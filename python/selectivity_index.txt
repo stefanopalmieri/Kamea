@@ -1,0 +1,5 @@
+Selectivity Index (higher = better at distinguishing structure from noise):
+  1. DS Recovery            1.000
+  2. Linear Probe           0.251
+  3. K-Means                0.208
+  4. Activation Patching    0.000
