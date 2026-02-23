@@ -10,4 +10,5 @@ dependencies = [
     "torch>=2.0.0",
     "scikit-learn>=1.0.0",
     "lark>=1.1.0",
+    "colorama>=0.4.6",
 ]

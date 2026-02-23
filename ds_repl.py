@@ -12,11 +12,34 @@ Usage:
 
 Syntax:
   :top :bot :e_D ...             atoms (keywords)
+  "hello"                        string sugar (DS-native ANSI char list)
+  0xA / 0xFF                     hex byte literal (0x00..0xFF)
   (:e_D :k)                      application
   '(:e_D :k)                     quote
   (eval '(:e_D :k))              eval quoted expression
   (app :e_D :k)                  build application node as data
   (unapp (app :e_D :k))          decompose app node
+  (bit :top)                     contextual bit (#app[:binary :top|:bot])
+  (bit 0x1)                      hex bit shorthand (0x0 or 0x1)
+  (unbit (bit :top))             decode contextual bit to :top/:bot
+  (byte b7 ... b0)               DS-native byte from 8 DS bits (MSB->LSB)
+  (byte 0x4 0x1)                 DS-native byte from 2 hex nibbles
+  (byte 0x41)                    DS-native byte from one hex byte
+  (char byte)                    ANSI char from a DS byte
+  (char 0x41)                    ANSI char from one hex byte
+  (char :ansi (byte (bit :bot) (bit :top) (bit :bot) (bit :bot)
+                    (bit :bot) (bit :bot) (bit :bot) (bit :top))) explicit char context + byte
+  (char-byte (char byte))        extract byte from char
+  (char-ctx (char byte))         extract context keyword from char
+  (string c1 c2 ...)             build string from chars (or 1-char strings)
+  (bit? x) (byte? x) (char? x)   DS-level predicates
+  (if cond t e)                  conditional on :top
+  (ok v) (err :code data)        result wrappers
+  (ok? r) (err? r)               test wrappers
+  (unwrap r)                     unwrap ok payload (or pass err)
+  (err-code r) (err-data r)      inspect error payload
+  (expand expr)                  macro-expand convenience forms
+  (print expr1 expr2 ...)        print evaluated values, returns last (or :p)
   (def x (:e_D :k))              bind name
   (do expr1 expr2 ...)           sequence, returns last
   (discover!)                    run self-discovery procedure
@@ -26,8 +49,10 @@ Syntax:
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
+import ast
 import sys
 import itertools
+import re
 
 from lark import Lark, Transformer, v_args
 
@@ -40,17 +65,22 @@ GRAMMAR = r"""
 
     ?expr: atom
          | keyword
+         | hexbyte
+         | string
          | quoted
          | list
          | special
 
     keyword: /:[a-zA-Z_][a-zA-Z0-9_!?\-]*/
     atom: /[a-zA-Z_][a-zA-Z0-9_!?\-]*/
+    hexbyte: /0x[0-9a-fA-F]{1,2}/
+    string: ESCAPED_STRING
     quoted: "'" expr
     list: "(" expr* ")"
     special: "#app" "[" expr expr "]"
            | "#bundle" "[" expr expr "]"
 
+    %import common.ESCAPED_STRING
     COMMENT: /;[^\n]*/
     %ignore COMMENT
     %ignore /\s+/
@@ -76,6 +106,16 @@ class Symbol:
 class Quoted:
     expr: Any
     def __repr__(self): return f"'{format_val(self.expr)}"
+
+@dataclass(frozen=True)
+class Literal:
+    value: Any
+    def __repr__(self): return f"#lit[{format_val(self.value)}]"
+
+@dataclass(frozen=True)
+class HexByte:
+    value: int
+    def __repr__(self): return f"0x{self.value:X}"
 
 @dataclass(frozen=True)
 class AppNode:
@@ -108,6 +148,12 @@ class ASTBuilder(Transformer):
 
     def atom(self, tok):
         return Symbol(str(tok))
+
+    def hexbyte(self, tok):
+        return HexByte(int(str(tok)[2:], 16))
+
+    def string(self, tok):
+        return ast.literal_eval(str(tok))
 
     def quoted(self, expr):
         return Quoted(expr)
@@ -143,6 +189,215 @@ ATOMS = [
     "d_I", "d_K", "m_I", "m_K", "s_C", "p",
 ]
 ATOM_SET = set(ATOMS)
+
+# DS-native data encoding constants
+ANSI_MIN = 0
+ANSI_MAX = 255
+BIT_CTX = "binary"
+BYTE_NIL = "byte_nil"
+STRING_NIL = "str_nil"
+CHAR_CTX_ANSI = "ansi"
+LEGACY_CHAR_TAG = "char"
+ANSI_RE = re.compile(r"^ansi_([0-9]{1,3})$")
+
+
+def ansi_keyword_name(code: int) -> str:
+    if not (ANSI_MIN <= code <= ANSI_MAX):
+        raise ValueError(f"ANSI code must be in 0..255, got {code}")
+    return f"ansi_{code:03d}"
+
+
+def coerce_bit_value(value: Any) -> int | None:
+    """Interpret a value as bit 0/1 from DS booleans (or internal ints)."""
+    if isinstance(value, int) and value in (0, 1):
+        return int(value)
+    if isinstance(value, HexByte) and value.value in (0, 1):
+        return value.value
+    if isinstance(value, Keyword):
+        if value.name == "top":
+            return 1
+        if value.name == "bot":
+            return 0
+    return None
+
+
+def coerce_nibble_value(value: Any) -> int | None:
+    """Interpret a value as nibble 0..15."""
+    if isinstance(value, HexByte):
+        return value.value
+    if isinstance(value, int) and 0 <= value <= 15:
+        return int(value)
+    return None
+
+
+def encode_bit(bit: Any) -> AppNode:
+    """Encode a bit as #app[:binary :top|:bot]."""
+    bit_val = coerce_bit_value(bit)
+    if bit_val is None:
+        raise ValueError(f"Bit must be :top or :bot, got {bit}")
+    return AppNode(Keyword(BIT_CTX), Keyword("top" if bit_val == 1 else "bot"))
+
+
+def decode_bit(term: Any) -> int | None:
+    """Decode contextual bit #app[:binary :top|:bot] to 0/1."""
+    if not isinstance(term, AppNode):
+        return None
+    if not isinstance(term.f, Keyword) or term.f.name != BIT_CTX:
+        return None
+    if not isinstance(term.x, Keyword):
+        return None
+    if term.x.name == "top":
+        return 1
+    if term.x.name == "bot":
+        return 0
+    return None
+
+
+def encode_byte_from_bits(bits: list[int]) -> Any:
+    """Encode exactly 8 bits (MSB→LSB) as a DS list ending in :byte_nil."""
+    if len(bits) != 8:
+        raise ValueError(f"Byte expects exactly 8 bits, got {len(bits)}")
+    out: Any = Keyword(BYTE_NIL)
+    for b in reversed(bits):
+        out = AppNode(encode_bit(b), out)
+    return out
+
+
+def encode_byte(code: int) -> Any:
+    """Encode an integer 0..255 as a DS byte."""
+    if not (ANSI_MIN <= code <= ANSI_MAX):
+        raise ValueError(f"Byte must be in 0..255, got {code}")
+    bits = [(code >> shift) & 1 for shift in range(7, -1, -1)]
+    return encode_byte_from_bits(bits)
+
+
+def decode_byte(term: Any, max_nodes: int = 16) -> int | None:
+    """Decode DS byte to integer when shape is 8 contextual bits + :byte_nil."""
+    bits: list[int] = []
+    cur = term
+    for _ in range(max_nodes):
+        if isinstance(cur, Keyword) and cur.name == BYTE_NIL:
+            break
+        if not isinstance(cur, AppNode):
+            return None
+        bit = decode_bit(cur.f)
+        if bit is None:
+            return None
+        bits.append(bit)
+        cur = cur.x
+    else:
+        return None
+
+    if len(bits) != 8:
+        return None
+    if not (isinstance(cur, Keyword) and cur.name == BYTE_NIL):
+        return None
+
+    code = 0
+    for b in bits:
+        code = (code << 1) | b
+    return code
+
+
+def split_char(term: Any) -> tuple[str, Any] | None:
+    """Split a DS char into (context, byte), with legacy fallback support."""
+    if isinstance(term, AppNode) and isinstance(term.f, Keyword):
+        if decode_byte(term.x) is not None:
+            return (term.f.name, term.x)
+
+    # Backward compatibility for legacy #app[:char :ansi_NNN] values.
+    if (
+        isinstance(term, AppNode)
+        and isinstance(term.f, Keyword)
+        and term.f.name == LEGACY_CHAR_TAG
+        and isinstance(term.x, Keyword)
+    ):
+        m = ANSI_RE.fullmatch(term.x.name)
+        if m:
+            code = int(m.group(1))
+            if ANSI_MIN <= code <= ANSI_MAX:
+                return (CHAR_CTX_ANSI, encode_byte(code))
+    return None
+
+
+def encode_char_code(code: int) -> AppNode:
+    """Encode ANSI code as #app[:ansi <byte>]."""
+    return AppNode(Keyword(CHAR_CTX_ANSI), encode_byte(code))
+
+
+def decode_char_code(term: Any) -> int | None:
+    """Decode ANSI char value #app[:ansi <byte>] to 0..255."""
+    parts = split_char(term)
+    if parts is None:
+        return None
+    ctx, byte_term = parts
+    if ctx != CHAR_CTX_ANSI:
+        return None
+    return decode_byte(byte_term)
+
+
+def encode_string_from_chars(chars: list[Any]) -> Any:
+    """Encode a sequence of DS-native char values as a linked list."""
+    out: Any = Keyword(STRING_NIL)
+    for ch in reversed(chars):
+        out = AppNode(ch, out)
+    return out
+
+
+def encode_string(text: str) -> Any:
+    """Encode Python string as DS-native ANSI char list."""
+    chars = []
+    for ch in text:
+        code = ord(ch)
+        if not (ANSI_MIN <= code <= ANSI_MAX):
+            raise ValueError(
+                f'Non-ANSI character {ch!r} (U+{code:04X}) is not encodable; use 0..255 only'
+            )
+        chars.append(encode_char_code(code))
+    return encode_string_from_chars(chars)
+
+
+def decode_string(term: Any, max_nodes: int = 10000) -> str | None:
+    """Decode DS-native ANSI char list back to Python string if it matches."""
+    chars: list[str] = []
+    cur = term
+    for _ in range(max_nodes):
+        if isinstance(cur, Keyword) and cur.name == STRING_NIL:
+            return "".join(chars)
+        if not isinstance(cur, AppNode):
+            return None
+        code = decode_char_code(cur.f)
+        if code is None:
+            return None
+        chars.append(chr(code))
+        cur = cur.x
+    return None
+
+
+def escape_string_literal(text: str) -> str:
+    """Render ANSI string with explicit escapes for non-printables."""
+    out: list[str] = []
+    for ch in text:
+        code = ord(ch)
+        if ch == "\\":
+            out.append("\\\\")
+        elif ch == '"':
+            out.append('\\"')
+        elif ch == "\n":
+            out.append("\\n")
+        elif ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        elif 32 <= code <= 126:
+            out.append(ch)
+        else:
+            out.append(f"\\x{code:02x}")
+    return "".join(out)
+
+
+def format_byte_bits(code: int) -> str:
+    return "".join(str((code >> shift) & 1) for shift in range(7, -1, -1))
 
 
 def dot_d1(x: str, y: str) -> str:
@@ -210,7 +465,7 @@ def ds_apply(left: Any, right: Any, fuel: int = MAX_FUEL) -> Any:
 
     # Inertness: structured values under atoms
     if isinstance(left, Keyword) and left.name in ATOM_SET:
-        if isinstance(right, (Quoted, AppNode, Bundle, Partial)):
+        if isinstance(right, (Quoted, Literal, AppNode, Bundle, Partial)):
             return Keyword("p")
 
     # Δ₁ fallback
@@ -219,6 +474,281 @@ def ds_apply(left: Any, right: Any, fuel: int = MAX_FUEL) -> Any:
             return Keyword(dot_d1(left.name, right.name))
 
     return Keyword("p")
+
+
+def ds_unapp_query(val: Any, selector: str) -> Any:
+    """Project from app-like data using UNAPP + boolean selector."""
+    bun = ds_apply(Keyword("UNAPP"), val)
+    return ds_apply(bun, Keyword(selector))
+
+
+def bool_kw(flag: bool) -> Keyword:
+    return Keyword("top" if flag else "bot")
+
+
+def normalize_err_code(code: Any) -> Keyword:
+    if isinstance(code, Keyword):
+        return code
+    if isinstance(code, Symbol):
+        return Keyword(code.name)
+    if isinstance(code, HexByte):
+        return Keyword(f"hex_{code.value:02X}")
+    if isinstance(code, str):
+        return Keyword(code)
+    return Keyword("error")
+
+
+def error_detail_term(message: str) -> Any:
+    """Encode an error detail string in an ANSI-safe DS string form."""
+    safe = message.encode("ascii", "backslashreplace").decode("ascii")
+    return encode_string(safe)
+
+
+def ok_result(value: Any) -> AppNode:
+    return AppNode(Keyword("ok"), value)
+
+
+def err_result(code: Any, detail: Any = None) -> AppNode:
+    if detail is None:
+        detail = Keyword("p")
+    return AppNode(Keyword("err"), AppNode(normalize_err_code(code), detail))
+
+
+def is_ok_result(v: Any) -> bool:
+    return isinstance(v, AppNode) and isinstance(v.f, Keyword) and v.f.name == "ok"
+
+
+def ok_payload(v: Any) -> Any:
+    return v.x if is_ok_result(v) else None
+
+
+def err_parts(v: Any) -> tuple[str, Any] | None:
+    if not (isinstance(v, AppNode) and isinstance(v.f, Keyword) and v.f.name == "err"):
+        return None
+    if isinstance(v.x, AppNode) and isinstance(v.x.f, Keyword):
+        return (v.x.f.name, v.x.x)
+    return ("error_payload", v.x)
+
+
+def is_err_result(v: Any) -> bool:
+    return err_parts(v) is not None
+
+
+def is_bit_value(v: Any) -> bool:
+    return decode_bit(v) is not None
+
+
+def is_byte_value(v: Any) -> bool:
+    return decode_byte(v) is not None
+
+
+def is_char_value(v: Any) -> bool:
+    return split_char(v) is not None
+
+
+def expand_if(cond: Any, yes: Any, no: Any) -> List:
+    return List([Symbol("if"), cond, yes, no])
+
+
+def expand_err(code: str, detail: Any) -> List:
+    return List([Symbol("err"), Keyword(code), detail])
+
+
+def build_app_chain_expr(items: list[Any], nil_term: Any) -> Any:
+    out: Any = nil_term
+    for item in reversed(items):
+        out = List([Symbol("app"), item, out])
+    return out
+
+
+def expand_unapp_projection(val: Any, selector: str) -> List:
+    """Build core DS expression ((unapp val) :selector)."""
+    return List([List([Symbol("unapp"), val]), Keyword(selector)])
+
+
+def guard_expr(checks: list[tuple[Any, Any]], success: Any) -> Any:
+    """Build nested if-checks around a success expression."""
+    result = success
+    for cond, err_expr in reversed(checks):
+        result = expand_if(cond, result, err_expr)
+    return result
+
+
+def expand_convenience(expr: Any) -> Any:
+    """Macro-expand REPL convenience forms into core DS data/forms."""
+    if isinstance(expr, str):
+        try:
+            return encode_string(expr)
+        except ValueError as e:
+            return err_result("non_ansi_string", error_detail_term(str(e)))
+    if isinstance(expr, (Keyword, Symbol, HexByte, Quoted, Literal, AppNode, Bundle, Partial)):
+        return expr
+
+    if isinstance(expr, List):
+        items = expr.items
+        if not items:
+            return Keyword("p")
+
+        if isinstance(items[0], Symbol):
+            name = items[0].name
+
+            if name == "bit":
+                if len(items) != 2:
+                    return err_result("bit_arity", List(items))
+                v = expand_convenience(items[1])
+                if is_err_result(v):
+                    return v
+                bit_val = coerce_bit_value(v)
+                if bit_val is not None:
+                    return encode_bit(bit_val)
+                if is_bit_value(v):
+                    return v
+                return expand_if(
+                    List([Symbol("bit?"), v]),
+                    v,
+                    expand_err("expected_bit", v),
+                )
+
+            if name == "unbit":
+                if len(items) != 2:
+                    return err_result("unbit_arity", List(items))
+                v = expand_convenience(items[1])
+                if is_err_result(v):
+                    return v
+                return expand_if(
+                    List([Symbol("bit?"), v]),
+                    expand_unapp_projection(v, "bot"),
+                    expand_err("expected_bit", v),
+                )
+
+            if name == "byte":
+                if len(items) == 2:
+                    v = expand_convenience(items[1])
+                    if is_err_result(v):
+                        return v
+                    if isinstance(v, HexByte):
+                        return encode_byte(v.value)
+                    code = decode_byte(v)
+                    if code is not None:
+                        return encode_byte(code)
+                    return expand_if(
+                        List([Symbol("byte?"), v]),
+                        v,
+                        expand_err("expected_byte", v),
+                    )
+                if len(items) == 3:
+                    hi_expr = expand_convenience(items[1])
+                    lo_expr = expand_convenience(items[2])
+                    if is_err_result(hi_expr):
+                        return hi_expr
+                    if is_err_result(lo_expr):
+                        return lo_expr
+                    hi = coerce_nibble_value(hi_expr)
+                    lo = coerce_nibble_value(lo_expr)
+                    if hi is None or lo is None:
+                        return expand_err("expected_hex_nibbles", List([hi_expr, lo_expr]))
+                    return encode_byte((hi << 4) | lo)
+                if len(items) == 9:
+                    checks: list[tuple[Any, Any]] = []
+                    bit_terms: list[Any] = []
+                    for arg in items[1:]:
+                        v = expand_convenience(arg)
+                        if is_err_result(v):
+                            return v
+                        if isinstance(v, HexByte) and v.value in (0, 1):
+                            bit_terms.append(encode_bit(v.value))
+                            continue
+                        if is_bit_value(v):
+                            bit_terms.append(v)
+                            continue
+                        bit_terms.append(v)
+                        checks.append((List([Symbol("bit?"), v]), expand_err("expected_bit", v)))
+                    success = build_app_chain_expr(bit_terms, Keyword(BYTE_NIL))
+                    return guard_expr(checks, success)
+                return err_result("byte_arity", List(items))
+
+            if name == "char":
+                if len(items) == 2:
+                    v = expand_convenience(items[1])
+                    if is_err_result(v):
+                        return v
+                    if isinstance(v, HexByte):
+                        return encode_char_code(v.value)
+                    if is_byte_value(v):
+                        return AppNode(Keyword(CHAR_CTX_ANSI), v)
+                    return expand_if(
+                        List([Symbol("byte?"), v]),
+                        List([Symbol("app"), Keyword(CHAR_CTX_ANSI), v]),
+                        expand_err("expected_byte", v),
+                    )
+                if len(items) == 3:
+                    ctx = expand_convenience(items[1])
+                    by = expand_convenience(items[2])
+                    if is_err_result(ctx):
+                        return ctx
+                    if is_err_result(by):
+                        return by
+                    if not isinstance(ctx, Keyword):
+                        return expand_err("expected_char_context", ctx)
+                    if is_byte_value(by):
+                        return AppNode(Keyword(ctx.name), by)
+                    return expand_if(
+                        List([Symbol("byte?"), by]),
+                        List([Symbol("app"), ctx, by]),
+                        expand_err("expected_byte", by),
+                    )
+                return err_result("char_arity", List(items))
+
+            if name == "char-byte":
+                if len(items) != 2:
+                    return err_result("char_byte_arity", List(items))
+                v = expand_convenience(items[1])
+                if is_err_result(v):
+                    return v
+                return expand_if(
+                    List([Symbol("char?"), v]),
+                    expand_unapp_projection(v, "bot"),
+                    expand_err("expected_char", v),
+                )
+
+            if name == "char-ctx":
+                if len(items) != 2:
+                    return err_result("char_ctx_arity", List(items))
+                v = expand_convenience(items[1])
+                if is_err_result(v):
+                    return v
+                return expand_if(
+                    List([Symbol("char?"), v]),
+                    expand_unapp_projection(v, "top"),
+                    expand_err("expected_char", v),
+                )
+
+            if name == "string":
+                chars: list[Any] = []
+                checks: list[tuple[Any, Any]] = []
+                for arg in items[1:]:
+                    v = expand_convenience(arg)
+                    if is_err_result(v):
+                        return v
+                    if isinstance(v, HexByte):
+                        chars.append(encode_char_code(v.value))
+                        continue
+                    code = decode_char_code(v)
+                    if code is not None:
+                        chars.append(encode_char_code(code))
+                        continue
+                    decoded = decode_string(v)
+                    if decoded is not None and len(decoded) == 1:
+                        chars.append(encode_char_code(ord(decoded)))
+                        continue
+                    chars.append(v)
+                    checks.append((List([Symbol("char?"), v]), expand_err("expected_char", v)))
+                success = build_app_chain_expr(chars, Keyword(STRING_NIL))
+                return guard_expr(checks, success)
+
+        return List([expand_convenience(i) for i in items])
+
+    return expr
 
 
 def ds_eval(expr: Any, fuel: int = MAX_FUEL) -> Any:
@@ -230,6 +760,8 @@ def ds_eval(expr: Any, fuel: int = MAX_FUEL) -> Any:
         return expr
     if isinstance(expr, Quoted):
         return expr
+    if isinstance(expr, Literal):
+        return expr.value
     if isinstance(expr, Bundle):
         return expr
     if isinstance(expr, Partial):
@@ -253,6 +785,17 @@ def repl_eval(expr: Any) -> Any:
     """Evaluate in REPL context (handles def, do, discover!, etc.)."""
     # Keywords evaluate to themselves
     if isinstance(expr, Keyword):
+        return expr
+
+    # String literals are sugar for DS-native char lists
+    if isinstance(expr, str):
+        try:
+            return encode_string(expr)
+        except ValueError as e:
+            return err_result("non_ansi_string", error_detail_term(str(e)))
+
+    # Hex byte literals are self-evaluating data
+    if isinstance(expr, HexByte):
         return expr
 
     # Symbols look up in environment
@@ -310,11 +853,101 @@ def repl_eval(expr: Any) -> Any:
                 print_table()
                 return Keyword("p")
 
+            # (if cond then else)
+            if name == "if":
+                if len(items) != 4:
+                    return err_result("if_arity", List(items))
+                cond = repl_eval(items[1])
+                if is_err_result(cond):
+                    return cond
+                branch = items[2] if isinstance(cond, Keyword) and cond.name == "top" else items[3]
+                return repl_eval(branch)
+
+            # Result wrappers
+            if name == "ok":
+                if len(items) != 2:
+                    return err_result("ok_arity", List(items))
+                return ok_result(repl_eval(items[1]))
+
+            if name == "err":
+                if len(items) not in (2, 3):
+                    return err_result("err_arity", List(items))
+                code_val = repl_eval(items[1])
+                if is_err_result(code_val):
+                    return code_val
+                detail_val = repl_eval(items[2]) if len(items) == 3 else Keyword("p")
+                if is_err_result(detail_val):
+                    return detail_val
+                return err_result(code_val, detail_val)
+
+            if name == "ok?":
+                if len(items) != 2:
+                    return err_result("okq_arity", List(items))
+                return bool_kw(is_ok_result(repl_eval(items[1])))
+
+            if name == "err?":
+                if len(items) != 2:
+                    return err_result("errq_arity", List(items))
+                return bool_kw(is_err_result(repl_eval(items[1])))
+
+            if name == "unwrap":
+                if len(items) != 2:
+                    return err_result("unwrap_arity", List(items))
+                val = repl_eval(items[1])
+                if is_ok_result(val):
+                    return ok_payload(val)
+                if is_err_result(val):
+                    return val
+                return Keyword("p")
+
+            if name == "err-code":
+                if len(items) != 2:
+                    return err_result("err_code_arity", List(items))
+                parts = err_parts(repl_eval(items[1]))
+                if parts is None:
+                    return Keyword("p")
+                return Keyword(parts[0])
+
+            if name == "err-data":
+                if len(items) != 2:
+                    return err_result("err_data_arity", List(items))
+                parts = err_parts(repl_eval(items[1]))
+                if parts is None:
+                    return Keyword("p")
+                return parts[1]
+
+            # Predicates
+            if name == "bit?":
+                if len(items) != 2:
+                    return err_result("bitq_arity", List(items))
+                return bool_kw(is_bit_value(repl_eval(items[1])))
+
+            if name == "byte?":
+                if len(items) != 2:
+                    return err_result("byteq_arity", List(items))
+                return bool_kw(is_byte_value(repl_eval(items[1])))
+
+            if name == "char?":
+                if len(items) != 2:
+                    return err_result("charq_arity", List(items))
+                return bool_kw(is_char_value(repl_eval(items[1])))
+
+            # (expand expr)
+            if name == "expand":
+                if len(items) != 2:
+                    return err_result("expand_arity", List(items))
+                try:
+                    return expand_convenience(items[1])
+                except Exception as e:
+                    return err_result("expand_error", error_detail_term(str(e)))
+
             # (eval expr)
             if name == "eval":
                 if len(items) != 2:
-                    raise SyntaxError("eval expects exactly 1 argument")
+                    return err_result("eval_arity", List(items))
                 val = repl_eval(items[1])
+                if is_err_result(val):
+                    return val
                 if isinstance(val, Quoted):
                     return ds_eval(val.expr)
                 return Keyword("p")
@@ -322,19 +955,50 @@ def repl_eval(expr: Any) -> Any:
             # (quote expr) — alternative to 'expr
             if name == "quote":
                 if len(items) != 2:
-                    raise SyntaxError("quote expects exactly 1 argument")
+                    return err_result("quote_arity", List(items))
                 return Quoted(quote_transform(items[1]))
 
             # (app f x)
-            if name == "app" and len(items) == 3:
+            if name == "app":
+                if len(items) != 3:
+                    return err_result("app_arity", List(items))
                 f = repl_eval(items[1])
+                if is_err_result(f):
+                    return f
                 x = repl_eval(items[2])
+                if is_err_result(x):
+                    return x
                 return AppNode(f, x)
 
             # (unapp expr)
-            if name == "unapp" and len(items) == 2:
+            if name == "unapp":
+                if len(items) != 2:
+                    return err_result("unapp_arity", List(items))
                 val = repl_eval(items[1])
+                if is_err_result(val):
+                    return val
                 return ds_apply(Keyword("UNAPP"), val)
+
+            # (print expr1 expr2 ...)
+            if name == "print":
+                if len(items) < 2:
+                    return err_result("print_arity", List(items))
+                vals = [repl_eval(item) for item in items[1:]]
+                for v in vals:
+                    if is_err_result(v):
+                        return v
+                print(" ".join(format_val(v) for v in vals))
+                return vals[-1] if vals else Keyword("p")
+
+            # Convenience forms are macro-expanded and then evaluated.
+            if name in ("bit", "unbit", "byte", "char", "char-byte", "char-ctx", "string"):
+                try:
+                    expanded = expand_convenience(expr)
+                except Exception as e:
+                    return err_result("expand_error", error_detail_term(str(e)))
+                if is_err_result(expanded):
+                    return expanded
+                return repl_eval(expanded)
 
         # General application: evaluate all, then apply left-to-right
         vals = [repl_eval(item) for item in items]
@@ -350,6 +1014,13 @@ def repl_eval(expr: Any) -> Any:
 
 def quote_transform(expr: Any) -> Any:
     """Transform an expression inside a quote to preserve structure."""
+    if isinstance(expr, str):
+        try:
+            return Literal(encode_string(expr))
+        except ValueError as e:
+            return Literal(err_result("non_ansi_string", error_detail_term(str(e))))
+    if isinstance(expr, HexByte):
+        return Literal(expr)
     if isinstance(expr, Symbol):
         if expr.name in ATOM_SET or expr.name in ("QUOTE", "EVAL", "APP", "UNAPP"):
             return Keyword(expr.name)
@@ -514,6 +1185,31 @@ def print_table():
 # ============================================================
 
 def format_val(v: Any) -> str:
+    if isinstance(v, Literal):
+        return format_val(v.value)
+    if isinstance(v, HexByte):
+        return f"0x{v.value:X}"
+    if is_ok_result(v):
+        return f"#ok[{format_val(ok_payload(v))}]"
+    parts = err_parts(v)
+    if parts is not None:
+        code, detail = parts
+        return f"#err[:{code} {format_val(detail)}]"
+    decoded_string = decode_string(v)
+    if decoded_string is not None:
+        return f"\"{escape_string_literal(decoded_string)}\""
+    split = split_char(v)
+    if split is not None:
+        ctx, byte_term = split
+        byte_code = decode_byte(byte_term)
+        if byte_code is not None:
+            return f"#char[:{ctx} #byte[{format_byte_bits(byte_code)}]]"
+    decoded_byte = decode_byte(v)
+    if decoded_byte is not None:
+        return f"#byte[{format_byte_bits(decoded_byte)}]"
+    decoded_bit = decode_bit(v)
+    if decoded_bit is not None:
+        return f"#bit[{decoded_bit}]"
     if isinstance(v, Keyword):
         return f":{v.name}"
     if isinstance(v, Quoted):
@@ -539,6 +1235,7 @@ def repl():
     """Interactive REPL."""
     print("Distinction Structures REPL")
     print("  21 atoms: 17 from Δ₁ + QUOTE, EVAL, APP, UNAPP")
+    print('  DS-native text: bit -> byte -> char -> string ("hello")')
     print("  Type (discover!) to run self-discovery")
     print("  Type (table) to see the Cayley table")
     print("  Ctrl-D to exit\n")
@@ -587,11 +1284,15 @@ def eval_file(path: str):
 
 def main():
     if len(sys.argv) > 1:
-        if sys.argv[1] == "-e":
-            result = eval_string(" ".join(sys.argv[2:]))
-            print(format_val(result))
-        else:
-            eval_file(sys.argv[1])
+        try:
+            if sys.argv[1] == "-e":
+                result = eval_string(" ".join(sys.argv[2:]))
+                print(format_val(result))
+            else:
+                eval_file(sys.argv[1])
+        except Exception as e:
+            print(f"Error: {e}")
+            sys.exit(1)
     else:
         repl()
 
