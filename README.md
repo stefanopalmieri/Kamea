@@ -4,9 +4,9 @@
 
 ---
 
-## Three Theorems
+## Three Theorems and Two Extensions
 
-This repository contains Lean 4 formalizations of three results about finite algebraic structures that model themselves. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 **Theorem 1 (Existence).** Intrinsically reflexive Distinction Structures exist. A 16-element symmetric algebra (Δ₀) and a 17-element directed algebra (Δ₁) each satisfy axioms A1--A7', Ext, and contain behavioral self-models: internal encodings whose elements, when composed by the structure's own operation, reproduce the behavior of the structure's own components.
 
@@ -14,7 +14,11 @@ This repository contains Lean 4 formalizations of three results about finite alg
 
 **Theorem 3 (Irreducibility).** Actuality is not determined by structure. Two models (Δ₁ and Δ₁') on the same 18-element carrier share 322 out of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. No structural predicate resolves the difference. The only way to determine which elements are actual is to query the actuality tester directly.
 
-Three machine-checked results. Self-description is possible. Communication is possible. But the question of what's real cannot be settled by structure alone.
+**Extension 1 (Δ₂ -- Flat Quoting).** Δ₁ extended with QUOTE, EVAL, APP, UNAPP restricted to flat (one-level) evaluation. The carrier is finite, the operation is total, and all properties are proved by `decide`. This is the Datalog-level extension: naming without executing, inspecting without reducing.
+
+**Extension 2 (Δ₃ -- Recursive Evaluation).** Δ₂ extended with recursive EVAL via a fuel-bounded interpreter. Evaluating a quoted application node recursively evaluates both subterms, then applies the results. Proved in Lean using a combined eval/dot function structurally recursive on fuel. Concrete computations (flat eval, nested eval, triple nesting, QUOTE/EVAL roundtrips) verified by `native_decide`.
+
+Five machine-checked results. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -27,6 +31,8 @@ Many systems can represent themselves (Godel numbering, quines, metacircular eva
 The irreducibility result shows what the framework *cannot* do. Given a complete structural description of a self-modeling system, the question "which elements are actual?" has multiple valid answers, and the structure alone does not select among them. Two fully valid self-modeling Distinction Structures can agree on every compositional fact and disagree only on actuality. The actuality tester carries irreducible information: there is no structural back door.
 
 This is "existence is not a predicate" as a machine-checked theorem. Not as a philosophical argument, not as an interpretation, not as a slogan -- as a Lean theorem that compiles with zero sorry.
+
+The extensions (Δ₂, Δ₃) show the path from algebra to computation: Δ₂ adds data representation (quoting without executing), Δ₃ adds recursive evaluation (executing quoted terms). Both are machine-verified. The boundary between finite decidable algebra and recursive interpretation is precisely located.
 
 ---
 
@@ -41,13 +47,14 @@ DistinctionStructures/
 │   ├── Delta0.lean                              # Δ₀: 16-element symmetric model
 │   ├── Delta1.lean                              # Δ₁: 17-element directed model
 │   ├── Discoverable.lean                        # 8 recovery lemmas (discoverability)
-│   └── ActualityIrreducibility.lean             # Actuality irreducibility theorem
-├── python/
-│   └── delta2_interpreter.py                    # Δ₂: interpreter with QUOTE/EVAL/APP/UNAPP
+│   ├── ActualityIrreducibility.lean             # Actuality irreducibility theorem
+│   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
+│   └── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
+├── delta2_true_blackbox.py                      # Δ₃ black-box recovery demo (Python)
+├── ai_interpretability/                         # ML interpretability experiments
 ├── docs/
 │   ├── Distinction_Structures.md                # Full document with proofs and philosophy
-│   ├── ARTIFACT.md                              # Artifact guide: what is proved and how
-│   └── COMMUNICATION.md                         # Communication protocol design
+│   └── Distinction_Structures.docx              # Word format
 └── README.md
 ```
 
@@ -58,11 +65,11 @@ DistinctionStructures/
 lake build
 ```
 
-All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~1270 lines of Lean. See [ARTIFACT.md](docs/ARTIFACT.md) for details.
+All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~1630 lines of Lean across 7 files. Zero sorry.
 
 ---
 
-## The Three Results in Detail
+## The Five Results in Detail
 
 ### Theorem 1: Existence (Δ₀ and Δ₁)
 
@@ -105,11 +112,7 @@ Two models, Δ₁ and Δ₁', are constructed on the same 18-element carrier (th
 | All other 322 entries | identical | identical |
 | Actuality set | M = D \ {p} | M' = D \ {q} |
 
-Both models independently satisfy:
-- Ext (behavioral separability)
-- H1, H2, H3 (homomorphism conditions)
-- IR1, IR2, IR4 (intrinsic reflexivity conditions)
-- A2, A5, A7' (existence, selectivity, structural novelty)
+Both models independently satisfy Ext, H1--H3, IR1--IR4, A2, A5, A7'.
 
 Key theorems in `ActualityIrreducibility.lean`:
 
@@ -123,43 +126,71 @@ Key theorems in `ActualityIrreducibility.lean`:
 | `no_universal_actuality_predicate` | No predicate matches actualM in Δ₁ and actualM' in Δ₁' |
 | `actuality_irreducibility` | Combined 7-conjunct theorem |
 
-The `cross_model_right_image` result is the sharp version: non-m_I elements cannot distinguish p from q at all as right arguments. The only element that "knows" which one is non-actual is m_I itself -- and m_I's behavior is the one thing that differs between the models. The only way to determine what's actual is to already have an actuality predicate. There is no structural back door.
+### Extension 1: Δ₂ -- Flat Quoting
 
-This connects directly to epistemology: given a complete structural description of a self-modeling system, the question "which elements are actual?" has multiple valid answers, and the structure alone does not select among them. You have to look. You have to encounter which model you're in. No amount of reasoning about the structure resolves it.
+Δ₂ adds QUOTE, EVAL, APP, UNAPP to Δ₁'s 17 atoms (21 total). Evaluation is flat: EVAL on a quoted application node looks up Δ₁'s dot table once. No recursion, no unbounded terms. The carrier includes atoms, quoted atoms, application nodes, bundles, and partial applications -- all finite.
+
+Key theorems in `Delta2.lean`:
+
+| Theorem | What it proves |
+|---------|---------------|
+| `eval_quote_inverse` | ∀ x, EVAL · (QUOTE · x) = x |
+| `unapp_app_roundtrip` | ∀ f x, UNAPP · (APP · f · x) = bundle(f, x) |
+| `bundle_query_top/bot` | ∀ f x, bundle(f,x) · top = f, bundle(f,x) · bot = x |
+| `eval_appnode` | ∀ f x : D1ι, EVAL · app(f,x) = dot(f,x) |
+| `eval_app_computes` | ∀ f x : D1ι, EVAL · (APP · f · x) = dot(f,x) |
+| `d1_fragment_preserved` | ∀ x y : D1ι, dot2(x,y) = dot(x,y) |
+| `quoted_inert_d1` | ∀ d : D1ι, d · quoted(y) = p |
+
+All proofs by `decide` over finite types.
+
+### Extension 2: Δ₃ -- Recursive Evaluation
+
+Δ₃ extends Δ₂ with recursive EVAL: evaluating a quoted application node recursively evaluates both subterms, then applies the results. This is the boundary between algebra and interpreter.
+
+The mutual recursion between eval and dot is resolved via a fuel parameter: `interp (fuel : Nat) (mode : Bool) (a b : T3) → T3`, structurally recursive on fuel. For any finite term, sufficient fuel exists for complete evaluation.
+
+Key theorems in `Delta3.lean`:
+
+| Theorem | What it proves |
+|---------|---------------|
+| `eval_quote_all_atoms` | All 21 atoms roundtrip through QUOTE/EVAL |
+| `flat_eval_eD_k` | eval(app(e_D, k)) = d_K |
+| `flat_eval_eM_i` | eval(app(e_M, i)) = m_I |
+| `flat_eval_eSigma_sC` | eval(app(e_Sigma, s_C)) = e_Delta |
+| `nested_eval_mI` | eval(app(m_I, app(e_I, i))) = top (recursive!) |
+| `eval_quoted_nested` | EVAL · quote(app(m_I, app(e_I, i))) = top |
+| `triple_nesting` | eval(app(e_M, app(e_D, app(e_I, i)))) = p (3 levels) |
+| `d1_preserved` | All 17x17 Δ₁ atom pairs compute correctly |
+| `full_app_unapp_roundtrip` | APP → UNAPP → bundle query roundtrip |
+
+All proofs by `native_decide` on concrete fuel values.
 
 ---
 
-## Δ₂ -- Computational Extension (Interpreter)
+## The Progression
 
-| Property | Value |
-|----------|-------|
-| Core atoms | 21 (17 from Δ₁ + QUOTE, EVAL, APP, UNAPP) |
-| Data domain | Unbounded (quoted terms, application nodes) |
-| Operation | Recursive interpreter extending Δ₁'s dot |
-| Status | Python implementation, not Lean-formalized |
-| File | `python/delta2_interpreter.py` |
+| Level | Elements | Operation | Key capability | Carrier | Lean file |
+|-------|----------|-----------|---------------|---------|-----------|
+| Δ₀ | 16 | Σ (symmetric) | Self-modeling | Finite | `Delta0.lean` |
+| Δ₁ | 17 | · (directed) | Discoverable self-modeling | Finite | `Delta1.lean` |
+| Δ₂ | 21 | · + QUOTE/EVAL | Flat quoting (name without executing) | Finite | `Delta2.lean` |
+| Δ₃ | 21 | · + recursive EVAL | Recursive evaluation (execute nested terms) | Unbounded | `Delta3.lean` |
 
-Δ₂ is not a finite algebra. It is a Distinction Structure core embedded in an interpreter. QUOTE generates unbounded inert values; EVAL is defined recursively over syntax trees. This is the boundary between algebra and computation.
+Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified.
+
+---
 
 ## What Is Not Proved
 
 - **Minimality.** We do not prove that 16 (resp. 17) is the minimum element count. The models are upper bound witnesses.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization.** The category-theoretic perspective is discussed in the document but not formalized in Lean.
-- **Δ₂ properties.** The computational extension is implemented in Python but not mechanically verified.
+- **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
 
-## Communication Protocol
+## Empirical Testing
 
-The discoverability property has a direct application: a communication protocol for unknown intelligences that requires no prior shared language.
-
-The protocol has four layers:
-
-- **Layer A** -- The Cayley table (self-interpreting, medium-independent)
-- **Layer B** -- Medium-reflexive grounding (anchors vocabulary in the transmission medium itself)
-- **Layer C** -- Extended physics (new domains introduced via the encoder apparatus)
-- **Layer D** -- Open communication (executable programs via Δ₂)
-
-The key innovation is that Layer B references the transmission medium -- the one physical context sender and recipient provably share. See [`COMMUNICATION.md`](COMMUNICATION.md) for the full protocol design.
+The `delta2_true_blackbox.py` script implements the full Δ₃ interpreter in Python with true black-box recovery of all 21 elements across 1000 random permutations (all pass). The `ai_interpretability/` directory contains neural network experiments testing whether the recovery procedure transfers to learned approximations of the algebra.
 
 ## Background Document
 
@@ -178,6 +209,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Distinction Structures: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization, 0 sorry. Three machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), and actuality irreducibility.}
+  note = {Lean 4 formalization, 0 sorry. Five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), and recursive evaluation (Δ₃).}
 }
 ```
