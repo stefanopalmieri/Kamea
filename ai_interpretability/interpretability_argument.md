@@ -45,3 +45,5 @@ The strongest single sentence is: **"If two interpretability methods disagree ab
 This is the figure I'd put on page 1. Before the algebra. Before the Lean proofs. Before the recovery procedure. Show this grid and say: "The left column is the ground truth — the behavioral structure of a self-modeling algebra with machine-checked uniqueness proofs. The middle columns are what standard training produces internally. The right columns are what axiom-derived regularization produces. The axioms work. Here's the paper explaining why."
 -----
 
+The recovery procedure identifies all structural roles (ARI=1.0) but the actuality irreducibility theorem (proved in the Lean formalization) shows that behavioral probing cannot determine which elements are 'actual' — two algebras differing in only 2 of 324 entries, with identical role structure, are behaviorally indistinguishable. This formally separates structural interpretability (recoverable) from referential interpretability (provably unrecoverable from behavior), suggesting that the limits of mechanistic interpretability are not merely practical but mathematical.
+

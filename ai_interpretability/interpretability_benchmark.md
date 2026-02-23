@@ -45,4 +45,7 @@ Selectivity = Δ₁ ARI minus Control ARI. It measures how much better the metho
 
 That table, with the Lean proofs in the appendix and the control algebra as a negative result, is publishable. The claim is clean: "Existing interpretability techniques recover at most 23% of the algebraic role structure in a self-modeling algebra with formally verified ground truth. A behaviorally-grounded recovery procedure, proved correct by Lean 4 proof assistant, recovers 100% with zero variance across all trials. The gap is explained by the distributed nature of the network's encoding: role information is stored in behavioral patterns across all interactions, not in individual activation values."
 
-That's a result. Go write the paper.
+
+------
+
+Interpretability methods form a hierarchy based on the level of behavioral information they access. Framework-guided behavioral probing (DS Recovery) achieves perfect role recovery. Generic behavioral clustering captures partial structure. Representation-based methods capture less, and representational regularization (L_role) further degrades representational clustering despite improving global similarity correlation. The gap between generic behavioral clustering (0.32) and DS Recovery (1.00) quantifies the value of the algebraically structured recovery procedure.

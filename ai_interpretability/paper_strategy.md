@@ -1,4 +1,19 @@
-That's a real concern. Let me think about who's reading it and what they'll think.
+Possible Skeleton:
+
+Title: Something like "Formal Ground Truth for Mechanistic Interpretability via Self-Modeling Algebras"
+Section 1: The ground truth problem. No formal definition of correct recovery, no completeness criterion, no implementation-independent benchmarks.
+Section 2: Background. Define DS axioms abstractly in two paragraphs. Introduce Δ₁ as the test instance in one paragraph. State what the Lean proofs verify in a bullet list. Point to the repo. Don't derive anything — just state what exists and where to find it.
+Section 3: Recovery procedure. The 8 steps. Proved correct in Lean. Tested across 1000 shuffles. This is the method.
+Section 4: Experiments. Neural network training, recovery transfer, capacity sweep showing compression reveals role structure.
+Section 5: Benchmark. DS Recovery vs K-Means, linear probes, activation patching, spectral clustering. The ARI table. The control algebra.
+Section 6: Regularization and ablation. L_role derivation, the L_ext failure, the four-regime sweep. The similarity heatmap grid.
+Section 7: Behavioral vs representational analysis. The hierarchy. The dissociation under L_role. The probe count curve.
+Section 8: Discussion. Limitations (17 elements, scaling open). The irreducibility theorem in one paragraph as a boundary result. Future directions.
+Appendix A: Full Δ₁ operation table. Appendix B: Lean proof summary. Appendix C: Recovery procedure pseudocode. Appendix D: All experimental details, seeds, hyperparameters.
+----
+
+
+Audience concerns:
 
 An interpretability researcher at Anthropic or DeepMind picks up the paper. They see a 17-element algebra they've never heard of, with element names like e_Sigma and d_K, a Lean formalization, and an 8-step recovery procedure. Their first reaction is: "this is a toy problem with a bespoke solution. They built the lock and the key. Of course the key fits."
 
