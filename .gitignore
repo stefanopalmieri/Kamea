@@ -1,3 +1,5 @@
 .DS_Store
 .lake/
 .claude/
+.venv/
+__pycache__/
