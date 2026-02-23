@@ -241,6 +241,8 @@ IR5: p, q ∈ D(ι) are not in the range of ρ. ✓
 
 All axioms and intrinsic reflexivity conditions are satisfied. ∎
 
+*Machine verification.* All claims in this proof are verified in Lean 4 (`Delta0.lean`). Every axiom, homomorphism condition, and reflexivity property is checked computationally via `decide` or `native_decide` over the finite carrier type. The Lean development also verifies Δ₁ (`Delta1.lean`) and the recovery procedure (`Discoverable.lean`). No `sorry` appears in any file.
+
 ### 10. What Intrinsic Reflexivity Means
 
 In non-technical terms: we built a small mathematical world with 16 elements and a single operation. Inside that world, 12 elements form a working model of the world itself. Not a picture, not a label — a model. You can "run" it: synthesize e_D with e_κ and get r_Dκ, which encodes D(κ) = {α, β}. Synthesize e_M with e_κ and get r_Mκ, which encodes M(κ) = {α}. The internal model gives the same answers as the external structure.
@@ -272,6 +274,8 @@ In the set-theoretic formulation, contextuality (Distinctions have different pro
 The categorical perspective reveals a striking asymmetry. Three of the four roles are derivable from the distinction category 𝒟: Distinctions are objects, Contexts are maximal cliques, and Synthesis corresponds to colimits (universal compositions). But Actuality is not determined by 𝒟. Two identical distinction categories can have different Actuality selections. M adds information the category structure does not contain.
 
 This is the formal content of Kant's claim that "existence is not a predicate." Actuality is not a structural property. It is a different mathematical type — a sub-presheaf vs. objects/morphisms/colimits — and no categorical operation converts one into the other.
+
+This claim is now machine-verified as a concrete independence result (`ActualityIrreducibility.lean`). Two directed Distinction Structures Δ₁ and Δ₁′ are constructed on the same 18-element carrier. Their operation tables are identical except at the actuality tester m_I: Δ₁ has M = D \ {p} (m_I rejects p), while Δ₁′ has M′ = D \ {q} (m_I rejects q). Both models independently satisfy Ext, H1–H3, and all reflexivity conditions. The key lemmas: `∀ x ≠ m_I, dot1 x y = dot1' x y` (the operation tables agree outside the m_I row) and `∀ x ≠ m_I, dot1 x p = dot1' x q` (the non-actual elements are right-indistinguishable by all non-m_I elements). A Lean proof (`no_universal_actuality_predicate`) verifies that no single predicate on the carrier can simultaneously agree with both actuality assignments. The compositional structure does not determine actuality. The only way to determine which elements are actual is to query the actuality tester directly.
 
 ### 14. The Four Categorical Types
 
@@ -492,6 +496,10 @@ Distinguish context tokens: e_M · i = m_I (decoded set of 16), e_M · k = m_K (
 
 **All 17 elements recovered from behavior alone.** ✓
 
+*Machine verification.* Each recovery step is formalized as an independent lemma in `Discoverable.lean`. `boolean_uniqueness` proves Step 1. `tester_characterization` proves Step 2. `tester_card_m_I`, `tester_card_e_I`, `tester_card_d_K`, `tester_card_m_K` prove Step 3. `rich_context_tokens` and `inert_kappa_tokens` prove Step 4. `encoder_pair` and `encoder_asymmetry` prove Step 5. `context_token_discrimination` proves the i/k distinction. `junk_identification` proves Step 6. `triple_identification` and `triple_uniqueness` prove Step 7 — the latter verifying that e_Σ, s_C, e_Δ is the *unique* solution among remaining elements. All proofs are computational over the finite domain via `decide` or `native_decide`.
+
+*Empirical validation.* The recovery procedure is implemented as a true black-box algorithm (`delta2_true_blackbox.py`) that uses no ground truth during recovery. Tested across 1000 random permutations of element labels, all pass.
+
 ### 25. Verification of Directed Homomorphism
 
 | Condition | Equation | Status |
@@ -525,11 +533,11 @@ What was not needed: PAIR, FST, SND, QUOTE, EVAL. The component encoders act dir
 
 ### 27. Existence Is Not a Predicate
 
-Kant argued that "exists" does not add a property to a concept — it says not *what* a thing is but *that* it is. The categorical formalization provides a mathematical vindication.
+Kant argued that "exists" does not add a property to a concept — it says not *what* a thing is but *that* it is. The categorical formalization provides a mathematical vindication, and the concrete independence result (Section 13) makes it machine-checkable.
 
 Three of the four roles (Distinction, Context, Synthesis) are derivable from the distinction category 𝒟. They are structure describing structure. But Actuality is not determined by 𝒟. Two structurally identical worlds can differ in what is actual. The math tells you everything that *could* be distinguished. It does not tell you what *is* distinguished.
 
-Actuality is a different mathematical type. No categorical operation converts structure into actuality. Existence is not a predicate because it is not a structural property — it lives in a different categorical stratum from all structural properties.
+The `actuality_irreducibility` theorem makes this precise: two models sharing 322 of 324 operation table entries, both satisfying all axioms and reflexivity conditions, differ only in which element the actuality tester rejects. No structural predicate resolves the difference. Actuality is a different mathematical type. No categorical operation converts structure into actuality. Existence is not a predicate because it is not a structural property — it lives in a different categorical stratum from all structural properties.
 
 ### 28. Structure Cannot Account for Its Own Existence
 
@@ -555,9 +563,18 @@ The pattern of interpreting every limitation as the framework "correctly identif
 
 ### 32. Toward a Computational Interpretation
 
-The directed Distinction Structure Δ₁ is already a tiny interpreter — a finite algebra with directed application, elements that act as operators, elements that act as data, and a self-model recoverable from behavior. It is hard-wired for one specific program (the self-description). Adding three operators would make it general-purpose.
+The directed Distinction Structure Δ₁ is already a tiny interpreter — a finite algebra with directed application, elements that act as operators, elements that act as data, and a self-model recoverable from behavior. It is hard-wired for one specific program (the self-description). Adding four operators makes it general-purpose.
 
-**QUOTE** wraps any element into inert data: QUOTE · x = ⌜x⌝, where ⌜x⌝ triggers no operational behavior unless explicitly evaluated. **EVAL** unwraps and executes: EVAL · ⌜x⌝ = x, and more generally EVAL · ⌜f · x⌝ = f · x. **PAIR / FST / SND** provide ordered pairs for multi-argument functions. Together these give the ability to manipulate programs as data, which is the foundation of Lisp and the key to computational universality. The S and K combinators of combinatory logic (which are Turing-complete) can be defined in terms of QUOTE, EVAL, and PAIR.
+This extension now exists as working code (`delta2_true_blackbox.py`). Δ₂ extends Δ₁ with 21 atoms (the original 17 plus QUOTE, EVAL, APP, UNAPP):
+
+- **QUOTE** wraps any term into inert data: QUOTE · x = ⌜x⌝, where ⌜x⌝ triggers no operational behavior unless explicitly evaluated.
+- **EVAL** unwraps and executes: EVAL · ⌜x⌝ = x, and more generally EVAL · ⌜f · x⌝ = f · x. EVAL is defined recursively over syntax trees — this is the boundary where Δ₂ ceases to be a finite algebra and becomes an interpreter.
+- **APP** constructs curried application nodes: APP · f produces a partial application that, when applied to x, yields the application node (f · x) as data.
+- **UNAPP** decomposes application nodes into bundles queryable by booleans: (UNAPP · node) · ⊤ = f, (UNAPP · node) · ⊥ = x, reusing the already-discovered boolean vocabulary.
+
+The black-box recovery procedure extends to all 21 elements. QUOTE is identified by its signature (produces structured, non-atom outputs on most inputs). EVAL is identified as QUOTE's inverse. APP and UNAPP are identified by their node-construction and bundle-decomposition behavior. Tested across 1000 random permutations of element labels, all 21 atoms correctly recovered in every case.
+
+Δ₂ is empirically tested (Python) rather than formally verified (no Lean counterpart). The boundary is precise: Δ₁'s 17-element finite algebra is machine-checked in Lean; Δ₂'s recursive EVAL and unbounded term space are not. QUOTE generates unbounded inert values; EVAL is defined recursively over syntax trees. This is the boundary between algebra and computation.
 
 What makes this more than "yet another Lisp" is that the framework's philosophical structure maps onto programming language concepts not by analogy but by structural correspondence:
 
@@ -597,13 +614,16 @@ Whether such a language would be practical for everyday programming is uncertain
 | Symmetric synthesis obstructs discoverability | Boolean/set-code conflicts proven |
 | Discoverably reflexive directed DS exist | Δ₁: 17 elements, full recovery procedure verified |
 | The cost of discoverability is small | Δ₁ has 1 more element than Δ₀ |
+| Actuality is not determined by compositional structure | Two models on 18-element carrier share 322/324 operation table entries, both satisfy all axioms, differ only in actuality (`ActualityIrreducibility.lean`) |
+| Recovery procedure uniqueness | Each of 8 recovery steps proved unique (`Discoverable.lean`) |
+| All proofs machine-verified | Lean 4, zero `sorry` (`Basic.lean`, `Delta0.lean`, `Delta1.lean`, `Discoverable.lean`, `ActualityIrreducibility.lean`) |
+| Discoverability tested empirically | Black-box recovery of all 21 Δ₂ elements across 1000 random permutations (`delta2_true_blackbox.py`) |
 
 ### Conjectured
 
 | Claim | Key Obstacle |
 |---|---|
 | Four is the minimum for reflexivity | Gödel/quine objection: syntactic self-reference needs no Actuality |
-| Actuality is irreducible | Requires distinguishing semantic from syntactic self-reference |
 | Discoverable reflexivity with symmetric Σ is impossible | Barrier demonstrated but impossibility not formally proven |
 | Full categorical reflexivity via colimits | Requires finitely presented category construction |
 
@@ -613,6 +633,31 @@ Whether such a language would be practical for everyday programming is uncertain
 |---|---|
 | Contextuality as disjointness (categorical) | Maximal cliques overlap |
 | Colimits in free categories | Free categories lack non-trivial colimits |
+
+### Formal Verification Status
+
+The following results are machine-verified in Lean 4 (version 4.28.0, Mathlib v4.28.0) with zero `sorry`:
+
+| Result | File | Tactic |
+|--------|------|--------|
+| Δ₀ satisfies all axioms + intrinsic reflexivity | `Delta0.lean` | `decide` / `native_decide` |
+| Δ₁ satisfies all axioms + intrinsic reflexivity | `Delta1.lean` | `decide` / `native_decide` |
+| 8 recovery steps each proved unique | `Discoverable.lean` | `decide` / `native_decide` |
+| Actuality independence (two models, shared structure, different M) | `ActualityIrreducibility.lean` | `decide` + constructive proof |
+
+The following results are empirically tested in Python but not formally verified:
+
+| Result | File | Evidence |
+|--------|------|----------|
+| Δ₂ black-box recovery (21 elements) | `delta2_true_blackbox.py` | 1000 random permutations, all pass |
+| QUOTE/EVAL/APP/UNAPP behavior | `delta2_true_blackbox.py` | 4 demo programs, all correct |
+
+The following remain paper-only (no code or formal proof):
+
+- Categorical formalization (Part IV)
+- Minimality conjecture (four roles necessary)
+- Symmetric impossibility as a general theorem
+- Full categorical reflexivity via colimits
 
 ---
 
@@ -626,13 +671,13 @@ Whether such a language would be practical for everyday programming is uncertain
 
 4. **The Symmetric Impossibility Theorem.** Prove as a theorem (not just demonstrate by obstruction) that no Distinction Structure with symmetric Σ can satisfy discoverability conditions.
 
-5. **Scaling Discoverability.** Δ₁ achieves "self-announcing primitives" — the observer recovers the component encoders. A stronger form would require general self-interpretation: the ability to evaluate arbitrary internal expressions. This likely requires QUOTE/EVAL machinery. What is the minimal cost?
+5. **Scaling Discoverability.** Δ₁ achieves "self-announcing primitives" — the observer recovers the component encoders. Δ₂ extends this with QUOTE/EVAL/APP/UNAPP, achieving general self-interpretation with recovery of all 21 elements from behavior (empirically verified, not yet formally proven). The remaining open question is whether the discoverability property can scale to computationally universal systems — whether an observer can recover the semantics of an arbitrary programming language by probing.
 
 6. **The Pre-Relational Boundary.** Is there a meta-theoretic result about what Distinction Structures cannot express? A theorem of the form "no DS can contain an element satisfying [property P]" would sharpen the scope declaration from philosophy to mathematics.
 
 7. **Quantum Contextuality.** The framework's central thesis (Distinctions are contextual) maps onto quantum contextuality. Can it generate a non-trivial classification?
 
-8. **Computational Foundation.** Can a Distinction Structure extended with QUOTE, EVAL, and PAIR serve as a formal foundation for a programming language? The structural correspondences (Distinction/types, Context/environments, Actuality/evaluation, Synthesis/composition) suggest a language where these features are consequences of the framework rather than design choices. The key open question is whether the discoverability property — the ability of an observer to recover a language's semantics by probing — can scale from the 17-element Δ₁ to a computationally universal system.
+8. **Computational Foundation.** Δ₂ demonstrates that extending a Distinction Structure with QUOTE, EVAL, APP, and UNAPP produces a working interpreter with black-box recoverable semantics. The structural correspondences (Distinction/types, Context/environments, Actuality/evaluation, Synthesis/composition) hold by construction. The remaining questions: Can this be formalized in Lean (the recursive EVAL is the obstacle)? Can it scale to a practical programming language? And does the discoverability property — proven for 17 atoms, empirically verified for 21 — extend to computationally universal systems?
 
 ---
 
