@@ -193,6 +193,65 @@ CUSTOM_TEMPLATE_ORDER = [
     "APP",
 ]
 
+# Rainbow palette derived from fontgen.js "Rainbow 3" dark colors.
+RAINBOW_HEADER_COLORS = (
+    (255, 40, 40),
+    (255, 120, 0),
+    (255, 180, 0),
+    (255, 220, 0),
+    (220, 255, 0),
+    (120, 255, 0),
+    (0, 255, 80),
+    (0, 255, 160),
+    (0, 200, 255),
+    (0, 120, 255),
+    (120, 80, 255),
+    (255, 0, 200),
+)
+
+
+def _ansi_rgb_fg(rgb: tuple[int, int, int]) -> str:
+    r, g, b = rgb
+    return f"\033[38;2;{r};{g};{b}m"
+
+
+def _render_rainbow_stripe_line(
+    line: str,
+    row_idx: int,
+    colors: tuple[tuple[int, int, int], ...],
+) -> str:
+    if not line:
+        return ""
+
+    parts: list[str] = []
+    start = 0 if (row_idx % 2) else -1
+    for col in range(start, len(line), 2):
+        chunk = line[max(0, col) : col + 2]
+        if not chunk:
+            continue
+        color_idx = (row_idx // 2 + max(0, col + 2) // 2) % len(colors)
+        parts.append(f"{_ansi_rgb_fg(colors[color_idx])}{chunk}")
+    parts.append(Style.RESET_ALL)
+    return "".join(parts)
+
+
+def print_rainbow_ascii_header() -> None:
+    header_path = Path(__file__).with_name("ascii_header.txt")
+    try:
+        header_text = header_path.read_text(encoding="utf-8").rstrip("\n")
+    except OSError:
+        return
+
+    if not header_text:
+        return
+
+    lines = header_text.splitlines()
+    styled_lines = [
+        _render_rainbow_stripe_line(line, row_idx, RAINBOW_HEADER_COLORS)
+        for row_idx, line in enumerate(lines)
+    ]
+    print("\n".join(styled_lines) + Style.RESET_ALL)
+
 
 def host_main(conn, seed: int = 17, prefix: str = "h") -> None:
     """Host device process: only ALU + memory + kick_eval."""
@@ -927,6 +986,7 @@ def discover_d2_extras_with_logs(
 
 
 def main() -> None:
+    print_rainbow_ascii_header()
     parent, child = Pipe()
     proc = Process(target=host_main, args=(child, 17, "h"), daemon=True)
     proc.start()

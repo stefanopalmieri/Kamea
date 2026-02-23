@@ -1,0 +1,43 @@
+; m_i_last_bit_demo.ds
+; Demo: extract the last bit from "Hello, world!" and apply :m_I to it.
+; Run with: uv run ds_repl.py examples/m_i_last_bit_demo.ds
+
+(do
+  (def greeting "Hello, world!")
+
+  ; Walk to the tail that contains only the last char ('!').
+  (def t1 ((unapp greeting) :bot))
+  (def t2 ((unapp t1) :bot))
+  (def t3 ((unapp t2) :bot))
+  (def t4 ((unapp t3) :bot))
+  (def t5 ((unapp t4) :bot))
+  (def t6 ((unapp t5) :bot))
+  (def t7 ((unapp t6) :bot))
+  (def t8 ((unapp t7) :bot))
+  (def t9 ((unapp t8) :bot))
+  (def t10 ((unapp t9) :bot))
+  (def t11 ((unapp t10) :bot))
+  (def t12 ((unapp t11) :bot))
+
+  (def last-char ((unapp t12) :top))
+  (def last-byte (char-byte last-char))
+
+  ; Walk to the least-significant bit (last bit in the byte list).
+  (def b1 ((unapp last-byte) :bot))
+  (def b2 ((unapp b1) :bot))
+  (def b3 ((unapp b2) :bot))
+  (def b4 ((unapp b3) :bot))
+  (def b5 ((unapp b4) :bot))
+  (def b6 ((unapp b5) :bot))
+  (def b7 ((unapp b6) :bot))
+  (def last-bit ((unapp b7) :top))
+
+  (def decoded-last-bit (unbit last-bit))
+  (def m_i_on_last_bit (:m_I decoded-last-bit))
+
+  (print greeting)
+  (print last-char)
+  (print last-byte)
+  (print last-bit decoded-last-bit)
+  (print m_i_on_last_bit)
+)
