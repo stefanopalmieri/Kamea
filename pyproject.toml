@@ -11,4 +11,6 @@ dependencies = [
     "scikit-learn>=1.0.0",
     "lark>=1.1.0",
     "colorama>=0.4.6",
+    "textual>=8.0.0",
+    "rich>=14.3.3",
 ]
