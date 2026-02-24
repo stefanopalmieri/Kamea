@@ -70,6 +70,7 @@ except ModuleNotFoundError:
 from delta2_true_blackbox import ALL_ATOMS, AppNode, Atom, Partial, Quote, UnappBundle, dot_iota
 
 try:
+    from rich.cells import cell_len
     from rich.text import Text
     from textual.app import App, ComposeResult
     from textual.containers import Horizontal
@@ -390,15 +391,19 @@ def sample_wizard_cells_from_table(
     dot_fn,
     role_of_token: dict[str, str] | None = None,
     blank_token: str | None = None,
+    order: list[str] | None = None,
 ) -> tuple[list[str], str | None]:
     if not domain:
         return default_symbol_cells(), blank_token
 
     token_counts = {str(tok): 0 for tok in domain}
     display_values: list[str] = []
+    source_order = [str(tok) for tok in (order if order else domain)]
+    if not source_order:
+        source_order = [str(tok) for tok in domain]
 
-    for x in domain:
-        for y in domain:
+    for x in source_order:
+        for y in source_order:
             out = dot_fn(x, y)
             if isinstance(out, str) and out in token_counts:
                 token_counts[out] += 1
@@ -430,6 +435,7 @@ def sample_wizard_cells_from_table(
 def build_client_canonical_cells() -> list[str]:
     domain = [atom.name for atom in ALL_ATOMS]
     role_of_token = {name: name for name in domain}
+    canonical_order = build_template_order_tokens(domain, role_of_token)
     atom_of_name = {atom.name: atom for atom in ALL_ATOMS}
 
     def canonical_dot(x: str, y: str) -> Any:
@@ -441,6 +447,7 @@ def build_client_canonical_cells() -> list[str]:
         dot_fn=canonical_dot,
         role_of_token=role_of_token,
         blank_token="p",
+        order=canonical_order,
     )
     return cells
 
@@ -1306,13 +1313,13 @@ if TEXTUAL_AVAILABLE:
                 self.row_star_offsets.append(running)
                 running += line.count("*")
             self.template_star_count = running
-            base_cells = default_symbol_cells()
+            base_cells = build_client_canonical_cells()
             self.client_cells = base_cells[: self.template_star_count]
             self.host_cells = base_cells[: self.template_star_count]
             self.client_mode = "canonical"
-            self.host_mode = "token"
-            self.client_blank_token: str | None = None
-            self.host_blank_token: str | None = None
+            self.host_mode = "canonical"
+            self.client_blank_token: str | None = "p"
+            self.host_blank_token: str | None = "p"
             self.beams: list[BeamState] = []
             self.host_state = "healthy"
             self.client_status = "Client Wizard: linked"
@@ -1365,12 +1372,24 @@ if TEXTUAL_AVAILABLE:
             wrap_width = 26
             wrapped_lines: list[str] = []
             for raw_line in str(message).splitlines() or [str(message)]:
-                cleaned = " ".join(raw_line.split())
-                if not cleaned:
+                line = raw_line.expandtabs(4)
+                if line == "":
                     wrapped_lines.append("")
                     continue
-                wrapped_lines.extend(textwrap.wrap(cleaned, width=wrap_width))
+                wrapped = textwrap.wrap(
+                    line,
+                    width=wrap_width,
+                    break_long_words=False,
+                    break_on_hyphens=False,
+                    replace_whitespace=False,
+                    drop_whitespace=False,
+                )
+                wrapped_lines.extend(wrapped if wrapped else [""])
             return wrapped_lines[:max_lines]
+
+        def _pad_cells(self, value: str, width: int) -> str:
+            pad = max(0, width - cell_len(value))
+            return value + (" " * pad)
 
         def set_client_quote(self, message: str | None, error: bool = False) -> None:
             if message is None:
@@ -1465,9 +1484,9 @@ if TEXTUAL_AVAILABLE:
         def _quote_bubble_lines(self) -> list[str]:
             if not self.host_quote_lines:
                 return []
-            width = max(len(line) for line in self.host_quote_lines)
+            width = max(cell_len(line) for line in self.host_quote_lines)
             top = f"  .-{'-' * width}-."
-            body = [f"  | {line.ljust(width)} |" for line in self.host_quote_lines]
+            body = [f"  | {self._pad_cells(line, width)} |" for line in self.host_quote_lines]
             bottom = f"  '-{'-' * width}-'"
             tail = ["      /", "     /"]
             return [top, *body, bottom, *tail]
@@ -1475,9 +1494,9 @@ if TEXTUAL_AVAILABLE:
         def _client_quote_bubble_lines(self) -> list[str]:
             if not self.client_quote_lines:
                 return []
-            width = max(len(line) for line in self.client_quote_lines)
+            width = max(cell_len(line) for line in self.client_quote_lines)
             top = f"  .-{'-' * width}-."
-            body = [f"  | {line.ljust(width)} |" for line in self.client_quote_lines]
+            body = [f"  | {self._pad_cells(line, width)} |" for line in self.client_quote_lines]
             bottom = f"  '-{'-' * width}-'"
             tail = ["      /", "     /"]
             return [top, *body, bottom, *tail]
@@ -1491,6 +1510,9 @@ if TEXTUAL_AVAILABLE:
             palette: dict[str, str] | None = None,
         ) -> str:
             selected_palette = palette if palette is not None else SEMANTIC_HEX_COLORS
+            if mode == "canonical" and value in {"QUOTE", "EVAL", "APP", "UNAPP"}:
+                idx = sum(ord(c) for c in value) % len(TOKEN_HEX_PALETTE)
+                return TOKEN_HEX_PALETTE[idx]
             if mode == "canonical" and value in selected_palette:
                 return selected_palette[value]
             if value in SEMANTIC_HEX_COLORS:
@@ -1561,7 +1583,13 @@ if TEXTUAL_AVAILABLE:
                     out.append(" ")
             return out
 
-        def _beam_gap(self, row_idx: int, width: int) -> Text:
+        def _beam_gap(
+            self,
+            row_idx: int,
+            width: int,
+            overlay_text: str | None = None,
+            overlay_style: str | None = None,
+        ) -> Text:
             chars = [" "] * width
             styles: list[str | None] = [None] * width
             for beam in self.beams:
@@ -1571,6 +1599,13 @@ if TEXTUAL_AVAILABLE:
                 for col in range(end):
                     chars[col] = "═"
                     styles[col] = beam.color
+            if overlay_text:
+                for col, ch in enumerate(overlay_text):
+                    if col >= width:
+                        break
+                    chars[col] = ch
+                    if overlay_style is not None:
+                        styles[col] = overlay_style
 
             out = Text()
             for ch, style in zip(chars, styles):
@@ -1603,7 +1638,6 @@ if TEXTUAL_AVAILABLE:
             client_bubble_lines = self._client_quote_bubble_lines()
             client_bubble_style = "bold #ff9b8f" if self.client_quote_error else "bold #b8ebff"
             client_bubble_start = 2
-            client_bubble_width = max((len(line) for line in client_bubble_lines), default=0)
 
             bubble_lines = self._quote_bubble_lines()
             bubble_start = 2
@@ -1627,16 +1661,19 @@ if TEXTUAL_AVAILABLE:
                         flip_horizontal=False,
                     )
                 )
-                if client_bubble_width > 0:
-                    bubble_idx = row_idx - client_bubble_start
-                    line.append("  ")
-                    if 0 <= bubble_idx < len(client_bubble_lines):
-                        bubble_text = client_bubble_lines[bubble_idx]
-                        line.append(bubble_text.ljust(client_bubble_width), style=client_bubble_style)
-                    else:
-                        line.append(" " * client_bubble_width)
+                client_overlay: str | None = None
+                bubble_idx = row_idx - client_bubble_start
+                if 0 <= bubble_idx < len(client_bubble_lines):
+                    client_overlay = client_bubble_lines[bubble_idx]
                 line.append("  ")
-                line.append_text(self._beam_gap(row_idx, gap_width))
+                line.append_text(
+                    self._beam_gap(
+                        row_idx,
+                        gap_width,
+                        overlay_text=client_overlay,
+                        overlay_style=client_bubble_style if client_overlay else None,
+                    )
+                )
                 line.append("  ")
                 line.append_text(
                     self._wizard_row(
@@ -1736,6 +1773,11 @@ if TEXTUAL_AVAILABLE:
                 mode="canonical",
                 blank_token="p",
             )
+            self.scene.set_host_symbol_cells(
+                build_client_canonical_cells(),
+                mode="canonical",
+                blank_token="p",
+            )
             self._refresh_scene_labels()
             self.set_interval(0.12, self._refresh_scene_labels)
             self._host = None
@@ -1798,6 +1840,13 @@ if TEXTUAL_AVAILABLE:
 (do
   (print "Hello, world!")
   "Hello, world!"
+)
+""".strip()
+            final_host_line = "The curse is lifted!"
+            final_host_program = f"""
+(do
+  (print "{final_host_line}")
+  "{final_host_line}"
 )
 """.strip()
             query_counter = 0
@@ -1884,7 +1933,7 @@ if TEXTUAL_AVAILABLE:
                 health = host.mem_read("sys", "health")
                 self.call_from_thread(
                     self.scene.set_host_symbol_cells,
-                    default_symbol_cells(),
+                    build_client_canonical_cells(),
                     "canonical",
                     "p",
                 )
@@ -2007,11 +2056,14 @@ if TEXTUAL_AVAILABLE:
                     for name, token in d1.items()
                     if not name.startswith("_")
                 }
+                display_role_of_token = dict(role_of_token)
+                display_role_of_token.update({str(token): name for name, token in d2.items()})
                 canonical_cells, _ = sample_wizard_cells_from_table(
                     domain,
                     host.dot,
-                    role_of_token=role_of_token,
+                    role_of_token=display_role_of_token,
                     blank_token=host.blank_token,
+                    order=template_order_tokens,
                 )
                 self.call_from_thread(
                     self.scene.set_host_symbol_cells,
@@ -2039,7 +2091,7 @@ if TEXTUAL_AVAILABLE:
                 post_check = dot_with_fx(d1["e_M"], d1["i"])
                 clog(f"sanity dot(e_M, i) => {post_check}")
 
-                host.mem_write("prog", "main", hello_program)
+                host.mem_write("prog", "main", final_host_program)
                 third = host.kick_eval("prog", "main")
                 if not third.get("ok"):
                     raise RuntimeError(f"post-recovery run failed: {third.get('error')}")
@@ -2047,14 +2099,13 @@ if TEXTUAL_AVAILABLE:
                 if third_stdout:
                     for line in third_stdout.splitlines():
                         hlog(line)
-                final_host_quote = "The curse has been lifted!"
+                final_host_quote = final_host_line
                 self.call_from_thread(self.scene.set_host_quote, final_host_quote, False)
-                hlog(final_host_quote)
                 hlog(f"result={third.get('result')}")
                 self.call_from_thread(
                     self._set_scene_status,
                     "Client Wizard: mission complete",
-                    "Host Wizard: hello world restored",
+                    "Host Wizard: curse lifted",
                 )
                 clog("blackbox ritual finished successfully")
             except Exception as exc:
