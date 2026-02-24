@@ -1148,8 +1148,20 @@ def discover_d2_extras_with_logs(
     logger(f"[discover] Δ2 step 2: structure producers = {producers}")
 
     probe_arg = str(domain[0])
-    quote_tok = next((t for t in producers if isinstance(dot_fn(t, probe_arg), Quote)), None)
-    app_tok = next((t for t in producers if isinstance(dot_fn(t, probe_arg), Partial)), None)
+    # Behavioral test — no isinstance needed (pipe treated as truly opaque):
+    #   QUOTE output (a qu-term) is inert on the left: applying it to any domain
+    #   token returns a domain element (the junk token p).
+    #   APP output (a pa-term) is productive on the left: applying it to any domain
+    #   token returns a non-domain app-node.
+    # This matches the quote_uniqueness / app_uniqueness fingerprints in Discoverable2.lean.
+    quote_tok, app_tok = None, None
+    for t in producers:
+        mid = dot_fn(t, probe_arg)
+        second = dot_fn(mid, probe_arg)
+        if second in domain:
+            quote_tok = t
+        else:
+            app_tok = t
     if quote_tok is None or app_tok is None:
         raise RuntimeError("failed to distinguish QUOTE vs APP")
     logger(f"[discover] identified QUOTE = {quote_tok}")
