@@ -55,6 +55,7 @@ import itertools
 import re
 
 from lark import Lark, Transformer, v_args
+from delta2_74181 import alu_74181
 
 # ============================================================
 # PEG Grammar (Lark Earley/LALR with PEG-like rules)
@@ -134,6 +135,21 @@ class Partial:
     f: Any
     def __repr__(self): return f"#partial[{format_val(self.f)}]"
 
+@dataclass(frozen=True)
+class ALUPartial1:
+    """ALU dispatch with selector applied, waiting for operand A."""
+    mode: str       # "logic", "arith", "arithc"
+    selector: int   # 0-15
+    def __repr__(self): return f"#alu1[{self.mode} N{self.selector:X}]"
+
+@dataclass(frozen=True)
+class ALUPartial2:
+    """ALU dispatch with selector and operand A applied, waiting for B."""
+    mode: str
+    selector: int
+    a: int          # 0-15
+    def __repr__(self): return f"#alu2[{self.mode} N{self.selector:X} N{self.a:X}]"
+
 class List:
     def __init__(self, items):
         self.items = items
@@ -183,12 +199,31 @@ def parse(text: str):
 # Δ₁ Core: The 17-element Cayley table
 # ============================================================
 
-ATOMS = [
+ATOMS_D1 = [
     "top", "bot", "i", "k", "a", "b", "e_I",
     "e_D", "e_M", "e_Sigma", "e_Delta",
     "d_I", "d_K", "m_I", "m_K", "s_C", "p",
 ]
+NIBBLE_NAMES = [f"N{i:X}" for i in range(16)]
+ALU_DISPATCH_NAMES = ["ALU_LOGIC", "ALU_ARITH", "ALU_ARITHC"]
+ALU_PRED_NAMES = ["ALU_ZERO", "ALU_COUT"]
+ALU_MISC_NAMES = ["N_SUCC"]
+
+ATOMS = ATOMS_D1 + NIBBLE_NAMES + ALU_DISPATCH_NAMES + ALU_PRED_NAMES + ALU_MISC_NAMES
 ATOM_SET = set(ATOMS)
+NIBBLE_SET = set(NIBBLE_NAMES)
+ALU_DISPATCH_SET = set(ALU_DISPATCH_NAMES)
+ALU_PRED_SET = set(ALU_PRED_NAMES)
+
+
+def is_nibble_name(name: str) -> bool:
+    return name in NIBBLE_SET
+
+def nibble_val(name: str) -> int:
+    return int(name[1:], 16)
+
+def nibble_name(n: int) -> str:
+    return f"N{n % 16:X}"
 
 # DS-native data encoding constants
 ANSI_MIN = 0
@@ -419,6 +454,57 @@ def dot_d1(x: str, y: str) -> str:
         return x
     return "p"
 
+
+def dot_atom(x: str, y: str) -> str:
+    """Full 43-atom Cayley table (Δ₁ + 74181 extension)."""
+    # D1 atoms use the original table (works for D1 × anything since
+    # D1 testers return bot for non-D1 atoms except m_I which returns top)
+    if x in ATOMS_D1:
+        return dot_d1(x, y)
+
+    # Nibble self-identification on top
+    if is_nibble_name(x) and y == "top":
+        return x
+
+    # Nibble × Nibble: Z/16Z addition
+    if is_nibble_name(x) and is_nibble_name(y):
+        return nibble_name((nibble_val(x) + nibble_val(y)) % 16)
+
+    # ALU dispatch self-identification on top
+    if x in ALU_DISPATCH_SET and y == "top":
+        return x
+
+    # ALU dispatch × Nibble: distinguishing mappings
+    if x == "ALU_LOGIC" and is_nibble_name(y):
+        return y  # identity
+    if x == "ALU_ARITH" and is_nibble_name(y):
+        return nibble_name((nibble_val(y) + 1) % 16)  # successor
+    if x == "ALU_ARITHC" and is_nibble_name(y):
+        return nibble_name((nibble_val(y) + 2) % 16)  # double successor
+
+    # ALU predicate self-identification on top
+    if x in ALU_PRED_SET and y == "top":
+        return x
+
+    # ALU_ZERO: tester on nibbles
+    if x == "ALU_ZERO" and is_nibble_name(y):
+        return "top" if y == "N0" else "bot"
+
+    # ALU_COUT: tester on nibbles (high bit)
+    if x == "ALU_COUT" and is_nibble_name(y):
+        return "top" if nibble_val(y) >= 8 else "bot"
+
+    # N_SUCC: successor on nibbles (16-cycle)
+    if x == "N_SUCC" and y == "top":
+        return x
+    if x == "N_SUCC" and y == "bot":
+        return "N0"  # reset on bot
+    if x == "N_SUCC" and is_nibble_name(y):
+        return nibble_name((nibble_val(y) + 1) % 16)
+
+    # Default: everything else → p
+    return "p"
+
 # ============================================================
 # Δ₃ Evaluator
 # ============================================================
@@ -463,15 +549,34 @@ def ds_apply(left: Any, right: Any, fuel: int = MAX_FUEL) -> Any:
             return left.x
         return Keyword("p")
 
+    # ALU dispatch × nibble → ALUPartial1
+    if isinstance(left, Keyword) and left.name in ALU_DISPATCH_SET:
+        if isinstance(right, Keyword) and is_nibble_name(right.name):
+            mode = {"ALU_LOGIC": "logic", "ALU_ARITH": "arith", "ALU_ARITHC": "arithc"}[left.name]
+            return ALUPartial1(mode, nibble_val(right.name))
+
+    # ALUPartial1 + nibble → ALUPartial2
+    if isinstance(left, ALUPartial1):
+        if isinstance(right, Keyword) and is_nibble_name(right.name):
+            return ALUPartial2(left.mode, left.selector, nibble_val(right.name))
+        return Keyword("p")
+
+    # ALUPartial2 + nibble → computed result
+    if isinstance(left, ALUPartial2):
+        if isinstance(right, Keyword) and is_nibble_name(right.name):
+            result, carry, zero = alu_74181(left.mode, left.selector, left.a, nibble_val(right.name))
+            return Keyword(nibble_name(result))
+        return Keyword("p")
+
     # Inertness: structured values under atoms
     if isinstance(left, Keyword) and left.name in ATOM_SET:
-        if isinstance(right, (Quoted, Literal, AppNode, Bundle, Partial)):
+        if isinstance(right, (Quoted, Literal, AppNode, Bundle, Partial, ALUPartial1, ALUPartial2)):
             return Keyword("p")
 
-    # Δ₁ fallback
+    # Atom × Atom fallback (full 43-atom Cayley table)
     if isinstance(left, Keyword) and isinstance(right, Keyword):
         if left.name in ATOM_SET and right.name in ATOM_SET:
-            return Keyword(dot_d1(left.name, right.name))
+            return Keyword(dot_atom(left.name, right.name))
 
     return Keyword("p")
 
@@ -1220,6 +1325,10 @@ def format_val(v: Any) -> str:
         return f"#bundle[{format_val(v.f)} {format_val(v.x)}]"
     if isinstance(v, Partial):
         return f"#partial[{format_val(v.f)}]"
+    if isinstance(v, ALUPartial1):
+        return f"#alu1[{v.mode} :N{v.selector:X}]"
+    if isinstance(v, ALUPartial2):
+        return f"#alu2[{v.mode} :N{v.selector:X} :N{v.a:X}]"
     if isinstance(v, List):
         return "(" + " ".join(format_val(i) for i in v.items) + ")"
     if isinstance(v, Symbol):
@@ -1234,7 +1343,7 @@ def format_val(v: Any) -> str:
 def repl():
     """Interactive REPL."""
     print("Distinction Structures REPL")
-    print("  21 atoms: 17 from Δ₁ + QUOTE, EVAL, APP, UNAPP")
+    print("  43 atoms: 17 Δ₁ + 4 Δ₂ + 16 nibbles + 3 ALU dispatch + 2 ALU pred + N_SUCC")
     print('  DS-native text: bit -> byte -> char -> string ("hello")')
     print("  Type (discover!) to run self-discovery")
     print("  Type (table) to see the Cayley table")
