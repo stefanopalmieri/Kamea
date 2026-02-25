@@ -150,6 +150,14 @@ class ALUPartial2:
     a: int          # 0-15
     def __repr__(self): return f"#alu2[{self.mode} N{self.selector:X} N{self.a:X}]"
 
+@dataclass(frozen=True)
+class ALUCoutProbe:
+    """ALU_COUT applied to an ALUPartial2 — awaiting operand B to extract real Cn+4."""
+    mode: str
+    selector: int
+    a: int
+    def __repr__(self): return f"#cout[{self.mode} N{self.selector:X} N{self.a:X}]"
+
 class List:
     def __init__(self, items):
         self.items = items
@@ -561,16 +569,29 @@ def ds_apply(left: Any, right: Any, fuel: int = MAX_FUEL) -> Any:
             return ALUPartial2(left.mode, left.selector, nibble_val(right.name))
         return Keyword("p")
 
-    # ALUPartial2 + nibble → computed result
+    # ALUPartial2 + nibble → computed result (just the nibble)
     if isinstance(left, ALUPartial2):
         if isinstance(right, Keyword) and is_nibble_name(right.name):
             result, carry, zero = alu_74181(left.mode, left.selector, left.a, nibble_val(right.name))
             return Keyword(nibble_name(result))
         return Keyword("p")
 
+    # ALU_COUT modal: on ALUPartial2, becomes carry probe awaiting B
+    if isinstance(left, Keyword) and left.name == "ALU_COUT":
+        if isinstance(right, ALUPartial2):
+            return ALUCoutProbe(right.mode, right.selector, right.a)
+
+    # ALUCoutProbe + nibble → real Cn+4 carry-out
+    if isinstance(left, ALUCoutProbe):
+        if isinstance(right, Keyword) and is_nibble_name(right.name):
+            _, carry, _ = alu_74181(left.mode, left.selector, left.a, nibble_val(right.name))
+            return Keyword("top" if carry else "bot")
+        return Keyword("p")
+
     # Inertness: structured values under atoms
     if isinstance(left, Keyword) and left.name in ATOM_SET:
-        if isinstance(right, (Quoted, Literal, AppNode, Bundle, Partial, ALUPartial1, ALUPartial2)):
+        if isinstance(right, (Quoted, Literal, AppNode, Bundle, Partial,
+                              ALUPartial1, ALUPartial2, ALUCoutProbe)):
             return Keyword("p")
 
     # Atom × Atom fallback (full 43-atom Cayley table)
@@ -1329,6 +1350,8 @@ def format_val(v: Any) -> str:
         return f"#alu1[{v.mode} :N{v.selector:X}]"
     if isinstance(v, ALUPartial2):
         return f"#alu2[{v.mode} :N{v.selector:X} :N{v.a:X}]"
+    if isinstance(v, ALUCoutProbe):
+        return f"#cout[{v.mode} :N{v.selector:X} :N{v.a:X}]"
     if isinstance(v, List):
         return "(" + " ".join(format_val(i) for i in v.items) + ")"
     if isinstance(v, Symbol):

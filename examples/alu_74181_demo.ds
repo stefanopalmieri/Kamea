@@ -1,0 +1,151 @@
+; alu_74181_demo.ds
+; Demo: 74181 ALU operations inside the Δ₃ interpreter.
+; Run with: uv run ds_repl.py examples/alu_74181_demo.ds
+
+(do
+  ; ── Nibble arithmetic (Z/16Z) ──
+  (print "--- Nibble addition (Z/16Z) ---")
+  (print (:N3 :N5))            ; 3 + 5 = 8
+  (print (:N7 :N7))            ; 7 + 7 = 14 (NE)
+  (print (:NA :N9))            ; 10 + 9 = 3 (mod 16)
+
+  ; ── N_SUCC: successor cycle ──
+  (print "--- N_SUCC successor cycle ---")
+  (print (:N_SUCC :N0))        ; 1
+  (print (:N_SUCC :NE))        ; F
+  (print (:N_SUCC :NF))        ; 0 (wraps)
+
+  ; ── ALU predicates ──
+  (print "--- ALU_ZERO / ALU_COUT predicates ---")
+  (print (:ALU_ZERO :N0))      ; top  (zero)
+  (print (:ALU_ZERO :N5))      ; bot  (nonzero)
+  (print (:ALU_COUT :N8))      ; top  (high bit set → carry)
+  (print (:ALU_COUT :N7))      ; bot  (high bit clear)
+
+  ; ── XOR (logic selector 6): A ⊕ B ──
+  (print "--- XOR (ALU_LOGIC N6) ---")
+  (def xor :ALU_LOGIC)
+  (print ((( xor :N6) :N5) :N3))   ; 5 ^ 3 = 6
+  (print ((( xor :N6) :NF) :NF))   ; F ^ F = 0
+  (print ((( xor :N6) :NA) :N5))   ; A ^ 5 = F
+
+  ; ── AND (logic selector B): A ∧ B ──
+  (print "--- AND (ALU_LOGIC NB) ---")
+  (print (((:ALU_LOGIC :NB) :NF) :N3))   ; F & 3 = 3
+  (print (((:ALU_LOGIC :NB) :N6) :N3))   ; 6 & 3 = 2
+
+  ; ── OR (logic selector E): A ∨ B ──
+  (print "--- OR (ALU_LOGIC NE) ---")
+  (print (((:ALU_LOGIC :NE) :N5) :NA))   ; 5 | A = F
+  (print (((:ALU_LOGIC :NE) :N1) :N4))   ; 1 | 4 = 5
+
+  ; ── NOT (logic selector 0, B=0): ¬A ──
+  (print "--- NOT (ALU_LOGIC N0, B=0) ---")
+  (print (((:ALU_LOGIC :N0) :N5) :N0))   ; ~5 = A
+  (print (((:ALU_LOGIC :N0) :N0) :N0))   ; ~0 = F
+  (print (((:ALU_LOGIC :N0) :NF) :N0))   ; ~F = 0
+
+  ; ── ADD (arith selector 9): A + B ──
+  (print "--- ADD (ALU_ARITH N9) ---")
+  (def add-op ((:ALU_ARITH :N9) :N3))    ; partial: add to 3
+  (print (add-op :N4))                     ; 3 + 4 = 7
+  (print (add-op :N0))                     ; 3 + 0 = 3
+  (print (add-op :ND))                     ; 3 + D = 0 (mod 16)
+
+  ; ── ADD with carry (arithc selector 9): A + B + 1 ──
+  (print "--- ADD+1 (ALU_ARITHC N9) ---")
+  (print (((:ALU_ARITHC :N9) :N3) :N4))  ; 3 + 4 + 1 = 8
+  (print (((:ALU_ARITHC :N9) :N0) :N0))  ; 0 + 0 + 1 = 1
+
+  ; ── SUB via two's complement: A + ~B + 1 (arithc selector 6) ──
+  (print "--- SUB (ALU_ARITHC N6) ---")
+  (print (((:ALU_ARITHC :N6) :N7) :N3))  ; 7 - 3 = 4
+  (print (((:ALU_ARITHC :N6) :N3) :N7))  ; 3 - 7 = C (mod 16, i.e. -4)
+  (print (((:ALU_ARITHC :N6) :N5) :N5))  ; 5 - 5 = 0
+
+  ; ── Combine: zero-test on a subtraction ──
+  (print "--- Zero-test on SUB result ---")
+  (def diff (((:ALU_ARITHC :N6) :N5) :N5))  ; 5 - 5 = 0
+  (print (:ALU_ZERO diff))                    ; top (equal!)
+  (def diff2 (((:ALU_ARITHC :N6) :N5) :N3)) ; 5 - 3 = 2
+  (print (:ALU_ZERO diff2))                   ; bot (not equal)
+
+  ; ── ALU_COUT: modal carry extraction ──
+  ; Unary on nibble: MSB test (atom-level Cayley table)
+  (print "--- ALU_COUT unary (MSB test) ---")
+  (print (:ALU_COUT :N8))                     ; top (bit 3 set)
+  (print (:ALU_COUT :N7))                     ; bot (bit 3 clear)
+
+  ; On ALUPartial2: real Cn+4 carry-out from the 74181
+  (print "--- ALU_COUT modal (real Cn+4) ---")
+  (print ((:ALU_COUT ((:ALU_ARITH :N9) :N8)) :N8))  ; 8+8=0 overflow → top
+  (print ((:ALU_COUT ((:ALU_ARITH :N9) :N3)) :N4))  ; 3+4=7 no overflow → bot
+
+  ; ── add8: 8-bit addition from two nibble pairs ──
+  ; add8(ah,al, bh,bl) → (app hi lo) with carry chain
+  ; No lambdas in the REPL, so we use a def-sequence idiom.
+  ; Each call sets ah/al/bh/bl then runs the body.
+
+  ; --- helper: add8 body (reads _ah _al _bh _bl from env) ---
+  ; Step 1: low nibble addition
+  ; Step 2: extract real Cn+4 carry via modal ALU_COUT
+  ; Step 3: if carry, high nibble uses ARITHC (+1), else ARITH
+  ; Step 4: pack (hi, lo) as an AppNode pair
+
+  (print "--- add8: 0x3A + 0x59 = 0x93 ---")
+  (def _al :NA) (def _ah :N3)
+  (def _bl :N9) (def _bh :N5)
+  (def _lo (((:ALU_ARITH :N9) _al) _bl))
+  (def _c  ((:ALU_COUT ((:ALU_ARITH :N9) _al)) _bl))
+  (def _hi (if _c
+             (((:ALU_ARITHC :N9) _ah) _bh)
+             (((:ALU_ARITH  :N9) _ah) _bh)))
+  (def result (app _hi _lo))
+  (print ((unapp result) :top) ((unapp result) :bot))  ; N9 N3 → 0x93 ✓
+
+  (print "--- add8: 0x10 + 0x10 = 0x20 ---")
+  (def _al :N0) (def _ah :N1)
+  (def _bl :N0) (def _bh :N1)
+  (def _lo (((:ALU_ARITH :N9) _al) _bl))
+  (def _c  ((:ALU_COUT ((:ALU_ARITH :N9) _al)) _bl))
+  (def _hi (if _c
+             (((:ALU_ARITHC :N9) _ah) _bh)
+             (((:ALU_ARITH  :N9) _ah) _bh)))
+  (def result (app _hi _lo))
+  (print ((unapp result) :top) ((unapp result) :bot))  ; N2 N0 → 0x20 ✓
+
+  (print "--- add8: 0xFF + 0x01 = 0x00 (carry out) ---")
+  (def _al :NF) (def _ah :NF)
+  (def _bl :N1) (def _bh :N0)
+  (def _lo (((:ALU_ARITH :N9) _al) _bl))
+  (def _c  ((:ALU_COUT ((:ALU_ARITH :N9) _al)) _bl))
+  (def _hi (if _c
+             (((:ALU_ARITHC :N9) _ah) _bh)
+             (((:ALU_ARITH  :N9) _ah) _bh)))
+  (def result (app _hi _lo))
+  (def _ch (if _c
+             ((:ALU_COUT ((:ALU_ARITHC :N9) _ah)) _bh)
+             ((:ALU_COUT ((:ALU_ARITH  :N9) _ah)) _bh)))
+  (print ((unapp result) :top) ((unapp result) :bot) _ch)  ; N0 N0 top → 0x100 ✓
+
+  (print "--- add8: 0x80 + 0x80 = 0x00 (carry out) ---")
+  (def _al :N0) (def _ah :N8)
+  (def _bl :N0) (def _bh :N8)
+  (def _lo (((:ALU_ARITH :N9) _al) _bl))
+  (def _c  ((:ALU_COUT ((:ALU_ARITH :N9) _al)) _bl))
+  (def _hi (if _c
+             (((:ALU_ARITHC :N9) _ah) _bh)
+             (((:ALU_ARITH  :N9) _ah) _bh)))
+  (def result (app _hi _lo))
+  (def _ch (if _c
+             ((:ALU_COUT ((:ALU_ARITHC :N9) _ah)) _bh)
+             ((:ALU_COUT ((:ALU_ARITH  :N9) _ah)) _bh)))
+  (print ((unapp result) :top) ((unapp result) :bot) _ch)  ; N0 N0 top → 0x100 ✓
+
+  ; ── Curried partial inspection ──
+  (print "--- Partial application stages ---")
+  (print (:ALU_LOGIC :N6))                            ; #alu1[logic :N6]
+  (print ((:ALU_LOGIC :N6) :N5))                      ; #alu2[logic :N6 :N5]
+  (print (((:ALU_LOGIC :N6) :N5) :N3))                ; :N6 (final result)
+  (print (:ALU_COUT ((:ALU_ARITH :N9) :N5)))          ; #cout[arith :N9 :N5]
+)
