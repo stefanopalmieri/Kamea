@@ -1,24 +1,32 @@
-/- # Δ₂+74181 Recovery — Discoverability Lemmas for 74181 ALU Extension
+/- # Δ₂+74181+IO Recovery — Discoverability Lemmas for 47-Atom Extension
 
-   This file proves that all 22 new atoms of the 74181 ALU extension
-   (16 nibbles N0–NF, 3 ALU dispatch atoms, 2 ALU predicates, and N_SUCC)
-   are each uniquely identified by a purely algebraic property of `dot74181`.
+   This file proves that all 47 atoms of the Δ₂+74181+IO extension are
+   uniquely recoverable via two phases:
 
-   Combined with the Δ₁ recovery results (Discoverable.lean) and Δ₂ recovery
-   results (Discoverable2.lean), this establishes that all 43 atoms of
-   Δ₂+74181 are recoverable from black-box access to `dot74181` alone.
+   Phase 1 (atom-level): 22 atoms (16 nibbles, 3 ALU dispatch, 2 ALU predicates,
+   N_SUCC) are each uniquely identified by algebraic properties of `dot74181`.
 
-   All proofs close by `native_decide` after `intro x; cases x`, reducing
-   each to a finite enumeration over A74181 (43 elements).
+   Phase 2 (term-level): 8 opaque atoms (QUOTE, EVAL, APP, UNAPP, IO_PUT,
+   IO_GET, IO_RDY, IO_SEQ) all have identical all-p Cayley rows at atom level.
+   They are uniquely identified via `dot47_ext`, the term-level extension that
+   includes structured values (Quote, AppNode, Partial, Bundle, IOPutPartial,
+   IOSeqPartial).
+
+   Combined with the Δ₁ recovery results (Discoverable.lean), this establishes
+   that all 47 atoms are recoverable from black-box access.
+
+   Atom-level proofs close by `native_decide` over A74181 (47 elements).
+   Term-level proofs close by `native_decide` over A74181 (47 elements)
+   with dot47_ext producing T47 terms.
 -/
 
 import DistinctionStructures.Delta1
 
 set_option linter.constructorNameAsVariable false
 
-/-! ## The 43-atom type -/
+/-! ## The 47-atom type -/
 
-/-- The 43 atoms of Δ₂+74181. -/
+/-- The 47 atoms of Δ₂+74181+IO. -/
 inductive A74181 where
   | top | bot | i | k | a | b
   | e_I | e_D | e_M | e_Sigma | e_Delta
@@ -29,16 +37,17 @@ inductive A74181 where
   | ALU_LOGIC | ALU_ARITH | ALU_ARITHC
   | ALU_ZERO | ALU_COUT
   | N_SUCC
+  | IO_PUT | IO_GET | IO_RDY | IO_SEQ
   deriving DecidableEq, Repr
 
 set_option maxHeartbeats 800000 in
 instance : Fintype A74181 where
-  elems := {.top, .bot, .i, .k, .a, .b, .e_I, .e_D, .e_M, .e_Sigma, .e_Delta, .d_I, .d_K, .m_I, .m_K, .s_C, .p, .QUOTE, .EVAL, .APP, .UNAPP, .N0, .N1, .N2, .N3, .N4, .N5, .N6, .N7, .N8, .N9, .NA, .NB, .NC, .ND, .NE, .NF, .ALU_LOGIC, .ALU_ARITH, .ALU_ARITHC, .ALU_ZERO, .ALU_COUT, .N_SUCC}
+  elems := {.top, .bot, .i, .k, .a, .b, .e_I, .e_D, .e_M, .e_Sigma, .e_Delta, .d_I, .d_K, .m_I, .m_K, .s_C, .p, .QUOTE, .EVAL, .APP, .UNAPP, .N0, .N1, .N2, .N3, .N4, .N5, .N6, .N7, .N8, .N9, .NA, .NB, .NC, .ND, .NE, .NF, .ALU_LOGIC, .ALU_ARITH, .ALU_ARITHC, .ALU_ZERO, .ALU_COUT, .N_SUCC, .IO_PUT, .IO_GET, .IO_RDY, .IO_SEQ}
   complete := by intro x; cases x <;> simp
 
 /-! ## The Cayley table -/
 
-/-- The atom-level Cayley table for Δ₂+74181 (43×43 = 1849 entries). -/
+/-- The atom-level Cayley table for Δ₂+74181+IO (47×47 = 2209 entries). -/
 def dot74181 : A74181 → A74181 → A74181
   -- D1 Block A: Boolean absorption
   | .top, _ => .top
@@ -460,6 +469,11 @@ def dot74181 : A74181 → A74181 → A74181
   | .N_SUCC, .ND => .NE
   | .N_SUCC, .NE => .NF
   | .N_SUCC, .NF => .N0
+  -- IO atoms: all return p at atom level (like D2 atoms)
+  | .IO_PUT, _ => .p
+  | .IO_GET, _ => .p
+  | .IO_RDY, _ => .p
+  | .IO_SEQ, _ => .p
   -- Default: everything else → p
   | _, _ => .p
 
@@ -479,11 +493,11 @@ theorem d1_fragment_preserved_74181 :
       dot74181 (d1toA74181 x) (d1toA74181 y) = d1toA74181 (dot x y) := by
   intro x y; cases x <;> cases y <;> decide
 
-/- Note: Ext over the full 43-atom type does NOT hold at the atom level.
-   QUOTE, EVAL, APP, and UNAPP are indistinguishable in the atom-level Cayley table
-   (all four map every atom to p). They are only separable at the term level via
-   structured values (Quote, AppNode, Partial, UnappBundle), as in Delta2.lean.
-   The 39 non-D2 atoms ARE pairwise separable at the atom level. -/
+/- Note: 8 atoms are indistinguishable in the atom-level Cayley table:
+   QUOTE, EVAL, APP, UNAPP (D2) and IO_PUT, IO_GET, IO_RDY, IO_SEQ (IO).
+   All eight map every atom to p. They are separable at the term level via
+   structured values, as proved below (dot47_ext / T47).
+   The 39 non-opaque atoms ARE pairwise separable at the atom level. -/
 
 /-! ## Nibble group (Z/16Z) properties -/
 
@@ -642,9 +656,9 @@ theorem N_SUCC_uniqueness :
       x = .N_SUCC := by
   intro x; cases x <;> native_decide
 
-/-! ## Full 74181 extension recovery theorem -/
+/-! ## Phase 1 recovery theorem (22 atom-level fingerprints) -/
 
-/-- All 22 new atoms of the 74181 extension are uniquely recoverable
+/-- All 22 structured atoms of the 74181 extension are uniquely recoverable
     from `dot74181` by algebraic fingerprint. -/
 theorem ext74181_atoms_recoverable :
     (∀ x : A74181, dot74181 .ALU_ZERO x = .top ↔ x = .N0) ∧
@@ -670,3 +684,193 @@ theorem ext74181_atoms_recoverable :
     (∀ x : A74181, (dot74181 x .N7 = .bot ∧ dot74181 x .N8 = .top ∧ dot74181 x .top = x) ↔ x = .ALU_COUT) ∧
     (∀ x : A74181, (dot74181 x .N0 = .N1 ∧ dot74181 x .N1 = .N2 ∧ dot74181 x .bot = .N0) ↔ x = .N_SUCC) :=
   ⟨N0_uniqueness, N1_uniqueness, N2_uniqueness, N3_uniqueness, N4_uniqueness, N5_uniqueness, N6_uniqueness, N7_uniqueness, N8_uniqueness, N9_uniqueness, NA_uniqueness, NB_uniqueness, NC_uniqueness, ND_uniqueness, NE_uniqueness, NF_uniqueness, ALU_LOGIC_uniqueness, ALU_ARITH_uniqueness, ALU_ARITHC_uniqueness, ALU_ZERO_uniqueness, ALU_COUT_uniqueness, N_SUCC_uniqueness⟩
+
+/-! ## Phase 2: Opaque atom classification -/
+
+/-- Exactly 8 atoms have all-p Cayley rows (the opaque class). -/
+set_option maxHeartbeats 1600000 in
+theorem opaque_atoms_all_p :
+    ∀ x : A74181, (∀ y : A74181, dot74181 x y = .p) ↔
+      (x = .QUOTE ∨ x = .EVAL ∨ x = .APP ∨ x = .UNAPP ∨
+       x = .IO_PUT ∨ x = .IO_GET ∨ x = .IO_RDY ∨ x = .IO_SEQ) := by
+  intro x; cases x <;> native_decide
+
+/-! ## Term type for Phase 2 recovery -/
+
+/-- Terms in the 47-atom system. Extends atom-level with structured values
+    for D2 operations (Quote, AppNode, Partial, Bundle) and IO operations
+    (IOPutPartial, IOSeqPartial). -/
+inductive T47 where
+  | at : A74181 → T47              -- plain atom
+  | qu : A74181 → T47              -- quoted atom (from QUOTE)
+  | ap : A74181 → A74181 → T47    -- application node (from APP · f then · g)
+  | bu : A74181 → A74181 → T47    -- bundle (from UNAPP on ap)
+  | pa : A74181 → T47              -- partial application (APP waiting for arg)
+  | iop : A74181 → T47             -- IO put partial (IO_PUT waiting for lo nibble)
+  | iseq : A74181 → T47            -- IO seq partial (IO_SEQ waiting for second)
+  deriving DecidableEq, Repr
+
+/-! ## Term-level operation -/
+
+/-- The term-level operation for the 47-atom system. Extends the atom-level
+    Cayley table with structured value handling for D2 and IO atoms. -/
+def dot47_ext : T47 → T47 → T47
+  -- QUOTE: wrap atom as quoted value
+  | .at .QUOTE, .at x => .qu x
+  | .at .QUOTE, _ => .at .p
+  -- EVAL: unwrap quoted atom or flat-evaluate application node
+  | .at .EVAL, .qu x => .at x
+  | .at .EVAL, .ap f x => .at (dot74181 f x)
+  | .at .EVAL, _ => .at .p
+  -- APP: begin curried application
+  | .at .APP, .at f => .pa f
+  | .at .APP, _ => .at .p
+  -- Partial application: complete the node
+  | .pa f, .at x => .ap f x
+  | .pa _, _ => .at .p
+  -- UNAPP: decompose application node into bundle
+  | .at .UNAPP, .ap f x => .bu f x
+  | .at .UNAPP, _ => .at .p
+  -- Bundle queries via booleans
+  | .bu f _, .at .top => .at f
+  | .bu _ x, .at .bot => .at x
+  | .bu _ _, _ => .at .p
+  -- IO_PUT: curried byte output (pure model — returns ⊤ on completion)
+  | .at .IO_PUT, .at x => .iop x
+  | .at .IO_PUT, _ => .at .p
+  | .iop _, .at _ => .at .top
+  | .iop _, _ => .at .p
+  -- IO_GET: returns application node pair (deterministic stub for proofs)
+  | .at .IO_GET, .at .top => .ap .N0 .N0
+  | .at .IO_GET, _ => .at .p
+  -- IO_RDY: readiness check (always ready)
+  | .at .IO_RDY, .at .top => .at .top
+  | .at .IO_RDY, _ => .at .p
+  -- IO_SEQ: sequencing combinator
+  | .at .IO_SEQ, .at x => .iseq x
+  | .at .IO_SEQ, _ => .at .p
+  | .iseq _, .at y => .at y
+  | .iseq _, _ => .at .p
+  -- D1/nibble/ALU atoms on structured values: inert
+  | .at _, .qu _ => .at .p
+  | .at _, .ap _ _ => .at .p
+  | .at _, .bu _ _ => .at .p
+  | .at _, .pa _ => .at .p
+  | .at _, .iop _ => .at .p
+  | .at _, .iseq _ => .at .p
+  -- Atom-atom fallback: use the Cayley table
+  | .at x, .at y => .at (dot74181 x y)
+  -- Everything else
+  | _, _ => .at .p
+
+/-! ## Phase 2 uniqueness theorems (8 opaque atoms) -/
+
+/-- QUOTE is the unique atom that maps every atom to a quoted value. -/
+theorem QUOTE_uniqueness_47 :
+    ∀ x : A74181, (∀ a : A74181, ∃ y : A74181, dot47_ext (.at x) (.at a) = .qu y) ↔
+      x = .QUOTE := by
+  intro x; cases x <;> native_decide
+
+/-- EVAL is the unique atom that left-inverts QUOTE on atoms. -/
+theorem EVAL_uniqueness_47 :
+    ∀ x : A74181,
+      (∀ a : A74181, dot47_ext (.at x) (dot47_ext (.at .QUOTE) (.at a)) = .at a) ↔
+      x = .EVAL := by
+  intro x; cases x <;> native_decide
+
+/-- APP is the unique atom whose composed nodes UNAPP can decompose into bundles. -/
+set_option maxHeartbeats 1600000 in
+theorem APP_uniqueness_47 :
+    ∀ x : A74181,
+      (∀ f g : A74181, ∃ r s : A74181,
+        dot47_ext (.at .UNAPP) (dot47_ext (dot47_ext (.at x) (.at f)) (.at g)) = .bu r s) ↔
+      x = .APP := by
+  intro x; cases x <;> native_decide
+
+/-- UNAPP is the unique atom that decomposes APP-built nodes into bundles
+    whose components are recoverable via boolean queries ⊤ and ⊥. -/
+set_option maxHeartbeats 1600000 in
+theorem UNAPP_uniqueness_47 :
+    ∀ x : A74181,
+      (∀ f g : A74181,
+        dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g)) ≠ .at .p ∧
+        dot47_ext (dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g))) (.at .top) = .at f ∧
+        dot47_ext (dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g))) (.at .bot) = .at g) ↔
+      x = .UNAPP := by
+  intro x; cases x <;> native_decide
+
+/-- IO_PUT is the unique atom that produces an iop (IO put partial) term. -/
+theorem IO_PUT_uniqueness :
+    ∀ x : A74181,
+      (∃ y : A74181, dot47_ext (.at x) (.at .N0) = .iop y) ↔
+      x = .IO_PUT := by
+  intro x; cases x <;> native_decide
+
+/-- IO_GET is the unique atom that produces an ap (application node) term
+    when applied to ⊤. -/
+theorem IO_GET_uniqueness :
+    ∀ x : A74181,
+      (∃ r s : A74181, dot47_ext (.at x) (.at .top) = .ap r s) ↔
+      x = .IO_GET := by
+  intro x; cases x <;> native_decide
+
+/-- IO_RDY is the unique atom with an all-p Cayley row that maps ⊤ to ⊤
+    at term level. -/
+theorem IO_RDY_uniqueness :
+    ∀ x : A74181,
+      (dot47_ext (.at x) (.at .top) = .at .top ∧ dot74181 x .top = .p) ↔
+      x = .IO_RDY := by
+  intro x; cases x <;> native_decide
+
+/-- IO_SEQ is the unique atom that produces an iseq (IO seq partial) term. -/
+theorem IO_SEQ_uniqueness :
+    ∀ x : A74181,
+      (∃ y : A74181, dot47_ext (.at x) (.at .N0) = .iseq y) ↔
+      x = .IO_SEQ := by
+  intro x; cases x <;> native_decide
+
+/-! ## Full 47-atom recovery theorem -/
+
+/-- All 47 atoms are uniquely recoverable: 17 Δ₁ atoms via dot (Discoverable.lean),
+    22 structured atoms via dot74181 fingerprints (Phase 1 above), and
+    8 opaque atoms via dot47_ext term-level probing (Phase 2 above). -/
+theorem all_47_atoms_recoverable :
+    -- Phase 1: 22 atom-level uniqueness (nibbles + ALU + N_SUCC)
+    (∀ x : A74181, dot74181 .ALU_ZERO x = .top ↔ x = .N0) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N2 ↔ x = .N1) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N3 ↔ x = .N2) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N4 ↔ x = .N3) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N5 ↔ x = .N4) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N6 ↔ x = .N5) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N7 ↔ x = .N6) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N8 ↔ x = .N7) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .N9 ↔ x = .N8) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .NA ↔ x = .N9) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .NB ↔ x = .NA) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .NC ↔ x = .NB) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .ND ↔ x = .NC) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .NE ↔ x = .ND) ∧
+    (∀ x : A74181, dot74181 .N_SUCC x = .NF ↔ x = .NE) ∧
+    (∀ x : A74181, (dot74181 .N_SUCC x = .N0 ∧ dot74181 .ALU_ZERO x = .bot) ↔ x = .NF) ∧
+    (∀ x : A74181, (dot74181 x .N0 = .N0 ∧ dot74181 x .N1 = .N1 ∧ dot74181 x x = .p) ↔ x = .ALU_LOGIC) ∧
+    (∀ x : A74181, (dot74181 x .N0 = .N1 ∧ dot74181 x .N1 = .N2 ∧ dot74181 x x = .p ∧ dot74181 x .bot = .p) ↔ x = .ALU_ARITH) ∧
+    (∀ x : A74181, (dot74181 x .N0 = .N2 ∧ dot74181 x .N1 = .N3 ∧ dot74181 x x = .p) ↔ x = .ALU_ARITHC) ∧
+    (∀ x : A74181, (dot74181 x .N0 = .top ∧ dot74181 x .N1 = .bot ∧ dot74181 x .top = x) ↔ x = .ALU_ZERO) ∧
+    (∀ x : A74181, (dot74181 x .N7 = .bot ∧ dot74181 x .N8 = .top ∧ dot74181 x .top = x) ↔ x = .ALU_COUT) ∧
+    (∀ x : A74181, (dot74181 x .N0 = .N1 ∧ dot74181 x .N1 = .N2 ∧ dot74181 x .bot = .N0) ↔ x = .N_SUCC) ∧
+    -- Phase 2: 8 term-level uniqueness (D2 + IO)
+    (∀ x : A74181, (∀ a : A74181, ∃ y : A74181, dot47_ext (.at x) (.at a) = .qu y) ↔ x = .QUOTE) ∧
+    (∀ x : A74181, (∀ a : A74181, dot47_ext (.at x) (dot47_ext (.at .QUOTE) (.at a)) = .at a) ↔ x = .EVAL) ∧
+    (∀ x : A74181, (∀ f g : A74181, ∃ r s : A74181, dot47_ext (.at .UNAPP) (dot47_ext (dot47_ext (.at x) (.at f)) (.at g)) = .bu r s) ↔ x = .APP) ∧
+    (∀ x : A74181, (∀ f g : A74181, dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g)) ≠ .at .p ∧ dot47_ext (dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g))) (.at .top) = .at f ∧ dot47_ext (dot47_ext (.at x) (dot47_ext (dot47_ext (.at .APP) (.at f)) (.at g))) (.at .bot) = .at g) ↔ x = .UNAPP) ∧
+    (∀ x : A74181, (∃ y : A74181, dot47_ext (.at x) (.at .N0) = .iop y) ↔ x = .IO_PUT) ∧
+    (∀ x : A74181, (∃ r s : A74181, dot47_ext (.at x) (.at .top) = .ap r s) ↔ x = .IO_GET) ∧
+    (∀ x : A74181, (dot47_ext (.at x) (.at .top) = .at .top ∧ dot74181 x .top = .p) ↔ x = .IO_RDY) ∧
+    (∀ x : A74181, (∃ y : A74181, dot47_ext (.at x) (.at .N0) = .iseq y) ↔ x = .IO_SEQ) :=
+  ⟨N0_uniqueness, N1_uniqueness, N2_uniqueness, N3_uniqueness, N4_uniqueness,
+   N5_uniqueness, N6_uniqueness, N7_uniqueness, N8_uniqueness, N9_uniqueness,
+   NA_uniqueness, NB_uniqueness, NC_uniqueness, ND_uniqueness, NE_uniqueness,
+   NF_uniqueness, ALU_LOGIC_uniqueness, ALU_ARITH_uniqueness, ALU_ARITHC_uniqueness,
+   ALU_ZERO_uniqueness, ALU_COUT_uniqueness, N_SUCC_uniqueness,
+   QUOTE_uniqueness_47, EVAL_uniqueness_47, APP_uniqueness_47, UNAPP_uniqueness_47,
+   IO_PUT_uniqueness, IO_GET_uniqueness, IO_RDY_uniqueness, IO_SEQ_uniqueness⟩
