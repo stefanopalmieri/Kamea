@@ -49,6 +49,7 @@ TAG_IOSEQP    = 0x6  # left = heap addr of first-result
 TAG_BUNDLE    = 0x7  # left = heap addr of f, right = heap addr of x
 TAG_PARTIAL   = 0x8  # left = heap addr of f
 TAG_COUT_PROBE = 0x9  # left = mode(2)|selector(4), right = A nibble (4b)
+TAG_W32        = 0xA  # left = high 16 bits (zero-padded to 24), right = low 16 bits
 
 # ALU mode encoding (2 bits)
 MODE_LOGIC  = 0
@@ -127,6 +128,17 @@ def make_ioseqp_word(first_addr: int) -> int:
 def make_cout_probe_word(mode: int, selector: int, a_val: int) -> int:
     ms = ((mode & 0x3) << 4) | (selector & 0xF)
     return pack_word(TAG_COUT_PROBE, ms, a_val & 0xF)
+
+
+def make_w32_word(val: int) -> int:
+    """Pack a 32-bit value into a W32 word (high 16 in left, low 16 in right)."""
+    return pack_word(TAG_W32, (val >> 16) & 0xFFFF, val & 0xFFFF)
+
+
+def w32_from_word(word: int) -> int:
+    """Extract a 32-bit value from a W32 word."""
+    _, left, right, _ = unpack_word(word)
+    return ((left & 0xFFFF) << 16) | (right & 0xFFFF)
 
 
 def atom_idx_from_word(word: int) -> int:

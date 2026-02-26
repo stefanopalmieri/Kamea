@@ -12,7 +12,7 @@ from .machine import (
     make_atom_word, make_app_word, make_quoted_word,
     unpack_word, atom_idx_from_word,
     TAG_ATOM, TAG_QUOTED, TAG_APP, TAG_ALUP1, TAG_ALUP2,
-    TAG_IOPUTP, TAG_IOSEQP, TAG_BUNDLE, TAG_PARTIAL, TAG_COUT_PROBE,
+    TAG_IOPUTP, TAG_IOSEQP, TAG_BUNDLE, TAG_PARTIAL, TAG_COUT_PROBE, TAG_W32,
     MODE_LOGIC, MODE_ARITH, MODE_ARITHC,
 )
 
@@ -203,6 +203,10 @@ class EmulatorHost:
             a_val = right & 0xF
             mode_name = ["logic", "arith", "arithc"][mode] if mode < 3 else "?"
             return f"#cout[{mode_name}, S={sel:X}, A={a_val:X}]"
+
+        if tag == TAG_W32:
+            val = ((left & 0xFFFF) << 16) | (right & 0xFFFF)
+            return f"#w32[0x{val:08X}]"
 
         return f"?tag({tag})"
 
