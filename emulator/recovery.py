@@ -1,7 +1,7 @@
 """
 Recovery demo — run the black-box discovery procedure against the emulator.
 
-Creates a scrambled Cayley ROM, loads it into the Kameas machine,
+Creates a scrambled Cayley ROM, loads it into the Kamea machine,
 and runs the 3-phase recovery pipeline through the machine's dispatch unit.
 No separate Python reimplementation of the dispatch logic — every dot(f, x)
 call goes through the same eval/apply state machine that normal evaluation uses.

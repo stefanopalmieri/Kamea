@@ -210,7 +210,7 @@ The 74181 extension adds 26 atoms to Δ₂'s 21, for a total of 47. The design m
 
 Phase 1 identifies 39 atoms from the 47×47 Cayley table alone. The remaining 8 have identical all-p Cayley rows and require term-level probing (applying atoms to structured values, not just other atoms). Phase 2's 4-step algorithm resolves all 8: QUOTE/EVAL via roundtrip, APP/IO_PUT/IO_SEQ via partial application signatures, IO_RDY via ⊤-response, UNAPP via AppNode destructure, IO_GET by exclusion.
 
-### Emulator: Kameas Machine
+### Emulator: Kamea Machine
 
 A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine. One dispatch unit handles all term-level operations — both normal evaluation and black-box recovery use the same code path.
 

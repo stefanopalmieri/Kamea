@@ -1,5 +1,5 @@
 """
-Chip primitives for the Kameas machine.
+Chip primitives for the Kamea machine.
 
 Models discrete hardware components: EEPROM, IC74181 ALU, SRAM, Register, FIFO.
 """

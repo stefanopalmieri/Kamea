@@ -1,5 +1,5 @@
 """
-EmulatorHost — high-level interface to the Kameas machine.
+EmulatorHost — high-level interface to the Kamea machine.
 
 Provides term loading (S-expression → heap), evaluation, and result decoding.
 """
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from . import cayley
 from .machine import (
-    DeltaMachine, S_FETCH, S_APPLY, S_DONE, S_HALTED,
+    KameaMachine, S_FETCH, S_APPLY, S_DONE, S_HALTED,
     make_atom_word, make_app_word, make_quoted_word,
     unpack_word, atom_idx_from_word,
     TAG_ATOM, TAG_QUOTED, TAG_APP, TAG_ALUP1, TAG_ALUP2,
@@ -18,11 +18,11 @@ from .machine import (
 
 
 class EmulatorHost:
-    """High-level interface to the Kameas machine."""
+    """High-level interface to the Kamea machine."""
 
     def __init__(self, cayley_rom: bytes | None = None,
                  atom_map: dict[str, int] | None = None):
-        self.machine = DeltaMachine(cayley_rom, atom_map)
+        self.machine = KameaMachine(cayley_rom, atom_map)
 
     # -------------------------------------------------------------------
     # Term loading: nested tuples/strings → heap words

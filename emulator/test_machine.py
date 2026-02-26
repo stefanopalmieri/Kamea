@@ -1,5 +1,5 @@
 """
-Verification suite for the Kameas machine emulator.
+Verification suite for the Kamea machine emulator.
 
 Tests the emulator against the reference implementations in delta2_74181.py
 and ds_repl.py to ensure behavioral equivalence.
@@ -20,7 +20,7 @@ from delta2_74181 import (
 )
 from emulator import cayley
 from emulator.machine import (
-    DeltaMachine, make_atom_word, make_app_word, unpack_word,
+    KameaMachine, make_atom_word, make_app_word, unpack_word,
     TAG_ATOM, TAG_QUOTED, TAG_APP, TAG_BUNDLE, TAG_PARTIAL,
     TAG_ALUP1, TAG_ALUP2, TAG_IOPUTP, TAG_IOSEQP, TAG_COUT_PROBE,
     S_DONE, S_HALTED, S_FETCH,
@@ -422,7 +422,7 @@ def _results_match(ref, result_word: int, host: EmulatorHost) -> bool:
 
 def main():
     print("=" * 60)
-    print("Kameas Machine Emulator — Verification Suite")
+    print("Kamea Machine Emulator — Verification Suite")
     print("=" * 60)
 
     all_pass = True

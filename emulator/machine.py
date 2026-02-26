@@ -1,5 +1,5 @@
 """
-Kameas machine — clocked eval/apply state machine for the 47-atom DS algebra.
+Kamea machine — clocked eval/apply state machine for the 47-atom DS algebra.
 
 Models the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap,
 hardware stack, UART FIFOs, and a microcode-driven state machine.
@@ -125,7 +125,7 @@ def atom_idx_from_word(word: int) -> int:
 # Machine
 # ---------------------------------------------------------------------------
 
-class DeltaMachine:
+class KameaMachine:
     """Clocked eval/apply state machine for the 47-atom DS algebra."""
 
     ADDR_BITS   = 12   # 4096 heap words

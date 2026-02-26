@@ -1,5 +1,5 @@
 """
-Cayley ROM builder for the Kameas machine.
+Cayley ROM builder for the Kamea machine.
 
 Generates the 47×47 atom-level Cayley table as a flat byte array
 suitable for EEPROM, plus atom name/index constants.
