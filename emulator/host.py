@@ -150,7 +150,7 @@ class EmulatorHost:
         if depth > 20:
             return "..."
 
-        tag, left, right = unpack_word(word)
+        tag, left, right, _meta = unpack_word(word)
 
         if tag == TAG_ATOM:
             idx = left & 0x3F

@@ -238,7 +238,7 @@ def test_io_get():
         expected_lo = f"N{byte_val & 0xF:X}"
 
         # Result should be an app-node(N_hi, N_lo)
-        tag, left, right = unpack_word(r["result_word"])
+        tag, left, right, _meta = unpack_word(r["result_word"])
         if tag != TAG_APP:
             print(f"  FAIL: IO_GET 0x{byte_val:02X} → tag={tag}, expected TAG_APP")
             errors += 1
@@ -361,7 +361,7 @@ def _format_ref(val) -> str:
 
 def _results_match(ref, result_word: int, host: EmulatorHost) -> bool:
     """Check if machine result matches reference value."""
-    tag, left, right = unpack_word(result_word)
+    tag, left, right, _meta = unpack_word(result_word)
 
     if isinstance(ref, Atom):
         if tag != TAG_ATOM:

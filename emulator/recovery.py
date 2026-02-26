@@ -23,7 +23,7 @@ from delta2_74181 import (
 )
 from emulator.cayley import build_cayley_rom_scrambled, NUM_ATOMS, NAME_TO_IDX
 from emulator.host import EmulatorHost
-from emulator.machine import make_atom_word, unpack_word, TAG_ATOM, LEFT_SHIFT
+from emulator.machine import make_atom_word, unpack_word, TAG_ATOM, TAG_SHIFT, LEFT_SHIFT
 
 
 def make_emulator_blackbox(seed: int = 11):
@@ -76,7 +76,7 @@ def make_emulator_blackbox(seed: int = 11):
 
     def from_word(w):
         """Convert machine word to oracle value."""
-        tag = (w >> 24) & 0xF
+        tag = (w >> TAG_SHIFT) & 0xF
         if tag == TAG_ATOM:
             idx = (w >> LEFT_SHIFT) & 0x3F
             return scrambled_idx_to_label.get(idx, w)

@@ -12,20 +12,31 @@ from . import cayley
 
 
 # ---------------------------------------------------------------------------
-# Word format: 4-bit tag | 12-bit left | 12-bit right  (28 bits total)
+# Word format: 4-bit tag | 24-bit left | 24-bit right | 12-bit metadata
+# (64 bits total, targeting ULX3S ECP5-85F with 32MB SDRAM)
 # ---------------------------------------------------------------------------
 
 TAG_BITS   = 4
-LEFT_BITS  = 12
-RIGHT_BITS = 12
-WORD_BITS  = TAG_BITS + LEFT_BITS + RIGHT_BITS  # 28
+LEFT_BITS  = 24
+RIGHT_BITS = 24
+META_BITS  = 12
+WORD_BITS  = TAG_BITS + LEFT_BITS + RIGHT_BITS + META_BITS  # 64
 
-LEFT_SHIFT  = RIGHT_BITS           # 12
-TAG_SHIFT   = LEFT_BITS + RIGHT_BITS  # 24
+META_SHIFT  = 0
+RIGHT_SHIFT = META_BITS                          # 12
+LEFT_SHIFT  = META_BITS + RIGHT_BITS             # 36
+TAG_SHIFT   = META_BITS + RIGHT_BITS + LEFT_BITS # 60
 
 TAG_MASK   = 0xF
-LEFT_MASK  = 0xFFF
-RIGHT_MASK = 0xFFF
+LEFT_MASK  = 0xFFFFFF
+RIGHT_MASK = 0xFFFFFF
+META_MASK  = 0xFFF
+
+# Reserved metadata bits (no behavior yet — for future GC)
+META_GC_FORWARD = 1 << 0   # GC: this word has been forwarded
+META_GC_GEN     = 1 << 1   # GC: generation (nursery/tenured)
+META_IMMUTABLE  = 1 << 2   # quoted terms
+META_PINNED     = 1 << 3   # don't relocate (key material)
 
 # Tag constants
 TAG_ATOM      = 0x0  # left = 6-bit atom index
@@ -60,17 +71,19 @@ S_HALTED  = 10
 MAX_CYCLES = 100_000
 
 
-def pack_word(tag: int, left: int, right: int) -> int:
+def pack_word(tag: int, left: int, right: int, meta: int = 0) -> int:
     return ((tag & TAG_MASK) << TAG_SHIFT) | \
            ((left & LEFT_MASK) << LEFT_SHIFT) | \
-           (right & RIGHT_MASK)
+           ((right & RIGHT_MASK) << RIGHT_SHIFT) | \
+           (meta & META_MASK)
 
 
-def unpack_word(word: int) -> tuple[int, int, int]:
+def unpack_word(word: int) -> tuple[int, int, int, int]:
     tag   = (word >> TAG_SHIFT) & TAG_MASK
     left  = (word >> LEFT_SHIFT) & LEFT_MASK
-    right = word & RIGHT_MASK
-    return (tag, left, right)
+    right = (word >> RIGHT_SHIFT) & RIGHT_MASK
+    meta  = word & META_MASK
+    return (tag, left, right, meta)
 
 
 def make_atom_word(idx: int) -> int:
@@ -128,8 +141,8 @@ def atom_idx_from_word(word: int) -> int:
 class KameaMachine:
     """Clocked eval/apply state machine for the 47-atom DS algebra."""
 
-    ADDR_BITS   = 12   # 4096 heap words
-    STACK_BITS  = 8    # 256 stack entries
+    ADDR_BITS   = 24   # 16M heap words (ULX3S 32MB SDRAM)
+    STACK_BITS  = 16   # 64K stack entries
     ATOM_BITS   = 6
 
     def __init__(self, cayley_rom: bytes | None = None,
@@ -260,7 +273,7 @@ class KameaMachine:
             self.state.load(S_DECODE)
 
         elif s == S_DECODE:
-            tag, left, right = unpack_word(self._current_word)
+            tag, left, right, _meta = unpack_word(self._current_word)
 
             if tag == TAG_APP:
                 # Application: eval left, then right, then apply
@@ -290,9 +303,8 @@ class KameaMachine:
             self._dispatch_apply(f_word, x_word)
 
         elif s == S_DOT:
-            # Cayley ROM lookup
-            x_idx = (self.result.value >> 16) & 0x3F  # stashed in upper bits
-            y_idx = self.result.value & 0x3F           # stashed in lower bits
+            # Cayley ROM lookup — indices packed via pack_word(0, fi, xi)
+            _, x_idx, y_idx, _ = unpack_word(self.result.value)
             addr = x_idx * cayley.NUM_ATOMS + y_idx
             result_idx = self.cayley_rom.read(addr)
             self.rom_reads += 1
@@ -332,8 +344,8 @@ class KameaMachine:
 
     def _dispatch_apply(self, f_word: int, x_word: int):
         """Route f(x) to the correct handler based on f's tag and atom."""
-        f_tag, f_left, f_right = unpack_word(f_word)
-        x_tag, x_left, x_right = unpack_word(x_word)
+        f_tag, f_left, f_right, _f_meta = unpack_word(f_word)
+        x_tag, x_left, x_right, _x_meta = unpack_word(x_word)
 
         if f_tag == TAG_ATOM:
             f_atom = f_left & 0x3F
@@ -458,9 +470,7 @@ class KameaMachine:
                 if f_inner_tag == TAG_ATOM and x_inner_tag == TAG_ATOM:
                     fi = (f_inner >> LEFT_SHIFT) & 0x3F
                     xi = (x_inner >> LEFT_SHIFT) & 0x3F
-                    # Pack both indices into the result register for S_DOT.
-                    # Coupling: S_DOT unpacks with the same (>> 16, & 0x3F) layout.
-                    self.result.load((fi << 16) | xi)
+                    self.result.load(pack_word(0, fi, xi))
                     self.state.load(S_DOT)
                     return
                 self.result.load(make_atom_word(self.P))

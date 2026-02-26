@@ -121,17 +121,17 @@ class IC74181:
 
 
 class SRAM:
-    """Static RAM, configurable width and depth."""
+    """Static RAM, configurable width and depth. Sparse backing store."""
 
     def __init__(self, addr_bits: int, data_bits: int):
-        self.data = [0] * (1 << addr_bits)
+        self.data: dict[int, int] = {}
         self.addr_bits = addr_bits
         self.data_bits = data_bits
         self._addr_mask = (1 << addr_bits) - 1
         self._data_mask = (1 << data_bits) - 1
 
     def read(self, addr: int) -> int:
-        return self.data[addr & self._addr_mask]
+        return self.data.get(addr & self._addr_mask, 0)
 
     def write(self, addr: int, val: int):
         self.data[addr & self._addr_mask] = val & self._data_mask
