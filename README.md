@@ -4,9 +4,11 @@
 
 ---
 
-## Three Theorems and Two Extensions
+## Three Theorems, Two Extensions, and a 74181 ALU
 
-This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves, plus a Python implementation extending the algebra with a full 74181 ALU and IO subsystem — 47 atoms total, all uniquely recoverable from black-box probing.
+
+All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 **Theorem 1 (Existence).** Intrinsically reflexive Distinction Structures exist. A 16-element symmetric algebra (Δ₀) and a 17-element directed algebra (Δ₁) each satisfy axioms A1--A7', Ext, and contain behavioral self-models: internal encodings whose elements, when composed by the structure's own operation, reproduce the behavior of the structure's own components.
 
@@ -18,7 +20,9 @@ This repository contains Lean 4 formalizations of five results about finite alge
 
 **Extension 2 (Δ₃ -- Recursive Evaluation).** Δ₂ extended with recursive EVAL via a fuel-bounded interpreter. Evaluating a quoted application node recursively evaluates both subterms, then applies the results. Proved in Lean using a combined eval/dot function structurally recursive on fuel. Concrete computations (flat eval, nested eval, triple nesting, QUOTE/EVAL roundtrips) verified by `native_decide`.
 
-Five machine-checked results. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Extension 3 (74181 ALU + IO).** Δ₂ extended with 26 new atoms: 16 nibble data values (N0–NF), 3 ALU dispatch atoms encoding the classic 74181 chip's 32 operations, 2 ALU predicates (zero-detect and carry-out), 1 nibble successor (N_SUCC), and 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ). Total: 47 atoms. All 47 are uniquely recoverable from black-box probing via a two-phase procedure: Phase 1 (Cayley-level) identifies 39 atoms, Phase 2 (term-level) identifies the remaining 8 opaque atoms. Verified across 200+ random permutations at 100% recovery rate.
+
+Five machine-checked results, plus a computationally complete extension. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -51,10 +55,16 @@ DistinctionStructures/
 │   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
 │   └── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
 ├── delta2_true_blackbox.py                      # Δ₃ black-box recovery demo (Python)
+├── delta2_74181.py                              # 74181+IO verification suite (47 atoms)
+├── delta2_74181_blackbox.py                     # 74181+IO true black-box recovery demo
+├── ds_repl.py                                   # Interactive REPL with all 47 atoms
+├── examples/
+│   ├── io_demo.ds                               # IO atoms demo (prints "Hi!")
+│   └── alu_74181_demo.ds                        # ALU operations demo
 ├── ai_interpretability/                         # ML interpretability experiments
 ├── docs/
 │   ├── Distinction_Structures.md                # Full document with proofs and philosophy
-│   └── Distinction_Structures.docx              # Word format
+│   └── Distinction_Structures_Complete.md       # Complete version
 └── README.md
 ```
 
@@ -166,18 +176,61 @@ Key theorems in `Delta3.lean`:
 
 All proofs by `native_decide` on concrete fuel values.
 
+### Extension 3: Δ₂+74181 -- ALU and IO (Python)
+
+The 74181 extension adds 26 atoms to Δ₂'s 21, for a total of 47. The design maps the classic 74181 4-bit ALU chip's control interface directly onto the algebra: the 4-bit function selector IS a nibble atom, the mode select IS the choice of dispatch atom. No translation layer — the algebra speaks the chip's native language.
+
+**Atom inventory (47 total):**
+
+| Group | Count | Atoms | Role |
+|-------|-------|-------|------|
+| Δ₁ core | 17 | ⊤, ⊥, p, i, k, a, b, e_I, e_D, e_M, e_Σ, e_Δ, d_I, d_K, m_I, m_K, s_C | Self-modeling primitives |
+| Δ₂ extensions | 4 | QUOTE, EVAL, APP, UNAPP | Term construction and evaluation |
+| Nibbles | 16 | N0–NF | 4-bit data values / ALU selectors |
+| ALU dispatch | 3 | ALU_LOGIC, ALU_ARITH, ALU_ARITHC | 74181 mode select (logic / arith / arith+carry) |
+| ALU predicates | 2 | ALU_ZERO, ALU_COUT | Zero-detect and carry-out testers |
+| N_SUCC | 1 | N_SUCC | Nibble successor (16-cycle) |
+| IO | 4 | IO_PUT, IO_GET, IO_RDY, IO_SEQ | Byte-level stdin/stdout |
+
+**Recovery procedure (two phases):**
+
+| Phase | Method | Atoms recovered | From |
+|-------|--------|----------------|------|
+| Phase 1a | Cayley-level probing | 17 Δ₁ atoms | Absorbers, testers, encoders, synthesis triple |
+| Phase 1b | Cayley-level probing | 22 extension atoms | Predicates, nibble group (Z/16Z), N_SUCC cycle, dispatch self-ID on ⊤ |
+| Phase 2 | Term-level probing | 8 opaque atoms (D2 + IO) | QUOTE/EVAL pair, partial group structure, AppNode destructure |
+
+Phase 1 identifies 39 atoms from the 47×47 Cayley table alone. The remaining 8 have identical all-p Cayley rows and require term-level probing (applying atoms to structured values, not just other atoms). Phase 2's 4-step algorithm resolves all 8: QUOTE/EVAL via roundtrip, APP/IO_PUT/IO_SEQ via partial application signatures, IO_RDY via ⊤-response, UNAPP via AppNode destructure, IO_GET by exclusion.
+
+**Usage (REPL):**
+
+```bash
+# ALU: 3 XOR 5 = 6
+uv run ds_repl.py -e '(((ALU_LOGIC :N6) :N3) :N5)'
+
+# ALU: 7 + 5 = 12
+uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
+
+# IO: print "Hi" followed by newline
+uv run ds_repl.py -e '((:IO_SEQ ((:IO_PUT :N4) :N8)) ((:IO_PUT :N6) :N9))'
+
+# Run verification suite (200 seeds)
+uv run delta2_74181.py --test 200
+```
+
 ---
 
 ## The Progression
 
-| Level | Elements | Operation | Key capability | Carrier | Lean file |
-|-------|----------|-----------|---------------|---------|-----------|
+| Level | Elements | Operation | Key capability | Carrier | Source |
+|-------|----------|-----------|---------------|---------|--------|
 | Δ₀ | 16 | Σ (symmetric) | Self-modeling | Finite | `Delta0.lean` |
 | Δ₁ | 17 | · (directed) | Discoverable self-modeling | Finite | `Delta1.lean` |
 | Δ₂ | 21 | · + QUOTE/EVAL | Flat quoting (name without executing) | Finite | `Delta2.lean` |
 | Δ₃ | 21 | · + recursive EVAL | Recursive evaluation (execute nested terms) | Unbounded | `Delta3.lean` |
+| Δ₂+74181 | 47 | · + ALU + IO | 74181 arithmetic + byte I/O | Unbounded | `delta2_74181.py` |
 
-Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified.
+Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified. The 74181+IO extension (Python) adds computational completeness: 32 ALU operations via 3 dispatch atoms × 16 nibble selectors, plus 4 IO atoms for stdin/stdout byte-level I/O.
 
 ---
 
@@ -187,10 +240,17 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization.** The category-theoretic perspective is discussed in the document but not formalized in Lean.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
+- **74181+IO Lean formalization.** The 47-atom extension is verified empirically in Python (200+ seeds, 100% recovery). Lean proofs for the 26 new atoms' uniqueness theorems are planned but not yet implemented.
 
 ## Empirical Testing
 
-The `delta2_true_blackbox.py` script implements the full Δ₃ interpreter in Python with true black-box recovery of all 21 elements across 1000 random permutations (all pass). The `ai_interpretability/` directory contains neural network experiments testing whether the recovery procedure transfers to learned approximations of the algebra.
+The `delta2_true_blackbox.py` script implements the full Δ₃ interpreter in Python with true black-box recovery of all 21 elements across 1000 random permutations (all pass).
+
+The `delta2_74181.py` and `delta2_74181_blackbox.py` scripts implement the 47-atom extension with two-phase recovery (Cayley-level + term-level). Both pass 200+ random permutation seeds with 100% recovery of all 47 atoms. The verification suite checks: Δ₂ preservation, nibble group closure (Z/16Z), ALU dispatch correctness, predicate behavior, N_SUCC 16-cycle, self-identification, tester preservation, behavioral separability (Ext axiom), and all 32 × 256 74181 ALU operations.
+
+The `ds_repl.py` interactive REPL provides an eval/apply interpreter for the full 47-atom algebra with real IO effects (stdout/stdin).
+
+The `ai_interpretability/` directory contains neural network experiments testing whether the recovery procedure transfers to learned approximations of the algebra.
 
 ## Background Document
 
@@ -209,6 +269,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Distinction Structures: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization, 0 sorry. Five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), and recursive evaluation (Δ₃).}
+  note = {Lean 4 formalization (0 sorry) of five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃). Python extension: 47-atom algebra with 74181 ALU + IO, 100\% black-box recovery.}
 }
 ```

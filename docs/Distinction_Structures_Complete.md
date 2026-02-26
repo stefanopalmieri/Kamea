@@ -634,6 +634,8 @@ Whether such a language would be practical for everyday programming is uncertain
 
 8. **Computational Foundation.** Can a Distinction Structure extended with QUOTE, EVAL, and PAIR serve as a formal foundation for a programming language? The structural correspondences (Distinction/types, Context/environments, Actuality/evaluation, Synthesis/composition) suggest a language where these features are consequences of the framework rather than design choices. The key open question is whether the discoverability property — the ability of an observer to recover a language's semantics by probing — can scale from the 17-element Δ₁ to a computationally universal system.
 
+**Update (2026):** Open question #8 has been partially answered. The Δ₂+74181+IO extension adds 26 atoms to the 21-atom Δ₂ algebra, yielding 47 atoms total. This includes 16 nibble data values (N0–NF forming Z/16Z under addition), 3 ALU dispatch atoms encoding all 32 operations of the classic 74181 4-bit ALU chip, 2 ALU predicates (zero-detect and carry-out), 1 nibble successor, and 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ) for byte-level stdin/stdout. The discoverability property scales: a two-phase recovery procedure identifies all 47 atoms from black-box probing — Phase 1 (Cayley-level) recovers 39 atoms, Phase 2 (term-level) recovers the remaining 8 opaque atoms. Verified across 200+ random permutations at 100% recovery rate. See `delta2_74181.py` and `delta2_74181_blackbox.py`.
+
 ---
 
 ## Appendix: Review History and Axiom Revisions

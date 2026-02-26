@@ -679,6 +679,8 @@ The following remain paper-only (no code or formal proof):
 
 8. **Computational Foundation.** Δ₂ demonstrates that extending a Distinction Structure with QUOTE, EVAL, APP, and UNAPP produces a working interpreter with black-box recoverable semantics. The structural correspondences (Distinction/types, Context/environments, Actuality/evaluation, Synthesis/composition) hold by construction. The remaining questions: Can this be formalized in Lean (the recursive EVAL is the obstacle)? Can it scale to a practical programming language? And does the discoverability property — proven for 17 atoms, empirically verified for 21 — extend to computationally universal systems?
 
+**Update (2026):** Open question #8 has been partially answered. The Δ₂+74181+IO extension adds 26 atoms to the 21-atom Δ₂ algebra, yielding 47 atoms total. This includes 16 nibble data values (N0–NF forming Z/16Z under addition), 3 ALU dispatch atoms encoding all 32 operations of the classic 74181 4-bit ALU chip, 2 ALU predicates (zero-detect and carry-out), 1 nibble successor, and 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ) for byte-level stdin/stdout. The discoverability property scales: a two-phase recovery procedure identifies all 47 atoms from black-box probing — Phase 1 (Cayley-level) recovers 39 atoms, Phase 2 (term-level) recovers the remaining 8 opaque atoms. Verified across 200+ random permutations at 100% recovery rate. See `delta2_74181.py` and `delta2_74181_blackbox.py`.
+
 ---
 
 ## Appendix: Review History and Axiom Revisions
