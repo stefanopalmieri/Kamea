@@ -53,10 +53,9 @@ S_APPLY   = 4
 S_DOT     = 5
 S_ALU     = 6
 S_IO      = 7
-S_ALLOC   = 8
-S_RETURN  = 9
-S_DONE    = 10
-S_HALTED  = 11
+S_RETURN  = 8
+S_DONE    = 9
+S_HALTED  = 10
 
 MAX_CYCLES = 100_000
 
@@ -306,16 +305,6 @@ class DeltaMachine:
         elif s == S_IO:
             self._execute_io()
 
-        elif s == S_ALLOC:
-            addr = self.alloc(self.result.value)
-            # After alloc, result becomes a word pointing to the new cell.
-            # The caller sets up what to do next via _alloc_result_fn.
-            self.result.load(self._alloc_result)
-            if self._alloc_needs_addr:
-                # The result IS the allocated address, wrapped in appropriate word
-                self.result.load(self._alloc_result_fn(addr))
-            self.state.load(S_RETURN)
-
         elif s == S_RETURN:
             if self.sp.value == 0:
                 self.state.load(S_DONE)
@@ -332,16 +321,9 @@ class DeltaMachine:
     # Allocation helpers
     # -------------------------------------------------------------------
 
-    def _alloc_and_return(self, word: int):
-        """Allocate a word on the heap and return it as the result."""
-        addr = self.alloc(word)
+    def _return_value(self, word: int):
+        """Return a word as the result. No heap allocation."""
         self.result.load(word)
-        self.state.load(S_RETURN)
-
-    def _alloc_and_return_addr(self, word: int, wrap_fn):
-        """Allocate a word on the heap, wrap the address, return wrapped."""
-        addr = self.alloc(word)
-        self.result.load(wrap_fn(addr))
         self.state.load(S_RETURN)
 
     # -------------------------------------------------------------------
@@ -362,7 +344,7 @@ class DeltaMachine:
             # Store x on heap, then make app node
             x_addr = self.alloc(x_word)
             result = make_app_word(f_left, x_addr)
-            self._alloc_and_return(result)
+            self._return_value(result)
 
         elif f_tag == TAG_BUNDLE:
             # Bundle(f_addr, x_addr) applied to ⊤ or ⊥
@@ -388,7 +370,7 @@ class DeltaMachine:
                 if self._is_nibble(x_atom):
                     a_val = self._nibble_val(x_atom)
                     result = make_alup2_word(mode, sel, a_val)
-                    self._alloc_and_return(result)
+                    self._return_value(result)
                     return
             self.result.load(make_atom_word(self.P))
             self.state.load(S_RETURN)
@@ -456,7 +438,7 @@ class DeltaMachine:
             # Store x_word on heap, wrap address as quoted
             x_addr = self.alloc(x_word)
             result = make_quoted_word(x_addr)
-            self._alloc_and_return(result)
+            self._return_value(result)
             return
 
         # --- EVAL ---
@@ -476,7 +458,8 @@ class DeltaMachine:
                 if f_inner_tag == TAG_ATOM and x_inner_tag == TAG_ATOM:
                     fi = (f_inner >> LEFT_SHIFT) & 0x3F
                     xi = (x_inner >> LEFT_SHIFT) & 0x3F
-                    # Stash x_idx and y_idx for S_DOT
+                    # Pack both indices into the result register for S_DOT.
+                    # Coupling: S_DOT unpacks with the same (>> 16, & 0x3F) layout.
                     self.result.load((fi << 16) | xi)
                     self.state.load(S_DOT)
                     return
@@ -493,7 +476,7 @@ class DeltaMachine:
             # Store x_word on heap, return partial
             x_addr = self.alloc(x_word)
             result = make_partial_word(x_addr)
-            self._alloc_and_return(result)
+            self._return_value(result)
             return
 
         # --- UNAPP ---
@@ -501,7 +484,7 @@ class DeltaMachine:
             if x_tag == TAG_APP:
                 # UNAPP(app-node) → bundle
                 result = make_bundle_word(x_left, x_right)
-                self._alloc_and_return(result)
+                self._return_value(result)
                 return
             self.result.load(make_atom_word(self.P))
             self.state.load(S_RETURN)
@@ -520,7 +503,7 @@ class DeltaMachine:
                         mode = MODE_ARITHC
                     sel = self._nibble_val(x_atom)
                     result = make_alup1_word(mode, sel)
-                    self._alloc_and_return(result)
+                    self._return_value(result)
                     return
             # Non-nibble → Cayley fallback
             self._cayley_or_default(f_atom, x_word, x_tag, x_left)
@@ -553,7 +536,7 @@ class DeltaMachine:
                 sel = x_left & 0xF
                 a_val = x_right & 0xF
                 result = make_cout_probe_word(mode, sel, a_val)
-                self._alloc_and_return(result)
+                self._return_value(result)
                 return
             self._cayley_or_default(f_atom, x_word, x_tag, x_left)
             return
@@ -565,7 +548,7 @@ class DeltaMachine:
                 if self._is_nibble(x_atom):
                     hi = self._nibble_val(x_atom)
                     result = make_ioputp_word(hi)
-                    self._alloc_and_return(result)
+                    self._return_value(result)
                     return
             self.result.load(make_atom_word(self.P))
             self.state.load(S_RETURN)
@@ -597,7 +580,7 @@ class DeltaMachine:
         if f_atom == self.IO_SEQ:
             x_addr = self.alloc(x_word)
             result = make_ioseqp_word(x_addr)
-            self._alloc_and_return(result)
+            self._return_value(result)
             return
 
         # --- Default: atom applied to something ---
@@ -662,7 +645,7 @@ class DeltaMachine:
             hi_addr = self.alloc(hi_word)
             lo_addr = self.alloc(lo_word)
             result = make_app_word(hi_addr, lo_addr)
-            self._alloc_and_return(result)
+            self._return_value(result)
             self.io_ops += 1
 
     # -------------------------------------------------------------------
