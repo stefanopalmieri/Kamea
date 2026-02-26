@@ -17,8 +17,8 @@ nibble selectors. Nibble atoms serve double duty as both data values
 and operation selectors.
 
 Usage:
-  python delta2_74181.py                # run verification suite
-  python delta2_74181.py --test 1000    # run 1000-seed integration test
+  python kamea.py                # run verification suite
+  python kamea.py --test 1000    # run 1000-seed integration test
 """
 
 from dataclasses import dataclass
@@ -98,17 +98,29 @@ NAMES_ALU_DISPATCH = ["ALU_LOGIC", "ALU_ARITH", "ALU_ARITHC"]
 NAMES_ALU_PRED = ["ALU_ZERO", "ALU_COUT"]
 NAMES_ALU_MISC = ["N_SUCC"]
 NAMES_IO = ["IO_PUT", "IO_GET", "IO_RDY", "IO_SEQ"]
+NAMES_W32 = [
+    "W_PACK8", "W_LO", "W_HI", "W_MERGE", "W_NIB",
+    "W_ADD", "W_SUB", "W_CMP",
+    "W_XOR", "W_AND", "W_OR", "W_NOT",
+    "W_SHL", "W_SHR", "W_ROTL", "W_ROTR",
+]
+NAMES_MUL = ["MUL16", "MAC16"]
 
-ALL_NAMES = (NAMES_D1 + NAMES_D2 + NAMES_NIBBLES +
-             NAMES_ALU_DISPATCH + NAMES_ALU_PRED + NAMES_ALU_MISC + NAMES_IO)
+NAMES_BASE = (NAMES_D1 + NAMES_D2 + NAMES_NIBBLES +
+              NAMES_ALU_DISPATCH + NAMES_ALU_PRED + NAMES_ALU_MISC + NAMES_IO)
+ALL_NAMES = NAMES_BASE + NAMES_W32 + NAMES_MUL
 ALL_ATOMS = [A(n) for n in ALL_NAMES]
+BASE_ATOMS = [A(n) for n in NAMES_BASE]  # Original 47 atoms (no W32/MUL)
 
 NIBBLE_ATOMS = frozenset(A(f"N{i:X}") for i in range(16))
 ALU_DISPATCH_ATOMS = frozenset(A(n) for n in NAMES_ALU_DISPATCH)
 ALU_PRED_ATOMS = frozenset(A(n) for n in NAMES_ALU_PRED)
 IO_ATOMS = frozenset(A(n) for n in NAMES_IO)
+W32_ATOMS = frozenset(A(n) for n in NAMES_W32)
+MUL_ATOMS = frozenset(A(n) for n in NAMES_MUL)
 NEW_ATOMS = (NIBBLE_ATOMS | ALU_DISPATCH_ATOMS | ALU_PRED_ATOMS |
-             frozenset(A(n) for n in NAMES_ALU_MISC) | IO_ATOMS)  # 26 new atoms
+             frozenset(A(n) for n in NAMES_ALU_MISC) | IO_ATOMS |
+             W32_ATOMS | MUL_ATOMS)
 D1_ATOMS = frozenset(A(n) for n in NAMES_D1)
 D2_EXT_ATOMS = frozenset(A(n) for n in NAMES_D2)
 
@@ -337,6 +349,9 @@ def atom_dot(x: Atom, y: Atom) -> Atom:
     # ── IO atoms × anything: all-p (effects happen at term level) ──
     if x in IO_ATOMS: return A("p")
 
+    # ── W32/MUL atoms × anything: all-p (effects happen at term level) ──
+    if x in W32_ATOMS or x in MUL_ATOMS: return A("p")
+
     # ── Nibble self-identification on ⊤ ──
     if is_nibble(x) and y == TOP: return x
 
@@ -495,9 +510,9 @@ def dot_ext(x: Any, y: Any) -> Any:
 # Black-box wrapper (for discovery testing)
 # ============================================================================
 
-def make_blackbox(seed: int = 11):
+def make_blackbox(seed: int = 11, atoms: list = None):
     rng = random.Random(seed)
-    atoms = ALL_ATOMS.copy()
+    atoms = (atoms or BASE_ATOMS).copy()
     rng.shuffle(atoms)
     labels = [f"u{idx:02d}" for idx in range(len(atoms))]
     true_to_hidden = {atoms[i]: labels[i] for i in range(len(atoms))}
@@ -752,7 +767,7 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
     d1_identified = {v for k, v in d1.items() if k != "_testers"}
     known = d1_identified
     remaining = [x for x in domain if x not in known]
-    assert len(remaining) == 30, f"Expected 30 remaining atoms, got {len(remaining)}"
+    assert len(remaining) == len(domain) - 17, f"Expected {len(domain) - 17} remaining atoms, got {len(remaining)}"
     log(f"Starting with {len(remaining)} unidentified atoms")
 
     # ── Step 0: Compute domain-restricted left images ─────────────────
@@ -855,7 +870,7 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
             opaque.append(x)
 
     assert len(dispatch) == 3, f"Expected 3 dispatch, got {len(dispatch)}"
-    assert len(opaque) == 8, f"Expected 8 opaque (D2+IO) atoms, got {len(opaque)}"
+    assert len(opaque) in (8, 26), f"Expected 8 or 26 opaque atoms, got {len(opaque)}"
 
     # Identify ALU_LOGIC / ALU_ARITH / ALU_ARITHC via curried probe:
     #   d(N0)(N5)(N0): LOGIC → NOT(5)=NA, ARITH → A=N5, ARITHC → A+1=N6
@@ -907,30 +922,34 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
 def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
                     ext: Dict[str, Any], verbose: bool = False) -> Dict[str, Any]:
     """
-    Phase 2: Identify all 8 opaque atoms via term-level probing.
+    Phase 2: Identify all 24 opaque atoms via term-level probing.
 
-    These 8 atoms have identical all-p Cayley rows and are indistinguishable
+    These 24 atoms have identical all-p Cayley rows and are indistinguishable
     at the atom-atom level. Term-level application reveals their identities:
 
-      Step 1: Apply each to N0 → identifies QUOTE (produces Quote),
-              EVAL (returns atom unchanged), and partitions the rest
-              into partial group (APP, IO_PUT, IO_SEQ) and p group
-              (UNAPP, IO_GET, IO_RDY).
-      Step 2: Resolve partial group via partial(N0)(N1).
-      Step 3: Resolve p group via application to ⊤.
-      Step 4: Confirm UNAPP via AppNode destructure; IO_GET by exclusion.
+      Phase 2a (original 8: D2+IO):
+        Step 1: Apply each to N0 → identifies QUOTE (produces Quote),
+                EVAL (returns atom unchanged), and partitions the rest
+                into partial group (APP, IO_PUT, IO_SEQ) and p group
+                (UNAPP, IO_GET, IO_RDY).
+        Step 2: Resolve partial group via partial(N0)(N1).
+        Step 3: Resolve p group via application to ⊤.
+        Step 4: Confirm UNAPP via AppNode destructure; IO_GET by exclusion.
+
+      Phase 2b (new 16: W32+MUL):
+        Identified via W32 probing with make_w32_word values.
 
     Args:
-        opaque: 8 hidden labels with all-p Cayley rows
+        opaque: 24 hidden labels with all-p Cayley rows
         dot: term-level dot oracle (must support structured terms)
         d1: Phase 1a results (17 D1 atoms)
         ext: Phase 1b results (22 74181 atoms)
         verbose: print discovery log
 
     Returns:
-        Dict mapping atom names to hidden labels for all 8 opaque atoms.
+        Dict mapping atom names to hidden labels for all 24 opaque atoms.
     """
-    assert len(opaque) == 8, f"Expected 8 opaque atoms, got {len(opaque)}"
+    assert len(opaque) in (8, 26), f"Expected 8 or 26 opaque atoms, got {len(opaque)}"
 
     top = d1["⊤"]
     bot = d1["⊥"]
@@ -973,10 +992,16 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
 
     log(f"Step 1: applied to N0 → partial group = {partial_group}, p group = {p_group}")
 
-    # partial_group = {QUOTE, APP, IO_PUT, IO_SEQ} (produce structured values)
-    # p_group = {EVAL, UNAPP, IO_GET, IO_RDY} (return p)
-    assert len(partial_group) == 4, f"Expected 4 in partial group, got {len(partial_group)}"
-    assert len(p_group) == 4, f"Expected 4 in p group, got {len(p_group)}"
+    # Detect full_mode by whether W_PACK8 produced a structured result.
+    # full_mode: partial=5 (QUOTE, APP, IO_PUT, IO_SEQ, W_PACK8), p=21
+    # basic_mode: partial=4 (QUOTE, APP, IO_PUT, IO_SEQ), p=4 or 22
+    full_mode = len(partial_group) == 5
+    if full_mode:
+        assert len(p_group) == 21, f"Expected 21 in p group, got {len(p_group)}"
+    else:
+        assert len(partial_group) == 4, f"Expected 4 in partial group, got {len(partial_group)}"
+        exp_p = len(opaque) - 4  # rest go to p_group
+        assert len(p_group) == exp_p, f"Expected {exp_p} in p group, got {len(p_group)}"
 
     # ── Step 1b: Identify QUOTE from partial group ────────────────────
     # QUOTE(N0) produces Quote(N0). Applying EVAL to Quote(N0) should
@@ -1001,33 +1026,57 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
     log(f"Step 1: remaining partial group = {partial_group}")
     log(f"Step 1: remaining p group = {p_group}")
 
-    # ── Step 2: Resolve partial group (APP, IO_PUT, IO_SEQ) ──────────
-    # Apply each partial(N0) to N1. Three outcomes:
-    #   APP: Partial("APP", N0)(N1) → AppNode(N0, N1) — structured, neither atom nor ⊤
-    #   IO_PUT: IOPutPartial(0)(N1) → writes 0x01 to stdout, returns ⊤
-    #   IO_SEQ: IOSeqPartial(N0)(N1) → returns N1 (the right argument)
-    APP_tok = IO_PUT_tok = IO_SEQ_tok = None
+    # ── Step 2: Resolve partial group (APP, IO_PUT, IO_SEQ, W_PACK8) ─
+    # Apply each partial(N0) to N1. Outcomes:
+    #   IO_PUT: IOPutPartial(0)(N1) → ⊤
+    #   IO_SEQ: IOSeqPartial(N0)(N1) → N1
+    #   APP: Partial(N0)(N1) → AppNode — structured, not in domain
+    #   W_PACK8: WPACK(0, 1)(N1) → WPACK(0x01, 2) — structured, not in domain
+    APP_tok = IO_PUT_tok = IO_SEQ_tok = W_PACK8_tok = None
+    other_partial = []
 
     for x in partial_group:
         partial_val = dot(x, n0)
         result = dot(partial_val, n1)
 
         if result == top:
-            # IO_PUT: IOPutPartial(0)(N1) → ⊤
             IO_PUT_tok = x
             log(f"Step 2: partial({x})(N0)(N1) = ⊤ → IO_PUT identified ({x})")
         elif result == n1:
-            # IO_SEQ returned the right argument
             IO_SEQ_tok = x
             log(f"Step 2: partial({x})(N0)(N1) returned N1 → IO_SEQ identified ({x})")
         else:
-            # APP built an AppNode
+            other_partial.append(x)
+
+    # Distinguish APP from W_PACK8 among other_partial:
+    # W_PACK8(N0)(N1)(N2)...(N7) produces a W32. Feed 6 more nibbles.
+    # APP(N0)(N1) is an AppNode. Feeding another nibble → p (not callable).
+    exp_other = 2 if full_mode else 1
+    assert len(other_partial) == exp_other, f"Expected {exp_other} in other_partial, got {len(other_partial)}"
+    for x in other_partial:
+        if not full_mode:
+            # Only APP in basic mode
             APP_tok = x
-            log(f"Step 2: partial({x})(N0)(N1) built AppNode → APP identified ({x})")
+            log(f"Step 2: APP identified ({x})")
+        else:
+            partial_val = dot(x, n0)
+            chain = dot(partial_val, n1)
+            # Try feeding one more nibble
+            chain2 = dot(chain, n0)
+            if chain2 == p_tok or (isinstance(chain2, str) and chain2 in domain_set):
+                # APP: AppNode can't accept more args → p or atom
+                APP_tok = x
+                log(f"Step 2: APP identified ({x})")
+            else:
+                # W_PACK8: still accumulating
+                W_PACK8_tok = x
+                log(f"Step 2: W_PACK8 identified ({x})")
 
     assert APP_tok is not None, "Failed to identify APP"
     assert IO_PUT_tok is not None, "Failed to identify IO_PUT"
     assert IO_SEQ_tok is not None, "Failed to identify IO_SEQ"
+    if full_mode:
+        assert W_PACK8_tok is not None, "Failed to identify W_PACK8"
 
     # ── Step 3: Resolve p group (UNAPP, IO_GET, IO_RDY) ──────────────
     # Apply each to ⊤:
@@ -1046,15 +1095,18 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
             p_subgroup.append(x)
 
     assert IO_RDY_tok is not None, "Failed to identify IO_RDY"
-    assert len(p_subgroup) == 2, f"Expected 2 remaining in p group, got {len(p_subgroup)}"
+    # p_subgroup = p_group minus EVAL minus IO_RDY
+    exp_sub = len(p_group) - 1  # -1 for IO_RDY (EVAL already removed above)
+    assert len(p_subgroup) == exp_sub, f"Expected {exp_sub} remaining in p group, got {len(p_subgroup)}"
 
-    # ── Step 4: Confirm UNAPP, IO_GET by exclusion ────────────────────
-    # Build AppNode(N0, N1) using APP, then apply UNAPP candidate.
+    # ── Step 4: Confirm UNAPP via AppNode destructure ─────────────────
+    # Build AppNode(N0, N1) using APP, then apply each candidate.
     # dot(UNAPP, AppNode(N0, N1)) → UnappBundle; dot(bundle, ⊤) → N0
     app_partial = dot(APP_tok, n0)
     app_node = dot(app_partial, n1)  # AppNode(N0, N1)
 
-    UNAPP_tok = IO_GET_tok = None
+    UNAPP_tok = None
+    remaining = []
     for x in p_subgroup:
         bundle = dot(x, app_node)
         left = dot(bundle, top)
@@ -1062,23 +1114,47 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
             UNAPP_tok = x
             log(f"Step 4: UNAPP confirmed via AppNode destructure ({x})")
         else:
-            IO_GET_tok = x
-
-    # If neither confirmed as UNAPP via the positive test, try the other
-    if UNAPP_tok is None:
-        # Fallback: one must be UNAPP
-        for x in p_subgroup:
-            if x != IO_GET_tok:
-                UNAPP_tok = x
-                break
+            remaining.append(x)
 
     assert UNAPP_tok is not None, "Failed to identify UNAPP"
-    if IO_GET_tok is None:
-        IO_GET_tok = [x for x in p_subgroup if x != UNAPP_tok][0]
-    log(f"Step 4: IO_GET identified by exclusion ({IO_GET_tok})")
-    log(f"Phase 2 complete: 8/8 opaque atoms identified")
 
-    return {
+    # ── Step 5: Identify IO_GET ──────────────────────────────────────
+    # IO_GET(⊤) reads from UART RX → structured value (in emulator mode).
+    # In pure-Python mode, IO_GET(⊤) returns p, indistinguishable from W32/MUL.
+    IO_GET_tok = None
+    w32_mul_candidates = []
+
+    for x in remaining:
+        result = dot(x, top)
+        if result != p_tok and result not in domain_set:
+            # Structured result — IO_GET reading from UART
+            IO_GET_tok = x
+            log(f"Step 5: IO_GET identified via UART read ({x})")
+        else:
+            w32_mul_candidates.append(x)
+
+    if IO_GET_tok is None and not full_mode:
+        # Pure-Python mode: IO_GET can't be distinguished from W32/MUL.
+        # In basic mode (8 opaque, no W32/MUL), IO_GET is the sole remainder.
+        if len(w32_mul_candidates) == 1:
+            IO_GET_tok = w32_mul_candidates.pop()
+            log(f"Step 5: IO_GET identified by exclusion ({IO_GET_tok})")
+
+    assert IO_GET_tok is not None, "Failed to identify IO_GET"
+    if full_mode:
+        assert len(w32_mul_candidates) == 17, f"Expected 17 W32/MUL candidates, got {len(w32_mul_candidates)}"
+    log(f"Phase 2a complete: 8/8 D2+IO opaque atoms identified")
+
+    phase3 = {}
+    if full_mode:
+        # ── Phase 3: Identify 17 W32/MUL atoms via term-level probing ─────
+        # W_PACK8 already identified in Step 2; pass it to Phase 3 so it can
+        # construct W32 values for probing.
+        phase3 = discover_phase3(w32_mul_candidates, dot, d1, ext,
+                                 w_pack8_tok=W_PACK8_tok, verbose=verbose)
+        log(f"Phase 2 complete: all 26 opaque atoms identified")
+
+    result = {
         "QUOTE": QUOTE_tok,
         "EVAL": EVAL_tok,
         "APP": APP_tok,
@@ -1088,6 +1164,392 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
         "IO_RDY": IO_RDY_tok,
         "IO_SEQ": IO_SEQ_tok,
     }
+    if W_PACK8_tok is not None:
+        result["W_PACK8"] = W_PACK8_tok
+    result.update(phase3)
+    return result
+
+
+def discover_phase3(candidates: List[str], dot, d1: Dict[str, Any],
+                    ext: Dict[str, Any], w_pack8_tok: str = None,
+                    verbose: bool = False) -> Dict[str, Any]:
+    """
+    Phase 3: Identify 17 W32/MUL atoms via term-level probing with W32 values.
+
+    W_PACK8 is pre-identified and passed in. The remaining 17 candidates
+    are identified by building W32/W16 values using W_PACK8 and probing.
+
+    Strategy:
+      Step 1: (skipped — W_PACK8 pre-identified)
+      Step 2: Feed 8 nibbles to build W32 values from W_PACK8.
+      Step 3: Apply each to the W32. Unary ops (W_LO, W_HI, W_NOT,
+              W_NIB) return non-p. Binary ops (W_ADD..W_ROTR, W_CMP) return
+              a partial. W_MERGE returns p (needs W16, not W32).
+              MUL16/MAC16 return p (need W16).
+      Step 4: From W_LO or W_HI, extract a W16 value to probe W_MERGE,
+              MUL16, MAC16.
+      Step 5: Discriminate within each group using specific value probes.
+    """
+    assert len(candidates) == 17, f"Expected 17 W32/MUL candidates, got {len(candidates)}"
+    assert w_pack8_tok is not None, "W_PACK8 must be pre-identified"
+
+    top = d1["⊤"]
+    bot = d1["⊥"]
+    p_tok = d1["p"]
+    n0 = ext["N0"]
+    n1 = ext["N1"]
+    n2 = ext["N2"]
+    n5 = ext["N5"]
+
+    def log(msg):
+        if verbose:
+            print(f"    [Phase 3] {msg}")
+
+    log(f"Starting with {len(candidates)} W32/MUL candidates")
+
+    # All known domain labels
+    all_known = set()
+    for k, v in d1.items():
+        if k != "_testers":
+            all_known.add(v)
+    for v in ext.values():
+        all_known.add(v)
+    domain_set = all_known | set(candidates)
+
+    # ── Step 1: W_PACK8 pre-identified ──────────────────────────────
+    W_PACK8_tok = w_pack8_tok
+    rest = list(candidates)  # all 17 candidates (none is W_PACK8)
+    log(f"W_PACK8 pre-identified: {W_PACK8_tok}")
+
+    # ── Step 2: Build W32 values using W_PACK8 ───────────────────────
+    # Pack 8 nibbles to get W32(0x00000000) and W32(0x12345050)
+    nibbles_zero = [n0] * 8
+    nibbles_test = [n1, n2, ext["N3"], ext["N4"], n5, n0, n5, n0]
+
+    def pack_w32(nibbles):
+        val = dot(W_PACK8_tok, nibbles[0])
+        for nib in nibbles[1:]:
+            val = dot(val, nib)
+        return val
+
+    w32_zero = pack_w32(nibbles_zero)    # W32(0x00000000)
+    w32_test = pack_w32(nibbles_test)    # W32(0x12345050)
+    # Build another distinct value for binary op testing
+    w32_one = pack_w32([n0, n0, n0, n0, n0, n0, n0, n1])  # W32(0x00000001)
+
+    log(f"Built W32 test values via W_PACK8")
+
+    # ── Step 3: Apply each to W32 → partition into groups ──────────────
+    # Unary ops taking W32: W_LO, W_HI, W_NOT, W_NIB → non-p structured
+    # Binary ops taking W32: W_ADD..W_ROTR, W_CMP → non-p partial (waiting for 2nd W32)
+    # W_MERGE: needs W16, not W32 → p
+    # MUL16, MAC16: need W16 → p
+    unary_w32 = []     # produce immediate result from W32
+    partial_w32 = []   # produce partial waiting for 2nd W32
+    w16_group = []     # produce p on W32 (need W16: W_MERGE, MUL16, MAC16)
+
+    for x in rest:
+        result = dot(x, w32_test)
+        if result == p_tok:
+            w16_group.append(x)
+        else:
+            # Apply the result to another W32 to see if it's a partial
+            result2 = dot(result, w32_zero)
+            if result2 == p_tok:
+                # Not a binary op partial — it's a unary result
+                # (W_NIB produces an extended partial that takes a nibble, not W32)
+                # Check if result accepts a nibble
+                result2_nib = dot(result, n0)
+                if result2_nib != p_tok and result2_nib not in domain_set:
+                    # W_NIB partial (accepts nibble to extract)
+                    unary_w32.append(x)
+                else:
+                    unary_w32.append(x)
+            else:
+                partial_w32.append(x)
+
+    log(f"Groups: unary_w32={len(unary_w32)}, partial_w32={len(partial_w32)}, w16_group={len(w16_group)}")
+
+    # ── Step 4: Identify unary ops (W_LO, W_HI, W_NOT, W_NIB) ────────
+    # W_LO(W32) → W16 (lower 16 bits)
+    # W_HI(W32) → W16 (upper 16 bits)
+    # W_NOT(W32) → W32 (bitwise NOT)
+    # W_NIB(W32) → ExtendedPartial (takes nibble position)
+    #
+    # Distinguish: apply result to a nibble
+    # W_NOT result is a W32 → applying nibble to it → p
+    # W_LO/W_HI result is a W16 → applying nibble to it → p
+    # W_NIB result is an ExtendedPartial → applying nibble → returns a nibble atom
+    W_NIB_tok = W_NOT_tok = None
+    w16_producers = []  # W_LO and W_HI
+
+    for x in unary_w32:
+        result = dot(x, w32_test)
+        # Try applying a nibble to the result
+        nib_result = dot(result, n0)
+        if nib_result in domain_set and nib_result != p_tok:
+            # W_NIB: partial takes nibble, returns nibble atom
+            W_NIB_tok = x
+            log(f"W_NIB identified: {x}")
+        else:
+            # Either W_NOT (returns W32) or W_LO/W_HI (returns W16)
+            # Apply W_PACK8 test: try using the result as input to a binary W32 op
+            # Actually, distinguish W_NOT from W_LO/W_HI:
+            # W_NOT(W32(0)) = W32(0xFFFFFFFF) — a W32
+            # W_LO/W_HI(W32) → W16 — not a W32
+            # Apply a known binary op partial to the result and then another W32
+            # Simpler: W_NOT(W_NOT(x)) == x (round-trip). W_LO doesn't compose with W_NOT.
+            # Even simpler: apply the candidate twice to see if result is same type
+            result_zero = dot(x, w32_zero)  # Apply to W32(0)
+            # Now apply x again to result_zero (if W_NOT, result is W32, so x(result) works)
+            roundtrip = dot(x, result_zero)
+            if roundtrip != p_tok and roundtrip not in domain_set:
+                # W_NOT(W_NOT(W32(0))) should produce a W32 → applying W_NOT again works
+                W_NOT_tok = x
+                log(f"W_NOT identified: {x}")
+            else:
+                w16_producers.append(x)
+
+    assert W_NIB_tok is not None, "Failed to identify W_NIB"
+    assert W_NOT_tok is not None, "Failed to identify W_NOT"
+    assert len(w16_producers) == 2, f"Expected 2 W16 producers (W_LO, W_HI), got {len(w16_producers)}"
+
+    # ── Step 5: Distinguish W_LO from W_HI ────────────────────────────
+    # W_LO(W32(0x12345050)) → W16(0x5050)
+    # W_HI(W32(0x12345050)) → W16(0x1234)
+    # Use W_MERGE to reconstruct: W_MERGE(W_HI(x))(W_LO(x)) == x
+    # Or: pack a W32 with known hi != lo, extract both, and compare
+    # Approach: W_LO(W32(0x00000001)) → W16(1), W_HI(W32(0x00000001)) → W16(0)
+    # Feed the W16 results back into W_MERGE (once found) to test.
+    # For now: check which W16 result, when merged with the other, gives back the original.
+    # Actually simplest: extract from w32_one (0x00000001):
+    # W_LO → W16(1), W_HI → W16(0). Use binary op: if we have a binary partial
+    # already, feed W16 into it — the partial expects W32, W16 won't match → p.
+    # Better approach: use W_NIB. W_NIB(w32_test)(N0) gives nibble 0 of w32_test.
+    # The nibble extraction order tells us which is lo/hi.
+    #
+    # Simplest: W_LO(W32(0x00010000)) → W16(0), W_HI(W32(0x00010000)) → W16(1)
+    # Then use the W16 to probe — but we can't easily check W16 values directly.
+    #
+    # Alternative: build w32 = W32(0x00010000). W_LO gives 0, W_HI gives non-zero.
+    # Then MERGE(hi)(lo) should be the original. If we swap, we get different.
+    # But we don't have MERGE yet.
+    #
+    # Cleanest approach: apply both to w32_zero (=0x00000000) and w32_one (=0x00000001).
+    # W_LO(0x00000001) → W16(1), W_HI(0x00000001) → W16(0).
+    # Now apply NOT to both W16 results — doesn't work (NOT takes W32, not W16).
+    # Apply both results to a binary partial: neither will work since binary expects W32.
+    #
+    # Best: after finding W_MERGE, merge hi+lo back and check.
+    # We'll defer and identify together with W_MERGE.
+    #
+    # Actually, let's use a different probe: build W32(0xFF000000).
+    # W_LO → W16(0), W_HI → W16(0xFF00). Now the W16 values are different.
+    # Feed each W16 into a candidate from w16_group to see which accepts it.
+    # W_MERGE takes W16 → ExtendedPartial. MUL16 takes W16 → MulPartial. MAC16 takes W16 → MulPartial.
+    # All three accept W16 and produce non-p. So using W16 doesn't help distinguish LO/HI directly.
+    #
+    # Final approach: use the identity W_NOT(W32(0)) = W32(0xFFFFFFFF).
+    # W_LO(0xFFFFFFFF) and W_HI(0xFFFFFFFF) both give W16(0xFFFF) — same.
+    # But for w32_one (0x00000001): W_LO → W16(1), W_HI → W16(0).
+    # To distinguish: apply each W16 to W_MERGE (or any W16-accepting op) to get a partial,
+    # then complete the operation and check the result.
+    # Since we haven't identified W_MERGE yet, let's do a joint identification.
+
+    # First, get W16 values from both candidates
+    w16_a = dot(w16_producers[0], w32_one)  # W16 from candidate a applied to W32(1)
+    w16_b = dot(w16_producers[1], w32_one)  # W16 from candidate b applied to W32(1)
+
+    # Now identify W_MERGE from w16_group: the one that takes W16 and produces
+    # a partial that then takes another W16 to produce a W32.
+    # MUL16(W16) → MulPartial, MUL_partial(W16) → APP(W16_hi, W16_lo)
+    # MAC16(W16) → MulPartial, ...
+    # W_MERGE(W16) → ExtPartial, ExtPartial(W16) → W32
+    #
+    # Key distinction: W_MERGE(hi)(lo) produces a W32. We can check by applying
+    # W_LO/W_HI again to the result — if it produces a W16, it was a W32.
+    # MUL16(a)(b) produces APP(hi, lo) — applying W_LO to an APP gives p.
+
+    W_MERGE_tok = MUL16_tok = MAC16_tok = None
+
+    for x in w16_group:
+        partial1 = dot(x, w16_a)
+        if partial1 == p_tok or partial1 in domain_set:
+            continue
+        result1 = dot(partial1, w16_b)
+        if result1 == p_tok or result1 in domain_set:
+            continue
+        # Got a result — check if it's a W32 (W_MERGE) or APP (MUL16/MAC16)
+        # Apply w16_producers[0] (W_LO or W_HI) to the result
+        check = dot(w16_producers[0], result1)
+        if check != p_tok and check not in domain_set:
+            # Result is a W32 → this is W_MERGE
+            W_MERGE_tok = x
+            log(f"W_MERGE identified: {x}")
+            break
+
+    assert W_MERGE_tok is not None, "Failed to identify W_MERGE"
+    mul_candidates = [x for x in w16_group if x != W_MERGE_tok]
+    assert len(mul_candidates) == 2, f"Expected 2 MUL candidates, got {len(mul_candidates)}"
+
+    # Now distinguish W_LO from W_HI using W_MERGE round-trip:
+    # W_MERGE(W_HI(w32))(W_LO(w32)) should equal w32
+    # Try: W_MERGE(w16_a)(w16_b) → if this recovers w32_one, then
+    #   w16_producers[0] = W_HI, w16_producers[1] = W_LO
+    merged = dot(dot(W_MERGE_tok, w16_a), w16_b)
+    # Apply W_NOT twice to both original and merged — if they match, order is HI, LO
+    # Actually, easier: check W_NOT(merged) == W_NOT(w32_one)
+    not_merged = dot(W_NOT_tok, merged)
+    not_original = dot(W_NOT_tok, w32_one)
+    # Compare by applying W_LO to both and checking equality
+    lo_merged = dot(w16_producers[0], not_merged)
+    lo_original = dot(w16_producers[0], not_original)
+
+    # If W_MERGE(a)(b) reconstructed the same value, then a=HI, b=LO
+    # The simplest equality check: apply some distinguishing operation
+    # Actually, let's use W_CMP (if identified) or a simpler test.
+    # Let me try a different approach: build a W32 where hi ≠ lo, extract both ways,
+    # merge, and check if we get the same nibble extraction.
+
+    # Simpler: W_MERGE is defined as W_MERGE(hi_W16)(lo_W16) → W32(hi<<16 | lo).
+    # If w32_one = 0x00000001:
+    #   W_HI(0x00000001) = W16(0), W_LO(0x00000001) = W16(1)
+    # If producers[0] = W_HI: w16_a = W16(0), w16_b = W16(1)
+    #   W_MERGE(W16(0))(W16(1)) = W32(0x00000001) = w32_one ✓
+    # If producers[0] = W_LO: w16_a = W16(1), w16_b = W16(0)
+    #   W_MERGE(W16(1))(W16(0)) = W32(0x00010000) ≠ w32_one
+    #
+    # To check: W_NIB(merged)(N0) should give N1 if merged = 0x00000001 (low nibble = 1)
+    nib_check = dot(dot(W_NIB_tok, merged), n0)
+    nibbles = {ext.get(f"N{i:X}", None): i for i in range(16)}
+    # If the lowest nibble of merged is 1, producers[0] is W_HI (correct order)
+    if nib_check == ext["N1"]:
+        W_HI_tok = w16_producers[0]
+        W_LO_tok = w16_producers[1]
+    else:
+        W_HI_tok = w16_producers[1]
+        W_LO_tok = w16_producers[0]
+    log(f"W_LO identified: {W_LO_tok}")
+    log(f"W_HI identified: {W_HI_tok}")
+
+    # ── Step 6: Identify MUL16 vs MAC16 ───────────────────────────────
+    # MUL16(a)(b) → APP(hi_W16, lo_W16) representing a*b
+    # MAC16(acc)(a) → ExtendedPartial waiting for b
+    #   then MAC16_partial(b) → APP(hi_W16, lo_W16) representing acc + a*b
+    #
+    # Key difference: MUL16 takes 2 args (a, b), MAC16 takes 3 args (acc, a, b).
+    # MUL16(W16(1))(W16(2)) → APP(W16(0), W16(2)) — result of 1*2 = 2
+    # MAC16(W16(1))(W16(2)) → ExtendedPartial (needs one more arg)
+    #   ExtPartial(W16(3)) → APP(hi, lo) of 1 + 2*3 = 7
+    #
+    # So: apply candidate to two W16 values. If result is a non-p structured
+    # value that is NOT itself a partial (doesn't accept a 3rd W16), it's MUL16.
+    # If the result accepts a 3rd W16, it's MAC16.
+    w16_one = dot(W_LO_tok, w32_one)  # W16(1)
+    w16_two = dot(W_LO_tok, pack_w32([n0, n0, n0, n0, n0, n0, n0, n2]))  # W16(2)
+    w16_three = dot(W_LO_tok, pack_w32([n0, n0, n0, n0, n0, n0, n0, ext["N3"]]))  # W16(3)
+
+    for x in mul_candidates:
+        partial1 = dot(x, w16_one)
+        result1 = dot(partial1, w16_two)
+        if result1 == p_tok or result1 in domain_set:
+            continue
+        # Try applying a third W16
+        result2 = dot(result1, w16_three)
+        if result2 != p_tok and result2 not in domain_set:
+            # Accepted 3rd arg → MAC16
+            MAC16_tok = x
+            log(f"MAC16 identified: {x}")
+        else:
+            # Only 2 args → MUL16
+            MUL16_tok = x
+            log(f"MUL16 identified: {x}")
+
+    assert MUL16_tok is not None, "Failed to identify MUL16"
+    assert MAC16_tok is not None, "Failed to identify MAC16"
+
+    # ── Step 7: Identify binary W32 ops ───────────────────────────────
+    # 10 binary ops: W_ADD, W_SUB, W_CMP, W_XOR, W_AND, W_OR, W_SHL, W_SHR, W_ROTL, W_ROTR
+    # Each: atom(W32_a) → W32_OP1_partial → partial(W32_b) → result
+    #
+    # Strategy: use A=0xFF00FF00, B=0x0F0F0F0F. With shift amount = 0x0F0F0F0F & 31 = 15,
+    # all 10 operations produce unique 32-bit results. Extract full result via W_NIB.
+    nf = ext["NF"]
+    w32_a = pack_w32([nf, nf, n0, n0, nf, nf, n0, n0])  # 0xFF00FF00
+    w32_b = pack_w32([n0, nf, n0, nf, n0, nf, n0, nf])   # 0x0F0F0F0F
+
+    A_val, B_val = 0xFF00FF00, 0x0F0F0F0F
+    S = B_val & 31  # 15
+    expected = {
+        "W_ADD":  (A_val + B_val) & 0xFFFFFFFF,
+        "W_SUB":  (A_val - B_val) & 0xFFFFFFFF,
+        "W_XOR":  A_val ^ B_val,
+        "W_AND":  A_val & B_val,
+        "W_OR":   A_val | B_val,
+        "W_SHL":  (A_val << S) & 0xFFFFFFFF,
+        "W_SHR":  A_val >> S,
+        "W_ROTL": ((A_val << S) | (A_val >> (32 - S))) & 0xFFFFFFFF,
+        "W_ROTR": ((A_val >> S) | (A_val << (32 - S))) & 0xFFFFFFFF,
+    }
+    # Verify all 9 numeric results are distinct (sanity check)
+    assert len(set(expected.values())) == 9, f"Expected values not unique: {expected}"
+
+    # Reverse lookup: result value → op name
+    val_to_op = {v: k for k, v in expected.items()}
+
+    # Nibble name lookup (0..15 → token)
+    nib_tok = [ext[f"N{v:X}"] for v in range(16)]
+
+    def extract_full_w32(w32_result):
+        """Extract full 32-bit value from a W32 result using W_NIB."""
+        val = 0
+        nib_partial = dot(W_NIB_tok, w32_result)
+        for pos in range(8):
+            nib_atom = dot(nib_partial, ext[f"N{pos:X}"])
+            for v in range(16):
+                if nib_atom == nib_tok[v]:
+                    val |= (v << (pos * 4))
+                    break
+        return val
+
+    identified_binary = {}
+    for x in partial_w32:
+        partial1 = dot(x, w32_a)
+        result = dot(partial1, w32_b)
+
+        # W_CMP returns an atom (BOT), not a W32
+        if result == bot:
+            identified_binary[x] = "W_CMP"
+            log(f"W_CMP identified: {x}")
+            continue
+        if result == top or result == p_tok or result in domain_set:
+            continue
+
+        # Extract full 32-bit result and match
+        full_val = extract_full_w32(result)
+        op_name = val_to_op.get(full_val)
+        if op_name:
+            identified_binary[x] = op_name
+            log(f"{op_name} identified: {x} (result=0x{full_val:08X})")
+
+    assert len(identified_binary) == 10, \
+        f"Expected 10 binary W32 ops, identified {len(identified_binary)}: {identified_binary}"
+
+    result = {
+        "W_LO": W_LO_tok,
+        "W_HI": W_HI_tok,
+        "W_NOT": W_NOT_tok,
+        "W_NIB": W_NIB_tok,
+        "W_MERGE": W_MERGE_tok,
+        "MUL16": MUL16_tok,
+        "MAC16": MAC16_tok,
+    }
+    for tok, name in identified_binary.items():
+        result[name] = tok
+
+    log(f"Phase 3 complete: {len(result)}/17 W32/MUL atoms identified")
+    assert len(result) == 17, f"Expected 17, got {len(result)}"
+    return result
 
 
 # ============================================================================
@@ -1170,24 +1632,27 @@ def verify_n_succ():
 
 
 def verify_self_id():
-    """Verify all new non-IO atoms self-identify on ⊤."""
+    """Verify all new non-IO/W32/MUL atoms self-identify on ⊤."""
     print("  Self-identification on ⊤:")
-    non_io = NEW_ATOMS - IO_ATOMS
-    for atom in non_io:
+    all_p_atoms = IO_ATOMS | W32_ATOMS | MUL_ATOMS
+    non_p = NEW_ATOMS - all_p_atoms
+    for atom in non_p:
         result = atom_dot(atom, A("⊤"))
         assert result == atom, f"dot({atom}, ⊤) = {result}, expected {atom}"
-    print(f"    ✓ All {len(non_io)} non-IO new atoms satisfy dot(x, ⊤) = x")
-    for atom in IO_ATOMS:
+    print(f"    ✓ All {len(non_p)} non-p new atoms satisfy dot(x, ⊤) = x")
+    for atom in all_p_atoms:
         result = atom_dot(atom, A("⊤"))
         assert result == A("p"), f"dot({atom}, ⊤) = {result}, expected p"
-    print(f"    ✓ All {len(IO_ATOMS)} IO atoms have all-p Cayley rows")
+    print(f"    ✓ All {len(all_p_atoms)} IO/W32/MUL atoms have all-p Cayley rows")
 
 
 def verify_ext_axiom():
-    """Verify all non-IO atoms have unique behavioral fingerprints (Ext axiom)."""
+    """Verify all non-IO/W32/MUL atoms have unique behavioral fingerprints (Ext axiom)."""
     print("  Ext axiom (unique fingerprints):")
-    # IO atoms are intentionally indistinguishable at the Cayley level
-    atoms = [a for a in ALL_ATOMS if a not in IO_ATOMS]
+    # IO/W32/MUL atoms are intentionally indistinguishable at the Cayley level
+    # (all-p rows); they're only distinguishable through term-level dispatch
+    opaque_atoms = IO_ATOMS | W32_ATOMS | MUL_ATOMS
+    atoms = [a for a in ALL_ATOMS if a not in opaque_atoms]
     # Build probe set: atoms + structured values created by D2 operations
     probes = list(ALL_ATOMS)
     # Add Quote values (produced by QUOTE)
@@ -1208,8 +1673,8 @@ def verify_ext_axiom():
                     found = True
                     break
             assert found, f"No distinguishing probe for {x.name} vs {y.name}"
-    print(f"    ✓ All {len(atoms)} non-IO atoms are pairwise distinguishable")
-    print(f"    (4 IO atoms are opaque — indistinguishable at Cayley level)")
+    print(f"    ✓ All {len(atoms)} non-opaque atoms are pairwise distinguishable")
+    print(f"    ({len(opaque_atoms)} IO/W32/MUL atoms are opaque — indistinguishable at Cayley level)")
 
 
 def verify_tester_preservation():
@@ -1386,7 +1851,7 @@ def run_integration_test(num_seeds: int, verbose: bool = False):
             print(f"    seed={seed}: {phase} failed at {key}")
         return False
     else:
-        print(f"  ✓ All {num_seeds} seeds passed — 47/47 atoms, 100% recovery rate")
+        print(f"  ✓ All {num_seeds} seeds passed — {len(BASE_ATOMS)}/{len(BASE_ATOMS)} atoms, 100% recovery rate")
         return True
 
 

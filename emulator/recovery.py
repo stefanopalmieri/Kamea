@@ -14,10 +14,10 @@ import os
 import random
 import time
 
-# Add parent directory for delta2_74181 import
+# Add parent directory for kamea import
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from delta2_74181 import (
+from kamea import (
     ALL_NAMES, ALL_ATOMS, A,
     discover_d1, discover_74181_with_logs, discover_phase2,
 )
@@ -50,8 +50,8 @@ def make_emulator_blackbox(seed: int = 11):
     host = EmulatorHost(rom_bytes, atom_map)
 
     # Pre-load UART RX so IO_RDY returns ⊤ (matches pure algebraic semantics).
-    # Multiple bytes because IO_GET pops one per call during Phase 2 probing.
-    host.uart_send(b'\x00' * 16)
+    # Multiple bytes because IO_GET pops one per call during Phase 2/3 probing.
+    host.uart_send(b'\x00' * 64)
 
     # Build label mappings (same scheme as make_blackbox in delta2_74181)
     rng = random.Random(seed)
@@ -78,7 +78,7 @@ def make_emulator_blackbox(seed: int = 11):
         """Convert machine word to oracle value."""
         tag = (w >> TAG_SHIFT) & 0xF
         if tag == TAG_ATOM:
-            idx = (w >> LEFT_SHIFT) & 0x3F
+            idx = (w >> LEFT_SHIFT) & 0x7F
             return scrambled_idx_to_label.get(idx, w)
         return w  # structured value — return as opaque int
 
@@ -96,10 +96,10 @@ def run_recovery(seed: int, verbose: bool = False):
     # Phase 1a: 17 D1 atoms
     d1 = discover_d1(domain, dot)
 
-    # Phase 1b: 22 74181 atoms + 8 opaque
+    # Phase 1b: 22 74181 atoms + 24 opaque (8 D2/IO + 16 W32/MUL)
     ext, opaque = discover_74181_with_logs(domain, dot, d1, verbose=verbose)
 
-    # Phase 2: 8 opaque atoms via term-level probing
+    # Phase 2: 24 opaque atoms via term-level probing (includes Phase 3 for W32/MUL)
     phase2 = discover_phase2(opaque, dot, d1, ext, verbose=verbose)
 
     # Merge all results
@@ -124,10 +124,12 @@ def run_recovery(seed: int, verbose: bool = False):
             errors += 1
 
     machine_stats = host.machine.stats()
-    success = errors == 0 and len(all_found) == 47
+    expected_atoms = NUM_ATOMS  # 65
+    success = errors == 0 and len(all_found) == expected_atoms
     return success, {
         "seed": seed,
         "atoms_found": len(all_found),
+        "atoms_expected": expected_atoms,
         "errors": errors,
         "cycles": machine_stats["cycles"],
         "rom_reads": machine_stats["rom_reads"],
@@ -156,7 +158,7 @@ def main():
         success, s = run_recovery(seed, verbose=args.verbose)
         status = "OK" if success else "FAIL"
         print(f"  seed {seed:4d}: {status}  "
-              f"({s['atoms_found']}/47 atoms, "
+              f"({s['atoms_found']}/{s['atoms_expected']} atoms, "
               f"{s['cycles']} cycles, "
               f"{s['rom_reads']} ROM reads, "
               f"{s['alu_ops']} ALU ops, "

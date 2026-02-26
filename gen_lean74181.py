@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate Discoverable74181.lean from the Python Cayley table."""
 
-from delta2_74181 import (
+from kamea import (
     A, atom_dot, ALL_NAMES, NAMES_D1, NAMES_D2, NAMES_NIBBLES,
     NAMES_ALU_DISPATCH, NAMES_ALU_PRED, NAMES_ALU_MISC,
     nibble, nibble_val, is_nibble

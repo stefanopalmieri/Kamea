@@ -13,7 +13,13 @@ from .machine import (
     unpack_word, atom_idx_from_word,
     TAG_ATOM, TAG_QUOTED, TAG_APP, TAG_ALUP1, TAG_ALUP2,
     TAG_IOPUTP, TAG_IOSEQP, TAG_BUNDLE, TAG_PARTIAL, TAG_COUT_PROBE, TAG_W32,
+    TAG_W16, TAG_WPACK, TAG_W32_OP1, TAG_MUL_OP1, TAG_EXTENDED,
     MODE_LOGIC, MODE_ARITH, MODE_ARITHC,
+    w32_from_word, w16_from_word, wpack_unpack,
+    W32_OP_ADD, W32_OP_SUB, W32_OP_CMP, W32_OP_XOR, W32_OP_AND, W32_OP_OR,
+    W32_OP_SHL, W32_OP_SHR, W32_OP_ROTL, W32_OP_ROTR,
+    MUL_OP_MUL16, MUL_OP_MAC1,
+    EXT_MAC2, EXT_MERGE, EXT_NIB,
 )
 
 
@@ -153,7 +159,7 @@ class EmulatorHost:
         tag, left, right, _meta = unpack_word(word)
 
         if tag == TAG_ATOM:
-            idx = left & 0x3F
+            idx = left & 0x7F
             if 0 <= idx < cayley.NUM_ATOMS:
                 return cayley.IDX_TO_NAME[idx]
             return f"?atom({idx})"
@@ -207,6 +213,45 @@ class EmulatorHost:
         if tag == TAG_W32:
             val = ((left & 0xFFFF) << 16) | (right & 0xFFFF)
             return f"#w32[0x{val:08X}]"
+
+        if tag == TAG_W16:
+            val = left & 0xFFFF
+            return f"#w16[0x{val:04X}]"
+
+        if tag == TAG_WPACK:
+            acc, count = wpack_unpack(word)
+            return f"#wpack[0x{acc:X}, {count}]"
+
+        if tag == TAG_W32_OP1:
+            opcode = left & 0xFF
+            op_names = {
+                W32_OP_ADD: "ADD", W32_OP_SUB: "SUB", W32_OP_CMP: "CMP",
+                W32_OP_XOR: "XOR", W32_OP_AND: "AND", W32_OP_OR: "OR",
+                W32_OP_SHL: "SHL", W32_OP_SHR: "SHR",
+                W32_OP_ROTL: "ROTL", W32_OP_ROTR: "ROTR",
+            }
+            name = op_names.get(opcode, f"?{opcode}")
+            a_word = self.machine.heap_read(right)
+            return f"#w32op1[{name}, A={self.decode_word(a_word, depth + 1)}]"
+
+        if tag == TAG_MUL_OP1:
+            sub = left & 0xFF
+            sub_name = {MUL_OP_MUL16: "MUL16", MUL_OP_MAC1: "MAC1"}.get(sub, f"?{sub}")
+            operand = self.machine.heap_read(right)
+            return f"#mulop1[{sub_name}, {self.decode_word(operand, depth + 1)}]"
+
+        if tag == TAG_EXTENDED:
+            sub_type = (left >> 20) & 0xF
+            if sub_type == EXT_MAC2:
+                app_word = self.machine.heap_read(right)
+                return f"#mac2[{self.decode_word(app_word, depth + 1)}]"
+            elif sub_type == EXT_MERGE:
+                hi_word = self.machine.heap_read(right)
+                return f"#merge[hi={self.decode_word(hi_word, depth + 1)}]"
+            elif sub_type == EXT_NIB:
+                w32_word = self.machine.heap_read(right)
+                return f"#nib[{self.decode_word(w32_word, depth + 1)}]"
+            return f"#ext[sub={sub_type}]"
 
         return f"?tag({tag})"
 

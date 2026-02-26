@@ -1,7 +1,7 @@
 """
 Verification suite for the Kamea machine emulator.
 
-Tests the emulator against the reference implementations in delta2_74181.py
+Tests the emulator against the reference implementations in kamea.py
 and ds_repl.py to ensure behavioral equivalence.
 """
 
@@ -12,53 +12,66 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from delta2_74181 import (
+from kamea import (
     ALL_NAMES, A, atom_dot, dot_ext, alu_74181,
     Atom, Quote, AppNode, UnappBundle, Partial,
     ALUPartial1, ALUPartial2, IOPutPartial, IOSeqPartial,
     is_nibble, nibble_val, nibble,
+    NAMES_W32, NAMES_MUL,
 )
 from emulator import cayley
 from emulator.machine import (
     KameaMachine, make_atom_word, make_app_word, unpack_word,
+    make_w32_word, make_w16_word, w32_from_word, w16_from_word,
     TAG_ATOM, TAG_QUOTED, TAG_APP, TAG_BUNDLE, TAG_PARTIAL,
     TAG_ALUP1, TAG_ALUP2, TAG_IOPUTP, TAG_IOSEQP, TAG_COUT_PROBE,
+    TAG_W32, TAG_W16, TAG_WPACK, TAG_W32_OP1, TAG_MUL_OP1, TAG_EXTENDED,
     S_DONE, S_HALTED, S_FETCH,
 )
 from emulator.host import EmulatorHost
 
 
 def test_cayley_rom():
-    """Verify all 47×47 = 2209 Cayley ROM entries match atom_dot."""
+    """Verify all N×N Cayley ROM entries match atom_dot."""
     rom = cayley.build_cayley_rom()
+    n = cayley.NUM_ATOMS
+    total = n * n
     errors = 0
     for xi, xn in enumerate(ALL_NAMES):
         for yi, yn in enumerate(ALL_NAMES):
             expected = atom_dot(A(xn), A(yn))
             expected_idx = cayley.NAME_TO_IDX[expected.name]
-            actual_idx = rom[xi * cayley.NUM_ATOMS + yi]
+            actual_idx = rom[xi * n + yi]
             if actual_idx != expected_idx:
                 print(f"  FAIL: {xn}·{yn} = {cayley.IDX_TO_NAME[actual_idx]} "
                       f"(expected {expected.name})")
                 errors += 1
-    print(f"Cayley ROM: {2209 - errors}/2209 correct")
+    print(f"Cayley ROM: {total - errors}/{total} correct")
     return errors == 0
 
 
 def test_atom_pairs():
     """
-    Test all 47×47 atom×atom applications through the eval/apply machine
-    against dot_ext from delta2_74181.py.
+    Test atom×atom applications through the eval/apply machine
+    against dot_ext from kamea.py.
     """
     host = EmulatorHost()
     errors = 0
     total = 0
+
+    # W32/MUL atoms have term-level dispatch not modeled by dot_ext
+    w32_mul_names = frozenset(NAMES_W32 + NAMES_MUL)
 
     for xn in ALL_NAMES:
         for yn in ALL_NAMES:
             # Skip IO_RDY·⊤: machine checks real FIFO (returns ⊥ when empty),
             # while the pure reference always returns ⊤.
             if xn == "IO_RDY" and yn == "⊤":
+                continue
+
+            # Skip W32/MUL atoms in function position: term-level dispatch
+            # produces structured values not modeled by the pure reference.
+            if xn in w32_mul_names:
                 continue
 
             total += 1
@@ -366,7 +379,7 @@ def _results_match(ref, result_word: int, host: EmulatorHost) -> bool:
     if isinstance(ref, Atom):
         if tag != TAG_ATOM:
             return False
-        return (left & 0x3F) == cayley.NAME_TO_IDX.get(ref.name, -1)
+        return (left & 0x7F) == cayley.NAME_TO_IDX.get(ref.name, -1)
 
     if isinstance(ref, Quote):
         if tag != TAG_QUOTED:
@@ -417,6 +430,432 @@ def _results_match(ref, result_word: int, host: EmulatorHost) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# W32/MUL Tests
+# ---------------------------------------------------------------------------
+
+def _w32_dispatch(host, f_word, x_word):
+    """Helper: dispatch f_word applied to x_word, return result word."""
+    return host.dispatch_word(f_word, x_word)
+
+
+def test_w32_pack8():
+    """Test W_PACK8: packing 8 nibbles into a W32."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+
+    # Pack 0x12345678
+    pack_atom = make_atom_word(m.W_PACK8)
+    nibbles = [1, 2, 3, 4, 5, 6, 7, 8]
+
+    val = _w32_dispatch(host, pack_atom, make_atom_word(m._nibble_idx(nibbles[0])))
+    for nib in nibbles[1:]:
+        val = _w32_dispatch(host, val, make_atom_word(m._nibble_idx(nib)))
+
+    tag, _, _, _ = unpack_word(val)
+    if tag != TAG_W32:
+        print(f"  FAIL: W_PACK8 result tag = {tag}, expected TAG_W32")
+        errors += 1
+    else:
+        result = w32_from_word(val)
+        if result != 0x12345678:
+            print(f"  FAIL: W_PACK8 result = 0x{result:08X}, expected 0x12345678")
+            errors += 1
+
+    # Pack 0x00000000
+    val = _w32_dispatch(host, pack_atom, make_atom_word(m._nibble_idx(0)))
+    for _ in range(7):
+        val = _w32_dispatch(host, val, make_atom_word(m._nibble_idx(0)))
+    result = w32_from_word(val)
+    if result != 0:
+        print(f"  FAIL: W_PACK8 zeros = 0x{result:08X}, expected 0x00000000")
+        errors += 1
+
+    # Pack 0xFFFFFFFF
+    val = _w32_dispatch(host, pack_atom, make_atom_word(m._nibble_idx(0xF)))
+    for _ in range(7):
+        val = _w32_dispatch(host, val, make_atom_word(m._nibble_idx(0xF)))
+    result = w32_from_word(val)
+    if result != 0xFFFFFFFF:
+        print(f"  FAIL: W_PACK8 FFs = 0x{result:08X}, expected 0xFFFFFFFF")
+        errors += 1
+
+    total = 3
+    print(f"W_PACK8: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_lo_hi():
+    """Test W_LO and W_HI: extract 16-bit halves from W32."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+
+    test_vals = [0x12345678, 0x00000000, 0xFFFFFFFF, 0xABCD0000, 0x0000BEEF]
+    for v in test_vals:
+        w = make_w32_word(v)
+        lo = _w32_dispatch(host, make_atom_word(m.W_LO), w)
+        hi = _w32_dispatch(host, make_atom_word(m.W_HI), w)
+
+        tag_lo, _, _, _ = unpack_word(lo)
+        tag_hi, _, _, _ = unpack_word(hi)
+        if tag_lo != TAG_W16:
+            print(f"  FAIL: W_LO(0x{v:08X}) tag = {tag_lo}")
+            errors += 1
+            continue
+        if tag_hi != TAG_W16:
+            print(f"  FAIL: W_HI(0x{v:08X}) tag = {tag_hi}")
+            errors += 1
+            continue
+
+        lo_val = w16_from_word(lo)
+        hi_val = w16_from_word(hi)
+        if lo_val != (v & 0xFFFF):
+            print(f"  FAIL: W_LO(0x{v:08X}) = 0x{lo_val:04X}, expected 0x{v & 0xFFFF:04X}")
+            errors += 1
+        if hi_val != ((v >> 16) & 0xFFFF):
+            print(f"  FAIL: W_HI(0x{v:08X}) = 0x{hi_val:04X}, expected 0x{(v >> 16) & 0xFFFF:04X}")
+            errors += 1
+
+    total = len(test_vals) * 2
+    print(f"W_LO/W_HI: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_merge():
+    """Test W_MERGE: combine two W16 halves into W32, round-trip with W_LO/W_HI."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+
+    test_vals = [0x12345678, 0xABCD1234, 0x00000001, 0xFFFF0000]
+    for v in test_vals:
+        w = make_w32_word(v)
+        lo = _w32_dispatch(host, make_atom_word(m.W_LO), w)
+        hi = _w32_dispatch(host, make_atom_word(m.W_HI), w)
+        # W_MERGE(hi)(lo) → W32
+        merge_partial = _w32_dispatch(host, make_atom_word(m.W_MERGE), hi)
+        merged = _w32_dispatch(host, merge_partial, lo)
+
+        tag, _, _, _ = unpack_word(merged)
+        if tag != TAG_W32:
+            print(f"  FAIL: W_MERGE round-trip tag = {tag}")
+            errors += 1
+            continue
+        result = w32_from_word(merged)
+        if result != v:
+            print(f"  FAIL: W_MERGE round-trip 0x{v:08X} → 0x{result:08X}")
+            errors += 1
+
+    total = len(test_vals)
+    print(f"W_MERGE: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_not():
+    """Test W_NOT: bitwise NOT of W32."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+
+    test_vals = [0x00000000, 0xFFFFFFFF, 0x12345678, 0xAAAA5555]
+    for v in test_vals:
+        w = make_w32_word(v)
+        result = _w32_dispatch(host, make_atom_word(m.W_NOT), w)
+        tag, _, _, _ = unpack_word(result)
+        if tag != TAG_W32:
+            print(f"  FAIL: W_NOT(0x{v:08X}) tag = {tag}")
+            errors += 1
+            continue
+        r = w32_from_word(result)
+        expected = (~v) & 0xFFFFFFFF
+        if r != expected:
+            print(f"  FAIL: W_NOT(0x{v:08X}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+    total = len(test_vals)
+    print(f"W_NOT: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_arithmetic():
+    """Test W_ADD, W_SUB, W_CMP."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+    total = 0
+
+    M = 0xFFFFFFFF
+    test_pairs = [
+        (0, 0), (1, 0), (0, 1), (100, 200),
+        (0xFFFFFFFF, 1),  # overflow
+        (0, 0xFFFFFFFF),  # underflow for sub
+        (0x80000000, 0x80000000),
+        (0x12345678, 0x12345678),  # equal for CMP
+    ]
+
+    for a, b in test_pairs:
+        wa = make_w32_word(a)
+        wb = make_w32_word(b)
+
+        # W_ADD
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_ADD), wa)
+        result = _w32_dispatch(host, partial, wb)
+        r = w32_from_word(result)
+        expected = (a + b) & M
+        if r != expected:
+            print(f"  FAIL: W_ADD(0x{a:08X}, 0x{b:08X}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+        # W_SUB
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_SUB), wa)
+        result = _w32_dispatch(host, partial, wb)
+        r = w32_from_word(result)
+        expected = (a - b) & M
+        if r != expected:
+            print(f"  FAIL: W_SUB(0x{a:08X}, 0x{b:08X}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+        # W_CMP
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_CMP), wa)
+        result = _w32_dispatch(host, partial, wb)
+        tag, left, _, _ = unpack_word(result)
+        atom_idx = left & 0x7F
+        expected_atom = m.TOP if a == b else m.BOT
+        if tag != TAG_ATOM or atom_idx != expected_atom:
+            print(f"  FAIL: W_CMP(0x{a:08X}, 0x{b:08X}) = {host.decode_word(result)}, expected {'⊤' if a == b else '⊥'}")
+            errors += 1
+
+    print(f"W_ADD/SUB/CMP: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_bitwise():
+    """Test W_XOR, W_AND, W_OR."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+    total = 0
+
+    test_pairs = [
+        (0xFF00FF00, 0x0F0F0F0F),
+        (0xAAAAAAAA, 0x55555555),
+        (0x00000000, 0xFFFFFFFF),
+        (0x12345678, 0x9ABCDEF0),
+    ]
+
+    ops = [
+        (m.W_XOR, "W_XOR", lambda a, b: a ^ b),
+        (m.W_AND, "W_AND", lambda a, b: a & b),
+        (m.W_OR,  "W_OR",  lambda a, b: a | b),
+    ]
+
+    for a, b in test_pairs:
+        wa = make_w32_word(a)
+        wb = make_w32_word(b)
+        for atom_idx, name, fn in ops:
+            total += 1
+            partial = _w32_dispatch(host, make_atom_word(atom_idx), wa)
+            result = _w32_dispatch(host, partial, wb)
+            r = w32_from_word(result)
+            expected = fn(a, b)
+            if r != expected:
+                print(f"  FAIL: {name}(0x{a:08X}, 0x{b:08X}) = 0x{r:08X}, expected 0x{expected:08X}")
+                errors += 1
+
+    print(f"W_XOR/AND/OR: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_shifts():
+    """Test W_SHL, W_SHR, W_ROTL, W_ROTR including ChaCha20 amounts."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+    total = 0
+
+    M = 0xFFFFFFFF
+    test_cases = [
+        # (value, shift_amount)
+        (0x00000001, 0), (0x00000001, 1), (0x00000001, 16), (0x00000001, 31),
+        (0x80000001, 1), (0x80000001, 7), (0x80000001, 8), (0x80000001, 12),
+        (0x80000001, 16),
+        (0xDEADBEEF, 7), (0xDEADBEEF, 8), (0xDEADBEEF, 12), (0xDEADBEEF, 16),
+    ]
+
+    for val, shift in test_cases:
+        wv = make_w32_word(val)
+        ws = make_w32_word(shift)
+
+        # SHL
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_SHL), wv)
+        result = _w32_dispatch(host, partial, ws)
+        r = w32_from_word(result)
+        expected = (val << shift) & M
+        if r != expected:
+            print(f"  FAIL: SHL(0x{val:08X}, {shift}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+        # SHR
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_SHR), wv)
+        result = _w32_dispatch(host, partial, ws)
+        r = w32_from_word(result)
+        expected = val >> shift
+        if r != expected:
+            print(f"  FAIL: SHR(0x{val:08X}, {shift}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+        # ROTL
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_ROTL), wv)
+        result = _w32_dispatch(host, partial, ws)
+        r = w32_from_word(result)
+        n = shift & 31
+        expected = ((val << n) | (val >> (32 - n))) & M if n else val
+        if r != expected:
+            print(f"  FAIL: ROTL(0x{val:08X}, {shift}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+        # ROTR
+        total += 1
+        partial = _w32_dispatch(host, make_atom_word(m.W_ROTR), wv)
+        result = _w32_dispatch(host, partial, ws)
+        r = w32_from_word(result)
+        expected = ((val >> n) | (val << (32 - n))) & M if n else val
+        if r != expected:
+            print(f"  FAIL: ROTR(0x{val:08X}, {shift}) = 0x{r:08X}, expected 0x{expected:08X}")
+            errors += 1
+
+    print(f"W_SHL/SHR/ROTL/ROTR: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_w32_nib():
+    """Test W_NIB: extract nibbles from a W32."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+
+    val = 0x12345678
+    w = make_w32_word(val)
+    nib_atom = make_atom_word(m.W_NIB)
+
+    for pos in range(8):
+        partial = _w32_dispatch(host, nib_atom, w)
+        result = _w32_dispatch(host, partial, make_atom_word(m._nibble_idx(pos)))
+        tag, left, _, _ = unpack_word(result)
+        if tag != TAG_ATOM:
+            print(f"  FAIL: W_NIB(0x{val:08X}, {pos}) tag = {tag}")
+            errors += 1
+            continue
+        idx = left & 0x7F
+        expected_nib = (val >> (pos * 4)) & 0xF
+        expected_idx = m._nibble_idx(expected_nib)
+        if idx != expected_idx:
+            print(f"  FAIL: W_NIB(0x{val:08X}, {pos}) = N{m._nibble_val(idx):X}, expected N{expected_nib:X}")
+            errors += 1
+
+    total = 8
+    print(f"W_NIB: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_mul16():
+    """Test MUL16: 16-bit multiply."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+    total = 0
+
+    test_pairs = [
+        (0, 0), (1, 1), (2, 3), (0xFF, 0xFF),
+        (0xFFFF, 0xFFFF),  # max overflow
+        (100, 200), (0x1234, 0x5678),
+    ]
+
+    for a, b in test_pairs:
+        total += 1
+        wa = make_w16_word(a)
+        wb = make_w16_word(b)
+
+        partial = _w32_dispatch(host, make_atom_word(m.MUL16), wa)
+        result = _w32_dispatch(host, partial, wb)
+
+        # Result should be APP(W16_hi, W16_lo)
+        tag, left, right, _ = unpack_word(result)
+        if tag != TAG_APP:
+            print(f"  FAIL: MUL16({a}, {b}) tag = {tag}, expected TAG_APP")
+            errors += 1
+            continue
+
+        hi_word = m.heap_read(left)
+        lo_word = m.heap_read(right)
+        hi_val = w16_from_word(hi_word)
+        lo_val = w16_from_word(lo_word)
+        product = (hi_val << 16) | lo_val
+        expected = a * b
+
+        if product != expected:
+            print(f"  FAIL: MUL16({a}, {b}) = {product}, expected {expected}")
+            errors += 1
+
+    print(f"MUL16: {total - errors}/{total} correct")
+    return errors == 0
+
+
+def test_mac16():
+    """Test MAC16: multiply-accumulate (acc + a * b)."""
+    host = EmulatorHost()
+    m = host.machine
+    errors = 0
+    total = 0
+
+    test_cases = [
+        # (acc, a, b)
+        (0, 2, 3),       # 0 + 2*3 = 6
+        (10, 5, 4),      # 10 + 5*4 = 30
+        (0xFFFF, 1, 1),  # 0xFFFF + 1 = 0x10000
+        (100, 0xFF, 0xFF),  # 100 + 255*255 = 65225
+    ]
+
+    for acc, a, b in test_cases:
+        total += 1
+        w_acc = make_w16_word(acc)
+        w_a = make_w16_word(a)
+        w_b = make_w16_word(b)
+
+        # MAC16(acc)(a)(b)
+        partial1 = _w32_dispatch(host, make_atom_word(m.MAC16), w_acc)
+        partial2 = _w32_dispatch(host, partial1, w_a)
+        result = _w32_dispatch(host, partial2, w_b)
+
+        tag, left, right, _ = unpack_word(result)
+        if tag != TAG_APP:
+            print(f"  FAIL: MAC16({acc}, {a}, {b}) tag = {tag}, expected TAG_APP")
+            errors += 1
+            continue
+
+        hi_word = m.heap_read(left)
+        lo_word = m.heap_read(right)
+        hi_val = w16_from_word(hi_word)
+        lo_val = w16_from_word(lo_word)
+        product = (hi_val << 16) | lo_val
+        expected = acc + a * b
+
+        if product != expected:
+            print(f"  FAIL: MAC16({acc}, {a}, {b}) = {product}, expected {expected}")
+            errors += 1
+
+    print(f"MAC16: {total - errors}/{total} correct")
+    return errors == 0
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -430,7 +869,7 @@ def main():
     print("\n--- Cayley ROM ---")
     all_pass &= test_cayley_rom()
 
-    print("\n--- Atom Pairs (47×47 = 2209 tests) ---")
+    print(f"\n--- Atom Pairs ({cayley.NUM_ATOMS}×{cayley.NUM_ATOMS} tests) ---")
     all_pass &= test_atom_pairs()
 
     print("\n--- ALU Operations ---")
@@ -459,6 +898,36 @@ def main():
 
     print("\n--- Nested Expressions ---")
     all_pass &= test_nested_expressions()
+
+    print("\n--- W_PACK8 ---")
+    all_pass &= test_w32_pack8()
+
+    print("\n--- W_LO/W_HI ---")
+    all_pass &= test_w32_lo_hi()
+
+    print("\n--- W_MERGE ---")
+    all_pass &= test_w32_merge()
+
+    print("\n--- W_NOT ---")
+    all_pass &= test_w32_not()
+
+    print("\n--- W_ADD/SUB/CMP ---")
+    all_pass &= test_w32_arithmetic()
+
+    print("\n--- W_XOR/AND/OR ---")
+    all_pass &= test_w32_bitwise()
+
+    print("\n--- W_SHL/SHR/ROTL/ROTR ---")
+    all_pass &= test_w32_shifts()
+
+    print("\n--- W_NIB ---")
+    all_pass &= test_w32_nib()
+
+    print("\n--- MUL16 ---")
+    all_pass &= test_mul16()
+
+    print("\n--- MAC16 ---")
+    all_pass &= test_mac16()
 
     print("\n" + "=" * 60)
     if all_pass:

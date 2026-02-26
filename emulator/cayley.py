@@ -10,10 +10,10 @@ from __future__ import annotations
 import sys
 import os
 
-# Add parent directory so we can import delta2_74181
+# Add parent directory so we can import kamea
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from delta2_74181 import ALL_NAMES, A, atom_dot
+from kamea import ALL_NAMES, A, atom_dot
 
 # ---------------------------------------------------------------------------
 # Atom name ↔ index mapping
@@ -48,6 +48,26 @@ IO_GET    = NAME_TO_IDX["IO_GET"]    # 44
 IO_RDY    = NAME_TO_IDX["IO_RDY"]    # 45
 IO_SEQ    = NAME_TO_IDX["IO_SEQ"]    # 46
 
+# W32/MUL atom indices (47-64)
+W_PACK8   = NAME_TO_IDX["W_PACK8"]  # 47
+W_LO      = NAME_TO_IDX["W_LO"]     # 48
+W_HI      = NAME_TO_IDX["W_HI"]     # 49
+W_MERGE   = NAME_TO_IDX["W_MERGE"]  # 50
+W_NIB     = NAME_TO_IDX["W_NIB"]    # 51
+W_ADD     = NAME_TO_IDX["W_ADD"]    # 52
+W_SUB     = NAME_TO_IDX["W_SUB"]    # 53
+W_CMP     = NAME_TO_IDX["W_CMP"]    # 54
+W_XOR     = NAME_TO_IDX["W_XOR"]    # 55
+W_AND     = NAME_TO_IDX["W_AND"]    # 56
+W_OR      = NAME_TO_IDX["W_OR"]     # 57
+W_NOT     = NAME_TO_IDX["W_NOT"]    # 58
+W_SHL     = NAME_TO_IDX["W_SHL"]    # 59
+W_SHR     = NAME_TO_IDX["W_SHR"]    # 60
+W_ROTL    = NAME_TO_IDX["W_ROTL"]   # 61
+W_ROTR    = NAME_TO_IDX["W_ROTR"]   # 62
+MUL16     = NAME_TO_IDX["MUL16"]    # 63
+MAC16     = NAME_TO_IDX["MAC16"]    # 64
+
 NIBBLE_BASE = N0  # 21
 NIBBLE_END  = NF  # 36 (inclusive)
 
@@ -55,6 +75,10 @@ ALU_DISPATCH_SET = frozenset([ALU_LOGIC, ALU_ARITH, ALU_ARITHC])
 ALU_PRED_SET     = frozenset([ALU_ZERO, ALU_COUT])
 IO_SET           = frozenset([IO_PUT, IO_GET, IO_RDY, IO_SEQ])
 D2_SET           = frozenset([QUOTE, EVAL, APP, UNAPP])
+W32_SET          = frozenset([W_PACK8, W_LO, W_HI, W_MERGE, W_NIB,
+                              W_ADD, W_SUB, W_CMP, W_XOR, W_AND, W_OR, W_NOT,
+                              W_SHL, W_SHR, W_ROTL, W_ROTR])
+MUL_SET          = frozenset([MUL16, MAC16])
 
 
 def is_nibble(idx: int) -> bool:

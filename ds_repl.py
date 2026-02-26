@@ -55,7 +55,7 @@ import itertools
 import re
 
 from lark import Lark, Transformer, v_args
-from delta2_74181 import alu_74181
+from kamea import alu_74181
 
 # ============================================================
 # PEG Grammar (Lark Earley/LALR with PEG-like rules)
