@@ -341,9 +341,9 @@ MIT
 If you use this work, please cite:
 
 ```
-@software{distinction_structures_2026,
+@software{kamea_2026,
   author = {Stefano Palmieri},
-  title = {Distinction Structures: A Minimal Self-Modeling Framework},
+  title = {Kamea: A Minimal Self-Modeling Framework},
   year = {2026},
   note = {Lean 4 formalization (0 sorry) of five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃). Python extension: 66-atom Kamea algebra with 74181 ALU, W32 wide arithmetic, MUL16 multiply, IO, and QUALE symmetry-breaker. Hardware emulator with CayleyScanner boot-time recovery. 100\% black-box recovery across 1000+ seeds.}
 }
