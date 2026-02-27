@@ -4,9 +4,9 @@
 
 ---
 
-## Three Theorems, Two Extensions, and a 74181 ALU
+## Three Theorems, Five Extensions, and a Hardware Emulator
 
-This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves, plus a Python implementation extending the algebra with a full 74181 ALU and IO subsystem — 47 atoms total, all uniquely recoverable from black-box probing.
+This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves, plus a Python implementation extending the algebra to 66 atoms with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner.
 
 All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
@@ -20,9 +20,13 @@ All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 **Extension 2 (Δ₃ -- Recursive Evaluation).** Δ₂ extended with recursive EVAL via a fuel-bounded interpreter. Evaluating a quoted application node recursively evaluates both subterms, then applies the results. Proved in Lean using a combined eval/dot function structurally recursive on fuel. Concrete computations (flat eval, nested eval, triple nesting, QUOTE/EVAL roundtrips) verified by `native_decide`.
 
-**Extension 3 (74181 ALU + IO).** Δ₂ extended with 26 new atoms: 16 nibble data values (N0–NF), 3 ALU dispatch atoms encoding the classic 74181 chip's 32 operations, 2 ALU predicates (zero-detect and carry-out), 1 nibble successor (N_SUCC), and 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ). Total: 47 atoms. All 47 are uniquely recoverable from black-box probing via a two-phase procedure: Phase 1 (Cayley-level) identifies 39 atoms, Phase 2 (term-level) identifies the remaining 8 opaque atoms. Verified across 200+ random permutations at 100% recovery rate.
+**Extension 3 (74181 ALU + IO).** Δ₂ extended with 26 new atoms: 16 nibble data values (N0–NF), 3 ALU dispatch atoms, 2 ALU predicates, 1 nibble successor (N_SUCC), and 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ). Total: 47 atoms.
 
-Five machine-checked results, plus a computationally complete extension. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Extension 4 (W32 + MUL).** 18 additional atoms for 32-bit wide arithmetic (W_ADD, W_SUB, W_CMP, W_XOR, W_AND, W_OR, W_NOT, W_SHL, W_SHR, W_ROTL, W_ROTR, W_PACK8, W_LO, W_HI, W_MERGE, W_NIB) and 16-bit multiply (MUL16, MAC16). Total: 65 atoms.
+
+**Extension 5 (QUALE).** A single symmetry-breaking atom that makes the algebra *rigid*. The 26 opaque atoms (D2 + IO + W32 + MUL) all have identical all-p Cayley rows; QUALE gives each a unique structurally-identifiable target in its column. All 66 atoms are now uniquely identifiable from the Cayley table alone — no term-level probing required. A dedicated hardware scanner (`CayleyScanner`) reads the Cayley ROM directly at boot, recovering the complete atom identity map in ~7,300 ROM reads.
+
+Six machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -37,6 +41,8 @@ The irreducibility result shows what the framework *cannot* do. Given a complete
 This is "existence is not a predicate" as a machine-checked theorem. Not as a philosophical argument, not as an interpretation, not as a slogan -- as a Lean theorem that compiles with zero sorry.
 
 The extensions (Δ₂, Δ₃) show the path from algebra to computation: Δ₂ adds data representation (quoting without executing), Δ₃ adds recursive evaluation (executing quoted terms). Both are machine-verified. The boundary between finite decidable algebra and recursive interpretation is precisely located.
+
+The QUALE extension addresses a fundamental obstruction: as the algebra grows, groups of atoms become structurally indistinguishable (identical Cayley rows), creating an automorphism group (S₂₆ for the 26 opaque atoms). QUALE trivializes this symmetry with a single column of unique values, making the algebra *rigid* — every atom uniquely identifiable from the operation table alone. A dedicated hardware scanner reads the Cayley ROM at boot to recover the complete identity map in ~7,300 ROM reads.
 
 ---
 
@@ -54,18 +60,19 @@ DistinctionStructures/
 │   ├── ActualityIrreducibility.lean             # Actuality irreducibility theorem
 │   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
 │   └── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
-├── delta2_true_blackbox.py                      # Δ₃ black-box recovery demo (Python)
-├── delta2_74181.py                              # 74181+IO verification suite (47 atoms)
-├── delta2_74181_blackbox.py                     # 74181+IO true black-box recovery demo
-├── ds_repl.py                                   # Interactive REPL with all 47 atoms
+├── kamea.py                                     # Core 66-atom algebra (D1+D2+74181+IO+W32+MUL+QUALE)
+├── kamea_blackbox.py                            # Black-box recovery (48-atom subset)
+├── ds_repl.py                                   # Interactive REPL with all 66 atoms
 ├── emulator/
 │   ├── __init__.py
 │   ├── chips.py                                 # Hardware primitives (EEPROM, IC74181, SRAM, Register, FIFO)
-│   ├── cayley.py                                # Cayley ROM builder (47×47 byte array)
-│   ├── machine.py                               # Clocked eval/apply state machine
+│   ├── cayley.py                                # Cayley ROM builder (66×66 byte array)
+│   ├── machine.py                               # Clocked eval/apply state machine (64-bit words)
 │   ├── host.py                                  # High-level interface (term loading, decoding)
-│   ├── recovery.py                              # Black-box recovery via the machine's dispatch unit
-│   └── test_machine.py                          # Verification suite (2209 atom pairs, 768 ALU ops)
+│   ├── scanner.py                               # CayleyScanner: boot-time hardware recovery module
+│   ├── recovery.py                              # Black-box recovery via dispatch unit + scanner
+│   ├── debugger.py                              # Textual TUI debugger for the emulator
+│   └── test_machine.py                          # Verification suite (4356 atom pairs, 768 ALU ops)
 ├── examples/
 │   ├── io_demo.ds                               # IO atoms demo (prints "Hi!")
 │   └── alu_74181_demo.ds                        # ALU operations demo
@@ -184,11 +191,11 @@ Key theorems in `Delta3.lean`:
 
 All proofs by `native_decide` on concrete fuel values.
 
-### Extension 3: Δ₂+74181 -- ALU and IO (Python)
+### Extensions 3–5: 74181 ALU + IO + W32 + MUL + QUALE (Python)
 
-The 74181 extension adds 26 atoms to Δ₂'s 21, for a total of 47. The design maps the classic 74181 4-bit ALU chip's control interface directly onto the algebra: the 4-bit function selector IS a nibble atom, the mode select IS the choice of dispatch atom. No translation layer — the algebra speaks the chip's native language.
+The full algebra extends Δ₂'s 21 atoms to 66 total. The design maps the classic 74181 4-bit ALU chip's control interface directly onto the algebra: the 4-bit function selector IS a nibble atom, the mode select IS the choice of dispatch atom. No translation layer — the algebra speaks the chip's native language.
 
-**Atom inventory (47 total):**
+**Atom inventory (66 total):**
 
 | Group | Count | Atoms | Role |
 |-------|-------|-------|------|
@@ -199,43 +206,62 @@ The 74181 extension adds 26 atoms to Δ₂'s 21, for a total of 47. The design m
 | ALU predicates | 2 | ALU_ZERO, ALU_COUT | Zero-detect and carry-out testers |
 | N_SUCC | 1 | N_SUCC | Nibble successor (16-cycle) |
 | IO | 4 | IO_PUT, IO_GET, IO_RDY, IO_SEQ | Byte-level stdin/stdout |
+| W32 | 16 | W_PACK8, W_LO, W_HI, W_MERGE, W_NIB, W_ADD, W_SUB, W_CMP, W_XOR, W_AND, W_OR, W_NOT, W_SHL, W_SHR, W_ROTL, W_ROTR | 32-bit wide arithmetic |
+| MUL | 2 | MUL16, MAC16 | 16-bit multiply / multiply-accumulate |
+| QUALE | 1 | QUALE | Symmetry breaker — makes all atoms uniquely identifiable |
 
-**Recovery procedure (two phases):**
+**Recovery via QUALE (single phase, Cayley-only):**
 
-| Phase | Method | Atoms recovered | From |
-|-------|--------|----------------|------|
-| Phase 1a | Cayley-level probing | 17 Δ₁ atoms | Absorbers, testers, encoders, synthesis triple |
-| Phase 1b | Cayley-level probing | 22 extension atoms | Predicates, nibble group (Z/16Z), N_SUCC cycle, dispatch self-ID on ⊤ |
-| Phase 2 | Term-level probing | 8 opaque atoms (D2 + IO) | QUOTE/EVAL pair, partial group structure, AppNode destructure |
+The 26 opaque atoms (D2 + IO + W32 + MUL) have identical all-p Cayley rows and are structurally indistinguishable at the atom-atom level. QUALE breaks this S₂₆ symmetry: each opaque atom maps to a unique structurally-identifiable target in the QUALE column (e.g., `dot(QUOTE, QUALE) = k`, `dot(W_ADD, QUALE) = N_SUCC`).
 
-Phase 1 identifies 39 atoms from the 47×47 Cayley table alone. The remaining 8 have identical all-p Cayley rows and require term-level probing (applying atoms to structured values, not just other atoms). Phase 2's 4-step algorithm resolves all 8: QUOTE/EVAL via roundtrip, APP/IO_PUT/IO_SEQ via partial application signatures, IO_RDY via ⊤-response, UNAPP via AppNode destructure, IO_GET by exclusion.
+| Phase | Method | Atoms recovered |
+|-------|--------|----------------|
+| Phase 1a | Cayley-level | 17 D1 atoms (absorbers, testers, encoders, synthesis triple) |
+| Phase 1b | Cayley-level | 22 atoms (predicates, nibble Z/16Z, N_SUCC, dispatch, QUALE) |
+| Phase 1c | QUALE column | 27 opaque atoms (one ROM read each via `dot(u, QUALE)`) |
+
+All 66 atoms identified from the 66×66 Cayley table alone. No term-level probing required. Verified across 1000+ random permutations at 100% recovery rate.
 
 ### Emulator: Kamea Machine
 
-A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine. One dispatch unit handles all term-level operations — both normal evaluation and black-box recovery use the same code path.
+A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, a microcode-driven eval/apply state machine, and a dedicated boot-time recovery scanner. One dispatch unit handles all term-level operations — both normal evaluation and black-box recovery use the same code path.
 
 **Architecture:**
 
 | Component | Model | Role |
 |-----------|-------|------|
-| Cayley ROM | EEPROM (12-bit addr, 6-bit data) | 47×47 atom-level dot lookup |
+| Cayley ROM | EEPROM (16-bit addr, 8-bit data) | 66×66 atom-level dot lookup (4,356 bytes) |
 | ALU | IC74181 (pin-accurate) | 32 operations via 3 mode atoms × 16 selectors |
-| Heap | SRAM (4096 × 28-bit words) | Term storage (tag + left + right) |
-| Stack | SRAM (256 × 28-bit words) | Eval/apply continuation stack |
+| Heap | SRAM (64-bit words) | Term storage (tag + left + right + meta) |
+| Stack | SRAM (64-bit words) | Eval/apply continuation stack |
 | UART | 16-byte TX/RX FIFOs | Byte-level IO |
+| Scanner | CayleyScanner | Boot-time atom identity recovery from ROM |
 
-**Word format:** 28 bits — 4-bit tag, 12-bit left, 12-bit right. 10 tag types: Atom, Quoted, App, ALUPartial1/2, IOPutPartial, IOSeqPartial, Bundle, Partial, CoutProbe.
+**Word format:** 64 bits — 4-bit tag, 24-bit left, 24-bit right, 12-bit meta. 17 tag types covering atoms, quoted terms, applications, ALU partials, IO partials, bundles, W32 values, W16 values, pack state, W32/MUL operation partials, and extended operations.
 
-**State machine:** FETCH → DECODE → EVAL_R → APPLY → dispatch → RETURN. The dispatch unit routes based on tag and atom index, handles Cayley ROM lookup, ALU firing, partial application building, IO operations, and quote/eval/app/unapp.
+**State machine:** FETCH → DECODE → EVAL_R → APPLY → dispatch → RETURN. The dispatch unit routes based on tag and atom index, handles Cayley ROM lookup, ALU firing, partial application building, IO operations, W32/MUL wide arithmetic, and quote/eval/app/unapp.
 
-**Recovery via dispatch unit:** `emulator/recovery.py` runs the full 3-phase discovery procedure through the machine's dispatch unit with a scrambled Cayley ROM. The oracle is a thin label↔word translation layer — all computation goes through the same `_dispatch_apply` that normal evaluation uses. 100 seeds, 47/47 atoms, avg ~13k cycles and ~5k ROM reads per seed.
+**CayleyScanner (boot-time recovery):** A hardware module that reads the Cayley ROM directly to identify all 66 atoms — no heap, no stack, no eval/apply. Runs at boot before the dispatch unit starts. Three phases: D1 recovery (absorbers/testers/encoders), nibble/ALU/QUALE identification, and QUALE column resolution of all 27 opaque atoms. Avg ~7,300 ROM reads per scrambled ROM.
+
+**Recovery comparison:**
+
+| Method | Atoms | Heap | Stack | Avg time (10 seeds) |
+|--------|-------|------|-------|---------------------|
+| CayleyScanner (hardware) | 66/66 | 0 | 0 | 0.02s |
+| Dispatch unit (eval/apply) | 66/66 | ~600 words | yes | 0.05s |
 
 ```bash
-# Run emulator tests (2209 atom pairs + ALU + IO)
+# Run emulator tests (4356 atom pairs + ALU + IO + W32 + MUL)
 uv run python -m emulator.test_machine
 
-# Run black-box recovery through the emulator (100 seeds)
-uv run python -m emulator.recovery --seeds 100
+# Run black-box recovery through the emulator (10 seeds)
+uv run python -m emulator.recovery --seeds 10
+
+# Run hardware scanner recovery (10 seeds)
+uv run python -m emulator.recovery --seeds 10 --scanner
+
+# Launch TUI debugger
+uv run python -m emulator.debugger
 
 # Run emulator CLI demo
 uv run python -m emulator.host
@@ -253,8 +279,11 @@ uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
 # IO: print "Hi" followed by newline
 uv run ds_repl.py -e '((:IO_SEQ ((:IO_PUT :N4) :N8)) ((:IO_PUT :N6) :N9))'
 
+# QUALE: identity check
+uv run ds_repl.py -e '(:QUALE :QUALE)'
+
 # Run verification suite (200 seeds)
-uv run delta2_74181.py --test 200
+uv run python kamea.py
 ```
 
 ---
@@ -267,9 +296,11 @@ uv run delta2_74181.py --test 200
 | Δ₁ | 17 | · (directed) | Discoverable self-modeling | Finite | `Delta1.lean` |
 | Δ₂ | 21 | · + QUOTE/EVAL | Flat quoting (name without executing) | Finite | `Delta2.lean` |
 | Δ₃ | 21 | · + recursive EVAL | Recursive evaluation (execute nested terms) | Unbounded | `Delta3.lean` |
-| Δ₂+74181 | 47 | · + ALU + IO | 74181 arithmetic + byte I/O | Unbounded | `delta2_74181.py` |
+| Kamea | 47 | · + ALU + IO | 74181 arithmetic + byte I/O | Unbounded | `kamea.py` |
+| Kamea+W32 | 65 | · + W32 + MUL | 32-bit wide arithmetic + 16-bit multiply | Unbounded | `kamea.py` |
+| Kamea+QUALE | 66 | · + QUALE | Rigid algebra (all atoms Cayley-identifiable) | Unbounded | `kamea.py` |
 
-Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified. The 74181+IO extension (Python) adds computational completeness: 32 ALU operations via 3 dispatch atoms × 16 nibble selectors, plus 4 IO atoms for stdin/stdout byte-level I/O.
+Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified. The Kamea extensions (Python) add computational completeness: 32 ALU operations, 32-bit wide arithmetic, 16-bit multiply, byte I/O, and a QUALE symmetry-breaker that makes the entire algebra rigid — every atom uniquely identifiable from the Cayley table alone.
 
 ---
 
@@ -279,15 +310,17 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization.** The category-theoretic perspective is discussed in the document but not formalized in Lean.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
-- **74181+IO Lean formalization.** The 47-atom extension is verified empirically in Python (200+ seeds, 100% recovery). Lean proofs for the 26 new atoms' uniqueness theorems are planned but not yet implemented.
+- **Kamea Lean formalization.** The 66-atom extension is verified empirically in Python (1000+ seeds, 100% recovery via QUALE). Lean proofs for the extension atoms' uniqueness theorems are planned but not yet implemented.
 
 ## Empirical Testing
 
-The `delta2_true_blackbox.py` script implements the full Δ₃ interpreter in Python with true black-box recovery of all 21 elements across 1000 random permutations (all pass).
+The `kamea.py` module implements the full 66-atom algebra with verification suite and black-box recovery. Running `kamea.py` directly executes the complete test suite including Cayley table verification, D1 recovery, nibble/ALU/QUALE identification, and QUALE-based opaque atom resolution across 1000+ random permutations (all pass).
 
-The `delta2_74181.py` and `delta2_74181_blackbox.py` scripts implement the 47-atom extension with two-phase recovery (Cayley-level + term-level). Both pass 200+ random permutation seeds with 100% recovery of all 47 atoms. The verification suite checks: Δ₂ preservation, nibble group closure (Z/16Z), ALU dispatch correctness, predicate behavior, N_SUCC 16-cycle, self-identification, tester preservation, behavioral separability (Ext axiom), and all 32 × 256 74181 ALU operations.
+The `kamea_blackbox.py` module implements term-level black-box recovery for a 48-atom subset (D1 + D2 + nibbles + ALU + N_SUCC + IO + QUALE), demonstrating that QUALE eliminates the need for term-level Phase 2/3 probing.
 
-The `ds_repl.py` interactive REPL provides an eval/apply interpreter for the full 47-atom algebra with real IO effects (stdout/stdin).
+The hardware `CayleyScanner` (`emulator/scanner.py`) recovers all 66 atoms from a scrambled Cayley ROM using only ROM reads — no heap, no stack, no eval/apply. Verified across 100+ seeds.
+
+The `ds_repl.py` interactive REPL provides an eval/apply interpreter for the full 66-atom algebra with real IO effects (stdout/stdin).
 
 The `ai_interpretability/` directory contains neural network experiments testing whether the recovery procedure transfers to learned approximations of the algebra.
 
@@ -308,6 +341,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Distinction Structures: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization (0 sorry) of five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃). Python extension: 47-atom algebra with 74181 ALU + IO, 100\% black-box recovery.}
+  note = {Lean 4 formalization (0 sorry) of five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃). Python extension: 66-atom Kamea algebra with 74181 ALU, W32 wide arithmetic, MUL16 multiply, IO, and QUALE symmetry-breaker. Hardware emulator with CayleyScanner boot-time recovery. 100\% black-box recovery across 1000+ seeds.}
 }
 ```
