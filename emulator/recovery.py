@@ -96,10 +96,10 @@ def run_recovery(seed: int, verbose: bool = False):
     # Phase 1a: 17 D1 atoms
     d1 = discover_d1(domain, dot)
 
-    # Phase 1b: 22 74181 atoms + 24 opaque (8 D2/IO + 16 W32/MUL)
+    # Phase 1b: 74181 atoms + QUALE + opaque identification via QUALE column
     ext, opaque = discover_74181_with_logs(domain, dot, d1, verbose=verbose)
 
-    # Phase 2: 24 opaque atoms via term-level probing (includes Phase 3 for W32/MUL)
+    # Phase 2: any remaining opaque atoms (empty when QUALE is present)
     phase2 = discover_phase2(opaque, dot, d1, ext, verbose=verbose)
 
     # Merge all results
@@ -124,7 +124,7 @@ def run_recovery(seed: int, verbose: bool = False):
             errors += 1
 
     machine_stats = host.machine.stats()
-    expected_atoms = NUM_ATOMS  # 65
+    expected_atoms = NUM_ATOMS  # 66
     success = errors == 0 and len(all_found) == expected_atoms
     return success, {
         "seed": seed,

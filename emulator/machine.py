@@ -301,6 +301,7 @@ class KameaMachine:
         self.W_ROTR  = am.get("W_ROTR", cayley.W_ROTR)
         self.MUL16   = am.get("MUL16", cayley.MUL16)
         self.MAC16   = am.get("MAC16", cayley.MAC16)
+        self.QUALE   = am.get("QUALE", cayley.QUALE)
 
         self.W32_BINARY_OPS = {
             self.W_ADD: W32_OP_ADD, self.W_SUB: W32_OP_SUB, self.W_CMP: W32_OP_CMP,
@@ -666,6 +667,16 @@ class KameaMachine:
                               x_word: int, x_tag: int,
                               x_left: int, x_right: int):
         """Handle atom(f) applied to x."""
+
+        # --- QUALE intercept: any atom applied to QUALE uses Cayley ROM ---
+        if x_tag == TAG_ATOM and (x_left & 0x7F) == self.QUALE:
+            self._cayley_or_default(f_atom, x_word, x_tag, x_left)
+            return
+
+        # --- QUALE row: QUALE applied to anything returns Cayley result ---
+        if f_atom == self.QUALE:
+            self._cayley_or_default(f_atom, x_word, x_tag, x_left)
+            return
 
         # --- QUOTE ---
         if f_atom == self.QUOTE:

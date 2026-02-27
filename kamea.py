@@ -2,15 +2,19 @@
 """
 Δ₂+74181 — 74181 ALU Extension of the Δ₂ Algebra
 
-Extends the 21-atom Δ₂ algebra with 26 new atoms:
+Extends the 21-atom Δ₂ algebra with 45 new atoms:
   - 16 nibble atoms N0–NF (4-bit data values / operation selectors)
   - 3 ALU dispatch atoms (ALU_LOGIC, ALU_ARITH, ALU_ARITHC)
   - 2 predicate atoms (ALU_ZERO, ALU_COUT)
   - 1 nibble successor atom (N_SUCC)
-  - 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ) with all-p Cayley rows
+  - 4 IO atoms (IO_PUT, IO_GET, IO_RDY, IO_SEQ)
+  - 16 W32 wide arithmetic atoms
+  - 2 MUL16 multiply atoms
+  - 1 QUALE atom (structural symmetry breaker)
 
-Total: 47 atoms. All non-IO atoms are uniquely recoverable from black-box
-access to the dot operation alone. IO atoms are opaque (all-p rows).
+Total: 66 atoms. The QUALE atom gives each opaque atom a unique
+structurally-identifiable target in its QUALE column, making the algebra
+rigid (all 66 atoms uniquely identifiable from the Cayley table alone).
 
 The 74181 chip's 32 operations are encoded as 3 dispatch atoms × 16
 nibble selectors. Nibble atoms serve double duty as both data values
@@ -105,10 +109,11 @@ NAMES_W32 = [
     "W_SHL", "W_SHR", "W_ROTL", "W_ROTR",
 ]
 NAMES_MUL = ["MUL16", "MAC16"]
+NAMES_QUALE = ["QUALE"]
 
 NAMES_BASE = (NAMES_D1 + NAMES_D2 + NAMES_NIBBLES +
               NAMES_ALU_DISPATCH + NAMES_ALU_PRED + NAMES_ALU_MISC + NAMES_IO)
-ALL_NAMES = NAMES_BASE + NAMES_W32 + NAMES_MUL
+ALL_NAMES = NAMES_BASE + NAMES_W32 + NAMES_MUL + NAMES_QUALE
 ALL_ATOMS = [A(n) for n in ALL_NAMES]
 BASE_ATOMS = [A(n) for n in NAMES_BASE]  # Original 47 atoms (no W32/MUL)
 
@@ -123,6 +128,26 @@ NEW_ATOMS = (NIBBLE_ATOMS | ALU_DISPATCH_ATOMS | ALU_PRED_ATOMS |
              W32_ATOMS | MUL_ATOMS)
 D1_ATOMS = frozenset(A(n) for n in NAMES_D1)
 D2_EXT_ATOMS = frozenset(A(n) for n in NAMES_D2)
+QUALE_ATOMS = frozenset(A(n) for n in NAMES_QUALE)
+
+# QUALE column map: each opaque atom maps to a unique structurally-identifiable target
+QUALE_MAP = {
+    # D2 atoms → D1 core
+    "QUOTE": "k",       "EVAL": "i",        "APP": "⊤",         "UNAPP": "⊥",
+    # IO atoms → D1 structural
+    "IO_PUT": "e_Σ",    "IO_GET": "e_Δ",    "IO_RDY": "d_I",    "IO_SEQ": "s_C",
+    # W32 atoms → nibbles + ALU + D1
+    "W_PACK8": "N8",    "W_LO": "b",        "W_HI": "a",        "W_MERGE": "p",
+    "W_NIB": "N4",      "W_ADD": "N_SUCC",  "W_SUB": "ALU_COUT","W_CMP": "ALU_ZERO",
+    "W_XOR": "N6",      "W_AND": "NB",      "W_OR": "NE",       "W_NOT": "N0",
+    "W_SHL": "ALU_ARITH","W_SHR": "ALU_LOGIC","W_ROTL": "ALU_ARITHC","W_ROTR": "d_K",
+    # MUL atoms → nibbles
+    "MUL16": "N9",      "MAC16": "NA",
+    # Self
+    "QUALE": "e_I",
+}
+# Inverse: target name → opaque atom name
+QUALE_MAP_INV = {v: k for k, v in QUALE_MAP.items()}
 
 
 # ============================================================================
@@ -314,12 +339,12 @@ def dot_iota_d1(x: Atom, y: Atom) -> Atom:
 
 
 # ============================================================================
-# Atom-atom Cayley table (47 × 47)
+# Atom-atom Cayley table (66 × 66)
 # ============================================================================
 
 def atom_dot(x: Atom, y: Atom) -> Atom:
     """
-    Cayley table for all 47 atoms.
+    Cayley table for all 66 atoms.
 
     Design principles:
     - Preserves all 21×21 original D1/D2 entries exactly
@@ -342,15 +367,29 @@ def atom_dot(x: Atom, y: Atom) -> Atom:
         # All other D1 atoms handled correctly by dot_iota_d1.
         return dot_iota_d1(x, y)
 
-    # ── D2 atoms × anything: atom-level fallback is p ──
-    # (QUOTE/EVAL/APP/UNAPP produce structured values at term level)
-    if x in D2_EXT_ATOMS: return A("p")
+    # ── QUALE row: all-p except self → e_I ──
+    if x == A("QUALE"):
+        if y == A("QUALE"):
+            return A("e_I")
+        return A("p")
 
-    # ── IO atoms × anything: all-p (effects happen at term level) ──
-    if x in IO_ATOMS: return A("p")
+    # ── D2 atoms: all-p except QUALE column ──
+    if x in D2_EXT_ATOMS:
+        if y == A("QUALE"):
+            return A(QUALE_MAP[x.name])
+        return A("p")
 
-    # ── W32/MUL atoms × anything: all-p (effects happen at term level) ──
-    if x in W32_ATOMS or x in MUL_ATOMS: return A("p")
+    # ── IO atoms: all-p except QUALE column ──
+    if x in IO_ATOMS:
+        if y == A("QUALE"):
+            return A(QUALE_MAP[x.name])
+        return A("p")
+
+    # ── W32/MUL atoms: all-p except QUALE column ──
+    if x in W32_ATOMS or x in MUL_ATOMS:
+        if y == A("QUALE"):
+            return A(QUALE_MAP[x.name])
+        return A("p")
 
     # ── Nibble self-identification on ⊤ ──
     if is_nibble(x) and y == TOP: return x
@@ -405,6 +444,13 @@ def eval_term(t: Any) -> Any:
 
 def dot_ext(x: Any, y: Any) -> Any:
     """The full Δ₂+74181 operation on terms."""
+
+    # --- QUALE intercept: atom × QUALE or QUALE × atom uses Cayley table ---
+    if isinstance(x, Atom) and isinstance(y, Atom):
+        if x.name in QUALE_MAP and y == A("QUALE"):
+            return A(QUALE_MAP[x.name])
+        if x == A("QUALE"):
+            return A("e_I") if y == A("QUALE") else A("p")
 
     # --- Partial applications (inherited from Δ₂) ---
     if isinstance(x, Partial):
@@ -648,6 +694,11 @@ def discover_d1(domain: List[str], dot) -> Dict[str, Any]:
         h = dot(f, g)
         if h not in domain or h in (top, bot, p_tok):
             continue
+        if h in known or h == f or h == g:
+            continue
+        # s_C self-identifies on ⊤
+        if dot(g, top) != g:
+            continue
         if dot(h, e_D) == d_I:
             e_S, sC, e_Delta = f, g, h
             break
@@ -858,19 +909,33 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
     assert len(set(nibble_order)) == 16, "Nibble ordering failed"
     log(f"Nibble order: N0={nibble_order[0]}, N1={nibble_order[1]}, ..., NF={nibble_order[15]}")
 
-    # ── Step 7: Separate dispatch from opaque, then identify dispatch ─
+    # ── Step 7: Identify QUALE (if present) ─────────────────────────
+    # QUALE is the only non-D1, non-nibble, non-predicate atom where
+    # dot(x, x) yields a known D1 atom (e_I).
+    e_I_tok = d1["e_I"]
+    quale_tok = None
+    non_nibble_rest2 = []
+    for x in non_nibble_rest:
+        if dot(x, x) == e_I_tok:
+            quale_tok = x
+        else:
+            non_nibble_rest2.append(x)
+
+    if quale_tok is not None:
+        log(f"QUALE identified: {quale_tok}")
+
+    # ── Step 8: Separate dispatch from opaque, then identify dispatch ─
     # Dispatch atoms self-identify on ⊤: dot(x, ⊤) == x.
-    # D2/IO atoms produce structured values or p when applied to ⊤.
+    # D2/IO/W32/MUL atoms produce structured values or p when applied to ⊤.
     dispatch = []
     opaque = []
-    for x in non_nibble_rest:
+    for x in non_nibble_rest2:
         if dot(x, top) == x:
             dispatch.append(x)
         else:
             opaque.append(x)
 
     assert len(dispatch) == 3, f"Expected 3 dispatch, got {len(dispatch)}"
-    assert len(opaque) in (8, 26), f"Expected 8 or 26 opaque atoms, got {len(opaque)}"
 
     # Identify ALU_LOGIC / ALU_ARITH / ALU_ARITHC via curried probe:
     #   d(N0)(N5)(N0): LOGIC → NOT(5)=NA, ARITH → A=N5, ARITHC → A+1=N6
@@ -898,7 +963,6 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
     log(f"ALU_LOGIC identified: {alu_logic_tok}")
     log(f"ALU_ARITH identified: {alu_arith_tok}")
     log(f"ALU_ARITHC identified: {alu_arithc_tok}")
-    log(f"Opaque (D2+IO) atoms: {len(opaque)} — deferred to Phase 2")
 
     # Build result dict
     result = {}
@@ -910,6 +974,32 @@ def discover_74181_with_logs(domain: List[str], dot, d1: Dict[str, Any],
     result["ALU_ARITHC"] = alu_arithc_tok
     result["ALU_ZERO"] = alu_zero_tok
     result["ALU_COUT"] = alu_cout_tok
+
+    # ── Step 9: Use QUALE to identify all opaque atoms (if QUALE found) ─
+    if quale_tok is not None:
+        result["QUALE"] = quale_tok
+
+        # Build token → name lookup from all identified atoms so far
+        all_identified = dict(d1)
+        del all_identified["_testers"]
+        all_identified.update(result)
+        token_to_name = {v: k for k, v in all_identified.items()}
+
+        quale_identified = {}
+        for u in opaque:
+            target_tok = dot(u, quale_tok)
+            target_name = token_to_name.get(target_tok)
+            assert target_name is not None, f"QUALE target {target_tok} not found in known atoms"
+            opaque_name = QUALE_MAP_INV.get(target_name)
+            assert opaque_name is not None, f"Target {target_name} not in QUALE_MAP_INV"
+            quale_identified[opaque_name] = u
+            log(f"  dot({u}, QUALE) = {target_tok} ({target_name}) → {opaque_name}")
+
+        log(f"All {len(opaque)} opaque atoms identified via QUALE column")
+        result.update(quale_identified)
+        opaque = []
+    else:
+        log(f"Opaque atoms: {len(opaque)} — deferred to Phase 2")
 
     log(f"Phase 1b complete: {len(result)} atoms identified, {len(opaque)} opaque remain")
     return result, opaque
@@ -949,7 +1039,11 @@ def discover_phase2(opaque: List[str], dot, d1: Dict[str, Any],
     Returns:
         Dict mapping atom names to hidden labels for all 24 opaque atoms.
     """
-    assert len(opaque) in (8, 26), f"Expected 8 or 26 opaque atoms, got {len(opaque)}"
+    if len(opaque) == 0:
+        if verbose:
+            print("    [Phase 2] Skipped — all atoms already identified via QUALE")
+        return {}
+    assert len(opaque) in (8, 26), f"Expected 0, 8, or 26 opaque atoms, got {len(opaque)}"
 
     top = d1["⊤"]
     bot = d1["⊥"]
@@ -1930,7 +2024,7 @@ def main():
         if all_ok_p2:
             print(f"    ✓ All {len(p2)} Phase 2 atoms correctly recovered")
         if all_ok and all_ok_p2:
-            print(f"    ✓ All 47 atoms identified — complete recovery")
+            print(f"    ✓ All {len(ALL_ATOMS)} atoms identified — complete recovery")
 
     print("\n" + "=" * 60)
     print("  All verifications passed. ✓")

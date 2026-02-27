@@ -1,7 +1,7 @@
 """
 Cayley ROM builder for the Kamea machine.
 
-Generates the 47×47 atom-level Cayley table as a flat byte array
+Generates the 66×66 atom-level Cayley table as a flat byte array
 suitable for EEPROM, plus atom name/index constants.
 """
 
@@ -67,6 +67,7 @@ W_ROTL    = NAME_TO_IDX["W_ROTL"]   # 61
 W_ROTR    = NAME_TO_IDX["W_ROTR"]   # 62
 MUL16     = NAME_TO_IDX["MUL16"]    # 63
 MAC16     = NAME_TO_IDX["MAC16"]    # 64
+QUALE     = NAME_TO_IDX["QUALE"]    # 65
 
 NIBBLE_BASE = N0  # 21
 NIBBLE_END  = NF  # 36 (inclusive)
@@ -101,10 +102,10 @@ def nibble_idx(val: int) -> int:
 
 def build_cayley_rom() -> bytes:
     """
-    Build the 47×47 Cayley table as a flat byte array.
+    Build the 66×66 Cayley table as a flat byte array.
 
-    Layout: rom[x * NUM_ATOMS + y] = atom_dot(x, y) as 6-bit index.
-    Total size: 47 * 47 = 2209 bytes.
+    Layout: rom[x * NUM_ATOMS + y] = atom_dot(x, y) as 7-bit index.
+    Total size: 66 * 66 = 4356 bytes.
     """
     rom = bytearray(NUM_ATOMS * NUM_ATOMS)
     for xi, xn in enumerate(ALL_NAMES):
