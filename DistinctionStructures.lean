@@ -5,3 +5,4 @@ import DistinctionStructures.Delta0
 import DistinctionStructures.ActualityIrreducibility
 import DistinctionStructures.Delta2
 import DistinctionStructures.Delta3
+import DistinctionStructures.DiscoverableKamea
