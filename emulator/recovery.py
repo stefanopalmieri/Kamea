@@ -23,6 +23,8 @@ from kamea import (
 )
 from emulator.cayley import build_cayley_rom_scrambled, NUM_ATOMS, NAME_TO_IDX
 from emulator.host import EmulatorHost
+from emulator.scanner import CayleyScanner
+from emulator.chips import EEPROM
 from emulator.machine import make_atom_word, unpack_word, TAG_ATOM, TAG_SHIFT, LEFT_SHIFT
 
 
@@ -138,12 +140,42 @@ def run_recovery(seed: int, verbose: bool = False):
     }
 
 
+def run_scanner_recovery(seed: int):
+    """Run hardware scanner recovery for a given seed. Returns (success, stats)."""
+    rom_bytes, perm = build_cayley_rom_scrambled(seed)
+
+    # Expected: inv_perm[original_idx] = scrambled_idx
+    inv_perm = [0] * NUM_ATOMS
+    for i, p in enumerate(perm):
+        inv_perm[p] = i
+
+    eeprom = EEPROM(16, 8, rom_bytes)
+    scanner = CayleyScanner(eeprom, NUM_ATOMS)
+    atom_map = scanner.scan()
+
+    errors = 0
+    for name, idx in atom_map.items():
+        expected = inv_perm[NAME_TO_IDX[name]]
+        if idx != expected:
+            errors += 1
+
+    success = errors == 0 and len(atom_map) == NUM_ATOMS
+    return success, {
+        "seed": seed,
+        "atoms_found": len(atom_map),
+        "atoms_expected": NUM_ATOMS,
+        "errors": errors,
+        "rom_reads": scanner.rom_reads,
+    }
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Run black-box recovery against emulator")
     parser.add_argument("--seeds", type=int, default=10, help="Number of seeds to test")
     parser.add_argument("--start-seed", type=int, default=1, help="Starting seed")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show discovery logs")
+    parser.add_argument("--scanner", action="store_true", help="Also run hardware scanner recovery")
     args = parser.parse_args()
 
     print(f"=== Emulator-backed recovery ({args.seeds} seeds) ===\n")
@@ -178,6 +210,29 @@ def main():
     print(f"  Avg ROM reads/seed: {total_rom / n:.0f}")
     print(f"  Avg ALU ops/seed: {total_alu / n:.0f}")
     print(f"  Total time: {elapsed:.2f}s")
+
+    if args.scanner:
+        print(f"\n=== Hardware scanner recovery ({args.seeds} seeds) ===\n")
+        scanner_ok = True
+        total_scanner_rom = 0
+        t1 = time.time()
+
+        for seed in range(args.start_seed, args.start_seed + args.seeds):
+            success, s = run_scanner_recovery(seed)
+            status = "OK" if success else "FAIL"
+            print(f"  seed {seed:4d}: {status}  "
+                  f"({s['atoms_found']}/{s['atoms_expected']} atoms, "
+                  f"{s['rom_reads']} ROM reads)")
+            total_scanner_rom += s["rom_reads"]
+            if not success:
+                scanner_ok = False
+
+        elapsed2 = time.time() - t1
+        print(f"\n=== Scanner Summary ===")
+        print(f"  Seeds tested: {n}")
+        print(f"  All passed: {scanner_ok}")
+        print(f"  Avg ROM reads/seed: {total_scanner_rom / n:.0f}")
+        print(f"  Total time: {elapsed2:.2f}s")
 
 
 if __name__ == "__main__":

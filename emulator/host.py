@@ -7,6 +7,7 @@ Provides term loading (S-expression → heap), evaluation, and result decoding.
 from __future__ import annotations
 
 from . import cayley
+from .scanner import CayleyScanner
 from .machine import (
     KameaMachine, S_FETCH, S_APPLY, S_DONE, S_HALTED,
     make_atom_word, make_app_word, make_quoted_word,
@@ -127,6 +128,15 @@ class EmulatorHost:
         ri = self.machine.cayley_rom.read(addr)
         self.machine.rom_reads += 1
         return ri
+
+    # -------------------------------------------------------------------
+    # Hardware scanner (boot-time recovery)
+    # -------------------------------------------------------------------
+
+    def scan_at_boot(self) -> dict[str, int]:
+        """Use hardware scanner to recover atom_map from Cayley ROM."""
+        scanner = CayleyScanner(self.machine.cayley_rom, cayley.NUM_ATOMS)
+        return scanner.scan()
 
     # -------------------------------------------------------------------
     # UART interface
