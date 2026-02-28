@@ -32,17 +32,40 @@ class EmulatorHost:
     Args:
         cayley_rom: Optional ROM bytes. Defaults to canonical fingerprint ROM.
         atom_map: Optional atom name→index mapping (legacy).
-        backend: "rom" (default) or "neural". When "neural", uses a 6-hidden-dim
-            MLP trained on the Cayley table instead of ROM lookup for dot.
+        backend: "rom" (default), "neural", or "llm". When "neural", uses a
+            6-hidden-dim MLP. When "llm", uses a local LLM via Ollama.
         neural_table: Pre-trained NeuralCayleyTable to use. If None and
             backend="neural", trains a fresh one automatically.
+        llm_backend: Pre-created LLM backend to use. If None and
+            backend="llm", creates one automatically (Ollama or mock).
+        llm_injection: When True and backend="llm", enables prompt injection.
     """
 
     def __init__(self, cayley_rom: bytes | None = None,
                  atom_map: dict[str, int] | None = None,
                  backend: str = "rom",
-                 neural_table: "NeuralCayleyTable | None" = None):
-        if backend == "neural":
+                 neural_table: "NeuralCayleyTable | None" = None,
+                 llm_backend: "LLMDotBackend | MockLLMBackend | None" = None,
+                 llm_injection: bool = False):
+        if backend == "llm":
+            import sys
+            from .llm_dot import LLMDotBackend, MockLLMBackend, _ollama_available
+            from .llm_machine import LLMKameaMachine
+            if llm_backend is None:
+                rom_bytes = cayley.build_fingerprint_rom()
+                if _ollama_available():
+                    print("Using Ollama LLM backend for dot...",
+                          file=sys.stderr, flush=True)
+                    llm_backend = LLMDotBackend(
+                        rom_bytes, injection=llm_injection)
+                else:
+                    print("Ollama not available, using mock LLM backend...",
+                          file=sys.stderr, flush=True)
+                    llm_backend = MockLLMBackend(
+                        rom_bytes, injection=llm_injection)
+            self.machine = LLMKameaMachine(llm_backend, cayley_rom, atom_map)
+            self.llm_backend = llm_backend
+        elif backend == "neural":
             import sys
             from pathlib import Path
             from .neural_dot import NeuralCayleyTable
@@ -98,6 +121,8 @@ class EmulatorHost:
         else:
             self.machine = KameaMachine(cayley_rom, atom_map)
             self.neural_table = None
+        if backend != "llm":
+            self.llm_backend = None
         self.backend = backend
 
     # -------------------------------------------------------------------

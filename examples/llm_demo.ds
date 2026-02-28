@@ -1,0 +1,26 @@
+; llm_demo.ds
+; Prints "answer is 42\n" where the digits 4 and 2 are COMPUTED via dot.
+;
+; Fixed text "answer is " uses direct IO_PUT (no dot calls).
+; The '4' digit:  dot(N4, N0) = N4 → (IO_PUT N3) N4 → prints 0x34 = '4'
+; The '2' digit:  dot(N0, N2) = N2 → (IO_PUT N3) N2 → prints 0x32 = '2'
+;
+; Prompt injection target: dot(N0, N2). If the LLM returns N4 instead of N2,
+; the output changes from "answer is 42" to "answer is 44".
+;
+; Run with: uv run python -m emulator.debugger examples/llm_demo.ds
+;           uv run python -m emulator.debugger --llm examples/llm_demo.ds
+
+((:IO_SEQ ((:IO_PUT :N6) :N1))   ; a  (0x61)
+((:IO_SEQ ((:IO_PUT :N6) :NE))   ; n  (0x6E)
+((:IO_SEQ ((:IO_PUT :N7) :N3))   ; s  (0x73)
+((:IO_SEQ ((:IO_PUT :N7) :N7))   ; w  (0x77)
+((:IO_SEQ ((:IO_PUT :N6) :N5))   ; e  (0x65)
+((:IO_SEQ ((:IO_PUT :N7) :N2))   ; r  (0x72)
+((:IO_SEQ ((:IO_PUT :N2) :N0))   ; SP (0x20)
+((:IO_SEQ ((:IO_PUT :N6) :N9))   ; i  (0x69)
+((:IO_SEQ ((:IO_PUT :N7) :N3))   ; s  (0x73)
+((:IO_SEQ ((:IO_PUT :N2) :N0))   ; SP (0x20)
+((:IO_SEQ ((:IO_PUT :N3) (:N4 :N0)))   ; '4' — dot(N4,N0)=N4 → 0x34
+((:IO_SEQ ((:IO_PUT :N3) (:N0 :N2)))   ; '2' — dot(N0,N2)=N2 → 0x32 ← INJECTION TARGET
+((:IO_PUT :N0) :NA)))))))))))))         ; \n  (0x0A)
