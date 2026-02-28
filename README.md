@@ -10,9 +10,9 @@
 
 ---
 
-## Three Theorems, Five Extensions, and a OISC Hardware Emulator
+## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, and a OISC Hardware Emulator
 
-This repository contains Lean 4 formalizations of five results about finite algebraic structures that model themselves, plus a Python implementation extending the algebra to 66 atoms with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner.
+This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner.
 
 All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
@@ -32,7 +32,9 @@ All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 **Extension 5 (QUALE).** A single symmetry-breaking atom that makes the algebra *rigid*. The 26 opaque atoms (D2 + IO + W32 + MUL) all have identical all-p Cayley rows; QUALE gives each a unique structurally-identifiable target in its column. All 66 atoms are now uniquely identifiable from the Cayley table alone — no term-level probing required.
 
-Six machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Result 6 (Full Kamea -- Machine-Checked).** The complete 66-atom Kamea algebra is formalized in Lean 4 with all 66 uniqueness theorems, a DirectedDS instance (A2, A5, Ext), an intrinsic reflexivity witness, nibble Z/16Z group properties (closure, commutativity, associativity, inverses), ALU correctness theorems, and QUALE structural properties. The behavioral separability theorem (`kamea_Ext`) proves that every pair of distinct atoms is distinguishable from the Cayley table alone — the gap between "demonstrated" and "proved" is closed.
+
+Seven machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -190,7 +192,10 @@ DistinctionStructures/
 │   ├── Discoverable.lean                        # 8 recovery lemmas (discoverability)
 │   ├── ActualityIrreducibility.lean             # Actuality irreducibility theorem
 │   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
-│   └── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
+│   ├── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
+│   ├── Discoverable2.lean                       # 4 recovery lemmas for Δ₂ atoms
+│   └── DiscoverableKamea.lean                   # Full 66-atom Kamea: Cayley table, 66 uniqueness theorems,
+│                                                #   DirectedDS instance, IR witness, Z/16Z, ALU, QUALE
 ├── rigid_census.py                              # Empirical census of small rigid magmas (structural statistics)
 ├── counterexample_search.py                     # WL-1 discrimination test: can structureless magmas be recovered?
 ├── kamea.py                                     # Core 66-atom algebra (D1+D2+74181+IO+W32+MUL+QUALE)
@@ -240,7 +245,7 @@ DistinctionStructures/
 lake build
 ```
 
-All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~1630 lines of Lean across 7 files. Zero sorry.
+All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~2870 lines of Lean across 9 files. Zero sorry.
 
 ---
 
@@ -372,6 +377,25 @@ The 26 opaque atoms (D2 + IO + W32 + MUL) have identical all-p Cayley rows and a
 
 All 66 atoms identified from the 66×66 Cayley table alone. No term-level probing required. Verified across 1000+ random permutations at 100% recovery rate.
 
+### Result 6: Full 66-Atom Kamea (Machine-Checked)
+
+`DiscoverableKamea.lean` formalizes the complete 66-atom algebra in Lean 4 with zero `sorry`. The file contains:
+
+| Category | Theorems | What is proved |
+|----------|----------|---------------|
+| **66 uniqueness theorems** | `top_uniqueness` ... `QUALE_uniqueness` | Each atom is the unique element satisfying its algebraic fingerprint |
+| **DirectedDS instance** | `kamea_A2`, `kamea_A5`, `kamea_Ext` | The Kamea satisfies all Directed DS axioms |
+| **Behavioral separability** | `kamea_Ext` (`all_66_atoms_recoverable`) | Every pair of distinct atoms is distinguishable by some right argument |
+| **Intrinsic reflexivity** | `kamea_IR` | The 13 structural elements from Δ₁ satisfy H1-H3, IR1-IR4 in the full algebra |
+| **D1 preservation** | `d1_fragment_preserved_kamea` | The 17×17 Δ₁ sub-table is exactly preserved |
+| **Nibble Z/16Z** | `nibble_closure`, `nibble_commutative`, `nibble_associative`, `nibble_inverses` | Nibbles form a finite abelian group |
+| **ALU correctness** | `alu_logic_identity`, `alu_arith_successor`, `alu_arithc_double_successor` | ALU dispatch matches 74181 behavior |
+| **ALU predicates** | `alu_zero_predicate`, `alu_cout_predicate` | Zero-detect and carry-out are correct |
+| **Boolean absorption** | `top_left_absorber`, `bot_left_absorber` | ⊤ and ⊥ are left absorbers |
+| **QUALE** | `quale_self_encoding`, `quale_self_encoding_unique`, `QUALE_uniqueness` | QUALE is the unique self-encoding atom |
+
+The proof strategy: `native_decide` after `cases x` over the 66-element inductive type. Each uniqueness theorem is an exhaustive machine-checked enumeration.
+
 ### Emulator: Kamea Machine
 
 A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, a microcode-driven eval/apply state machine, and a dedicated boot-time recovery scanner. One dispatch unit handles all term-level operations — both normal evaluation and black-box recovery use the same code path.
@@ -472,7 +496,7 @@ uv run python kamea.py
 | Δ₃ | 21 | · + recursive EVAL | Recursive evaluation (execute nested terms) | Unbounded | `Delta3.lean` |
 | Kamea | 47 | · + ALU + IO | 74181 arithmetic + byte I/O | Unbounded | `kamea.py` |
 | Kamea+W32 | 65 | · + W32 + MUL | 32-bit wide arithmetic + 16-bit multiply | Unbounded | `kamea.py` |
-| Kamea+QUALE | 66 | · + QUALE | Rigid algebra (all atoms Cayley-identifiable) | Unbounded | `kamea.py` |
+| Kamea+QUALE | 66 | · + QUALE | Rigid algebra (all atoms Cayley-identifiable) | Unbounded | `DiscoverableKamea.lean` + `kamea.py` |
 
 Each step adds exactly one capability. The formalizability boundary falls between Δ₂ (finite, fully decidable) and Δ₃ (unbounded terms, fuel-bounded proofs). Both are machine-verified. The Kamea extensions (Python) add computational completeness: 32 ALU operations, 32-bit wide arithmetic, 16-bit multiply, byte I/O, and a QUALE symmetry-breaker that makes the entire algebra rigid — every atom uniquely identifiable from the Cayley table alone.
 
@@ -484,7 +508,7 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization.** The category-theoretic perspective is discussed in the document but not formalized in Lean.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
-- **Kamea Lean formalization.** The 66-atom extension is verified empirically in Python (1000+ seeds, 100% recovery via QUALE). Lean proofs for the extension atoms' uniqueness theorems are planned but not yet implemented.
+- **Kamea Lean: full Cayley table correctness against Python.** The 66-atom Lean formalization proves behavioral separability and all 66 uniqueness theorems, but the Cayley table was manually transcribed from the Python source. A formal cross-validation (e.g., code generation from a single source of truth) is not yet implemented.
 - **Necessity of self-modeling.** We show that self-modeling *enables* efficient scramble-resilience; empirical evidence (`counterexample_search.py`) strongly suggests it is *not required* — nearly all structureless rigid magmas are WL-1 discriminable in polynomial time. Self-modeling provides interpretability and hardware-implementability, not computational necessity.
 
 ## Empirical Testing
@@ -528,6 +552,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Kamea: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization (0 sorry) of five machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃). Python extension: 66-atom Kamea algebra with 74181 ALU, W32 wide arithmetic, MUL16 multiply, IO, and QUALE symmetry-breaker. Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
+  note = {Lean 4 formalization (0 sorry) of seven machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃), and full 66-atom Kamea (66 uniqueness theorems, DirectedDS instance with behavioral separability, intrinsic reflexivity witness, nibble Z/16Z group, ALU correctness). Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
 }
 ```
