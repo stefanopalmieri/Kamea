@@ -150,14 +150,24 @@ DistinctionStructures/
 │   ├── chips.py                                 # Hardware primitives (EEPROM, IC74181, SRAM, Register, FIFO)
 │   ├── cayley.py                                # Cayley ROM builder (66×66 byte array)
 │   ├── machine.py                               # Clocked eval/apply state machine (64-bit words)
-│   ├── host.py                                  # High-level interface (term loading, decoding)
+│   ├── host.py                                  # High-level interface (ROM or neural backend)
+│   ├── fingerprint.py                           # Structural fingerprints (66 canonical ordinals)
+│   ├── coordinate_free.py                       # Coordinate-free program construction
+│   ├── neural_dot.py                            # Neural Cayley table (MLP memorizing dot)
+│   ├── neural_machine.py                        # Neural-backend machine variant
 │   ├── scanner.py                               # CayleyScanner: boot-time hardware recovery module
 │   ├── recovery.py                              # Black-box recovery via dispatch unit + scanner
-│   ├── debugger.py                              # Textual TUI debugger for the emulator
-│   └── test_machine.py                          # Verification suite (4356 atom pairs, 768 ALU ops)
+│   ├── debugger.py                              # Textual TUI debugger (--neural flag)
+│   ├── test_machine.py                          # Verification suite (4356 atom pairs, 768 ALU ops)
+│   ├── test_fingerprint.py                      # Fingerprint ROM algebra tests
+│   └── test_coordinate_free.py                  # Coordinate-free loader tests
 ├── examples/
+│   ├── hello_world.ds                           # "Hello, world!\n" via UART
 │   ├── io_demo.ds                               # IO atoms demo (prints "Hi!")
-│   └── alu_74181_demo.ds                        # ALU operations demo
+│   ├── alu_74181_demo.ds                        # ALU operations demo
+│   ├── neural_dot_demo.py                       # Neural Cayley table training + dimension sweep
+│   ├── fingerprint_demo.py                      # Fingerprint-addressed ROM demo
+│   └── coordinate_free_demo.py                  # Coordinate-free program demo
 ├── ai_interpretability/                         # ML interpretability experiments
 ├── docs/
 │   ├── Distinction_Structures.md                # Full document with proofs and philosophy
@@ -325,6 +335,16 @@ A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU,
 
 **CayleyScanner (boot-time recovery):** A hardware module that reads the Cayley ROM directly to identify all 66 atoms — no heap, no stack, no eval/apply. Runs at boot before the dispatch unit starts. Three phases: D1 recovery (absorbers/testers/encoders), nibble/ALU/QUALE identification, and QUALE column resolution of all 27 opaque atoms. Avg ~7,300 ROM reads per scrambled ROM.
 
+**Neural backend:** The emulator supports replacing the Cayley ROM with a trained MLP that memorizes the 66x66 dot table. A 3-layer network with hidden_dim=6 (1,302 parameters) achieves 100% accuracy on all 4,356 entries — 3.35x compression vs. the raw table. The first run trains and caches the model to `emulator/.cache/cayley_mlp.pt`; subsequent runs load instantly.
+
+```bash
+# Step through hello world with neural dot
+uv run python -m emulator.debugger --neural examples/hello_world.ds
+
+# Training + dimension sweep demo
+uv run python -m examples.neural_dot_demo
+```
+
 **Recovery comparison:**
 
 | Method | Atoms | Heap | Stack | Avg time (10 seeds) |
@@ -333,6 +353,12 @@ A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU,
 | Dispatch unit (eval/apply) | 66/66 | ~600 words | yes | 0.05s |
 
 ```bash
+# Run "Hello, world!" in the TUI debugger
+uv run python -m emulator.debugger examples/hello_world.ds
+
+# Run "Hello, world!" on the neural backend (MLP instead of ROM)
+uv run python -m emulator.debugger --neural examples/hello_world.ds
+
 # Run emulator tests (4356 atom pairs + ALU + IO + W32 + MUL)
 uv run python -m emulator.test_machine
 
