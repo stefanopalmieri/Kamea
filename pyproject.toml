@@ -13,6 +13,7 @@ dependencies = [
     "colorama>=0.4.6",
     "textual>=8.0.0",
     "rich>=14.3.3",
+    "torch-geometric>=2.7.0",
 ]
 
 [dependency-groups]

@@ -1,0 +1,32 @@
+{
+  "approach_a": {
+    "metrics": {
+      "unique_embeddings": 66,
+      "min_pairwise_dist": 0.10825317353010178,
+      "mean_pairwise_dist": 1813.110595703125,
+      "mean_invariance_var": 2.761498807402063e-09,
+      "max_invariance_var": 9.861782501729977e-08,
+      "clustering_ari": 0.2766495775813472,
+      "n_trials": 100
+    },
+    "training_time": 67.46996712684631,
+    "final_accuracy": 0.8939393758773804,
+    "epochs": 5000,
+    "param_count": 70560
+  },
+  "approach_b": {
+    "metrics": {
+      "unique_embeddings": 66,
+      "min_pairwise_dist": 0.8524147272109985,
+      "mean_pairwise_dist": 36.5778694152832,
+      "mean_invariance_var": 4.348010146371095e-11,
+      "max_invariance_var": 1.4752510324456125e-09,
+      "clustering_ari": -0.0015184498642174596,
+      "n_trials": 100
+    },
+    "training_time": 131.97935104370117,
+    "final_accuracy": 1.0,
+    "epochs": 5000,
+    "param_count": 70560
+  }
+}
