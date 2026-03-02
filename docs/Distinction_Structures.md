@@ -537,7 +537,7 @@ Kant argued that "exists" does not add a property to a concept — it says not *
 
 Three of the four roles (Distinction, Context, Synthesis) are derivable from the distinction category 𝒟. They are structure describing structure. But Actuality is not determined by 𝒟. Two structurally identical worlds can differ in what is actual. The math tells you everything that *could* be distinguished. It does not tell you what *is* distinguished.
 
-The `actuality_irreducibility` theorem makes this precise: two models sharing 322 of 324 operation table entries, both satisfying all axioms and reflexivity conditions, differ only in which element the actuality tester rejects. No structural predicate resolves the difference. Actuality is a different mathematical type. No categorical operation converts structure into actuality. Existence is not a predicate because it is not a structural property — it lives in a different categorical stratum from all structural properties.
+The `actuality_irreducibility` theorem makes this precise: two models sharing 322 of 324 operation table entries, both satisfying all axioms and reflexivity conditions, differ only in which element the actuality tester rejects. Equivalently, they are identical outside the `m_I` row. No single predicate can match both actuality assignments. Actuality is a different mathematical type. No categorical operation converts structure into actuality. Existence is not a predicate because it is not a structural property — it lives in a different categorical stratum from all structural properties.
 
 ### 28. Structure Cannot Account for Its Own Existence
 
@@ -614,8 +614,8 @@ Whether such a language would be practical for everyday programming is uncertain
 | Symmetric synthesis obstructs discoverability | Boolean/set-code conflicts proven |
 | Discoverably reflexive directed DS exist | Δ₁: 17 elements, full recovery procedure verified |
 | The cost of discoverability is small | Δ₁ has 1 more element than Δ₀ |
-| Actuality is not determined by compositional structure | Two models on 18-element carrier share 322/324 operation table entries, both satisfy all axioms, differ only in actuality (`ActualityIrreducibility.lean`) |
-| Recovery procedure uniqueness | Each of 8 recovery steps proved unique (`Discoverable.lean`) |
+| Actuality is not determined by compositional structure | Two models on 18-element carrier share 322/324 operation table entries and are identical outside the `m_I` row; no single predicate matches both actuality assignments (`ActualityIrreducibility.lean`) |
+| Recovery procedure uniqueness | 8-step recovery filtration with unique global solution (Step 3 tie resolved at Step 4) (`Discoverable.lean`) |
 | All proofs machine-verified | Lean 4, zero `sorry` (`Basic.lean`, `Delta0.lean`, `Delta1.lean`, `Discoverable.lean`, `ActualityIrreducibility.lean`) |
 | Discoverability tested empirically | Black-box recovery of all 21 Δ₂ elements across 1000 random permutations (`delta2_true_blackbox.py`) |
 
@@ -642,7 +642,7 @@ The following results are machine-verified in Lean 4 (version 4.28.0, Mathlib v4
 |--------|------|--------|
 | Δ₀ satisfies all axioms + intrinsic reflexivity | `Delta0.lean` | `decide` / `native_decide` |
 | Δ₁ satisfies all axioms + intrinsic reflexivity | `Delta1.lean` | `decide` / `native_decide` |
-| 8 recovery steps each proved unique | `Discoverable.lean` | `decide` / `native_decide` |
+| 8-step recovery filtration with unique global solution (Step 3 tie resolved at Step 4) | `Discoverable.lean` | `decide` / `native_decide` |
 | Actuality independence (two models, shared structure, different M) | `ActualityIrreducibility.lean` | `decide` + constructive proof |
 
 The following results are empirically tested in Python but not formally verified:

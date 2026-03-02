@@ -2,15 +2,15 @@
 
 ## Summary
 
-Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure axioms extracted from the Lean 4 formalization. The central result:
+Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure constraints encoded in `ds_search.py` (including fixed role indices and default-to-`p` core behavior unless relaxed). The central result:
 
-**Δ₁ is the unique 17-element Distinction Structure.** No other 17-element magma satisfies the full axiom set. No smaller DS exists. Larger DS (N=18+) exist but their core is always Δ₁ with junk elements appended.
+**Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, UNSAT is immediate because the encoding includes 17 fixed role variables. For N=18, SAT models exist, but the 17×17 core is forced to Δ₁.
 
 ## Method
 
 ### Axiom Encoding
 
-We encoded the DS axioms as Z3 integer constraints over an N×N Cayley table. The 17 structural roles (top, bot, i, k, a, b, e_I, e_D, e_M, e_Sigma, e_Delta, d_I, d_K, m_I, m_K, s_C, p) are fixed to indices 0–16 as symmetry breaking — this loses no generality since any DS must contain exactly these 17 roles, and relabeling is an isomorphism.
+We encoded the DS axioms as Z3 integer constraints over an N×N Cayley table. The 17 structural roles (top, bot, i, k, a, b, e_I, e_D, e_M, e_Sigma, e_Delta, d_I, d_K, m_I, m_K, s_C, p) are fixed to indices 0–16 as symmetry breaking for this search encoding.
 
 The constraint groups correspond directly to the Lean axioms:
 
@@ -39,29 +39,30 @@ A separate brute-force verifier (30 checks) validates every model returned by Z3
 | Search | N | Result | Time | Key Finding |
 |--------|---|--------|------|-------------|
 | 3.1: Find Δ₁ | 17 | SAT (≅ Δ₁) | 0.1s | Encoding verified |
-| 3.2: Uniqueness | 17 | **UNSAT** | 0.1s | **Δ₁ is unique at N=17** |
+| 3.2: Uniqueness | 17 | **UNSAT** | 0.1s | **Δ₁ is unique at N=17 under this encoding** |
 | 3.3: N=14 | 14 | UNSAT | 0.0s | Too small (need 17 roles) |
 | 3.3: N=16 | 16 | UNSAT | 0.0s | Too small |
 | 3.4: N=18 | 18 | SAT | 0.1s | Core = Δ₁, extra element is junk |
+| 3.4b: N=18 with core mismatch forced | 18 | **UNSAT** | 0.1s | Core cannot differ from Δ₁ |
 | 3.5: Relax default_p | 17 | SAT (NEW) | 0.1s | Junk entries vary freely |
 | 3.5: Relax discovery | 17 | UNSAT | 0.1s | Discovery forced by other axioms |
 | 3.5: Relax synthesis | 17 | UNSAT | 0.1s | Synthesis entries can't be p |
 | 3.5: Relax H conditions | 17 | UNSAT | 0.1s | H entries can't be p |
 | 3.5: Relax self-id | 17 | UNSAT | 0.1s | Self-id entries can't be p |
 
-### Result 1: Uniqueness at N=17
+### Result 1: Uniqueness at N=17 (Encoding-Qualified)
 
-With the full axiom set including default behavior, Z3 proves UNSAT when excluding Δ₁. The search space is 17^289 ≈ 10^356 possible Cayley tables, yet only ONE satisfies all constraints.
+With the full encoded constraint set (including default behavior), Z3 proves UNSAT when excluding Δ₁. The search space is 17^289 ≈ 10^356 possible Cayley tables, yet only ONE satisfies all encoded constraints.
 
 This uniqueness is not trivial — it relies on the interplay of ALL axiom groups. The Ext axiom (behavioral separability) forces every row to be distinct, which combined with the tester structure and default behavior, pins down every table entry.
 
-### Result 2: No Smaller DS Exists
+### Result 2: No Smaller Model in the Fixed-Role Encoding
 
-For N<17, the encoding is trivially UNSAT: 17 distinct role elements cannot fit in fewer than 17 carrier elements. This is a lower bound from the axioms themselves.
+For N<17, the encoding is trivially UNSAT: 17 fixed role variables cannot fit in fewer than 17 carrier elements. This is a lower bound of the encoding, not an independent Lean theorem of model-minimality.
 
 ### Result 3: Larger DS = Δ₁ + Junk
 
-At N=18, Z3 finds a model, but the 17×17 core is always identical to Δ₁. Even when we explicitly exclude tables whose core matches Δ₁, Z3 still returns Δ₁-core solutions — the extra elements are completely unconstrained modulo Ext (row distinctness) and tester behavior (testers output top or bot on the extra element).
+At N=18, Z3 finds a model, and the 17×17 core is identical to Δ₁. An explicit core-mismatch check (`N=18` with any forced difference in the 17×17 core) is UNSAT. The extra elements are unconstrained except by global constraints such as Ext and tester behavior.
 
 The 18th element is "actual" (m_I accepts it) and distinguishable from all core elements, but carries no structural information.
 
@@ -90,15 +91,15 @@ The actuality relaxation is notable: it's the only one that breaks a category. W
 
 ### 1. The Distinction Structure Is Rigid in the Strongest Sense
 
-Δ₁ is not merely the unique 17-element DS up to isomorphism — it is the unique table, period (with fixed role names). The symmetry-breaking argument (fixing role indices) combined with UNSAT at N=17 excluding Δ₁ means: there is exactly one function D₁ × D₁ → D₁ satisfying all axioms.
+Within this encoding, Δ₁ is not merely unique up to isomorphism at N=17 — it is the unique table with fixed role names and default core behavior. The symmetry-breaking argument (fixed role indices) combined with UNSAT at N=17 excluding Δ₁ yields a single satisfying Cayley table.
 
 ### 2. Every Table Entry Is Necessary
 
-The 174 "default-to-p" entries are not arbitrary padding. They are forced by the interaction of Ext with the 115 axiom-governed entries. If any axiom-governed entry is changed to p, the system becomes inconsistent. The entire 289-entry table is a single tightly-coupled unit.
+The 174 "default-to-p" entries are not arbitrary padding in this encoding. They are coupled to the non-default entries by Ext and the other constraints. If any axiom-governed entry is changed to p, the system becomes inconsistent under the default-to-p encoding.
 
 ### 3. Self-Modeling Forces Minimality
 
-No smaller carrier can accommodate the 17 distinct roles. No larger carrier adds meaningful structure — extra elements are inert junk. The self-modeling property (H1–H3) requires exactly as many elements as the encoding demands, no more and no less.
+No smaller carrier can accommodate the 17 fixed role variables in this encoding. At N=18, the extra element does not alter the forced 17×17 core, but this does not by itself prove model-minimality in Lean.
 
 ### 4. Actuality Is the Category-Critical Axiom
 

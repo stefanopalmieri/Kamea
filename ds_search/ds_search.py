@@ -92,6 +92,7 @@ def encode_ds(
     N: int,
     *,
     exclude_delta1: bool = False,
+    exclude_delta1_core: bool = False,
     relax: set[str] | None = None,
     timeout_seconds: int = 3600,
 ) -> tuple[Solver, list[list]]:
@@ -104,6 +105,12 @@ def encode_ds(
     relax options: "tester_cards", "discovery_unique", "synthesis",
                    "context", "actuality", "h_conditions", "self_id",
                    "ext", "default_p"
+
+    exclude_delta1:
+      For N=17, force at least one core entry to differ from Δ₁.
+
+    exclude_delta1_core:
+      For N>=17, force at least one entry in the 17×17 core to differ from Δ₁.
     """
     if N < 17:
         # Can't have 17 distinct roles with < 17 elements
@@ -315,8 +322,14 @@ def encode_ds(
         # For N > 17: do NOT constrain extra rows/cols (they're genuinely new)
 
     # ═══════════════════════════════════════════════════════════════
-    # Exclude Δ₁
+    # Exclude Δ₁ / Δ₁ core
     # ═══════════════════════════════════════════════════════════════
+
+    if exclude_delta1_core:
+        s.add(Or([
+            dot[i][j] != DELTA1_TABLE[i][j]
+            for i in range(17) for j in range(17)
+        ]))
 
     if exclude_delta1:
         if N == 17:
@@ -581,6 +594,7 @@ def run_search(
     label: str,
     *,
     exclude_delta1: bool = False,
+    exclude_delta1_core: bool = False,
     relax: set[str] | None = None,
     timeout_seconds: int = 3600,
 ) -> dict:
@@ -593,7 +607,10 @@ def run_search(
 
     t0 = time.time()
     solver, dot = encode_ds(
-        N, exclude_delta1=exclude_delta1, relax=relax,
+        N,
+        exclude_delta1=exclude_delta1,
+        exclude_delta1_core=exclude_delta1_core,
+        relax=relax,
         timeout_seconds=timeout_seconds,
     )
     result_status = solver.check()
@@ -603,6 +620,7 @@ def run_search(
         "label": label, "N": N, "status": str(result_status),
         "time_seconds": round(elapsed, 2),
         "exclude_delta1": exclude_delta1,
+        "exclude_delta1_core": exclude_delta1_core,
         "relax": list(relax) if relax else [],
     }
 
@@ -700,6 +718,13 @@ def main():
     # 3.4: Larger model
     # ───────────────────────────────────────────────────────
     r = run_search(18, "3.4: Larger model N=18", timeout_seconds=600)
+    results.append(r)
+
+    # 3.4b: Force core mismatch at N=18
+    r = run_search(
+        18, "3.4b: N=18 with core mismatch forced",
+        exclude_delta1_core=True, timeout_seconds=600,
+    )
     results.append(r)
 
     # ───────────────────────────────────────────────────────

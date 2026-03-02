@@ -12,15 +12,15 @@
 
 ## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, a Sheaf-Theoretic Necessity Result, SMT-Verified Uniqueness, and a OISC Hardware Emulator
 
-This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure.
+This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + default-to-p encoding used in `ds_search.py`.
 
 All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. The repository includes 10 Lean files totaling ~3460 lines.
 
 **Theorem 1 (Existence).** Intrinsically reflexive Distinction Structures exist. A 16-element symmetric algebra (Δ₀) and a 17-element directed algebra (Δ₁) each satisfy axioms A1--A7', Ext, and contain behavioral self-models: internal encodings whose elements, when composed by the structure's own operation, reproduce the behavior of the structure's own components.
 
-**Theorem 2 (Discoverability).** Discoverably reflexive Distinction Structures exist. The 17-element directed model Δ₁ has a self-model that is recoverable from black-box probing alone, with each of the 8 recovery steps proved unique. An observer with no prior knowledge can identify every structural component purely from the operation table.
+**Theorem 2 (Discoverability).** Discoverably reflexive Distinction Structures exist. The 17-element directed model Δ₁ has a self-model that is recoverable from black-box probing alone, with an 8-step recovery filtration whose constraints have a unique global solution (Step 3's 2-way tester tie is resolved at Step 4). An observer with no prior knowledge can identify every structural component purely from the operation table.
 
-**Theorem 3 (Irreducibility).** Actuality is not determined by structure. Two models (Δ₁ and Δ₁') on the same 18-element carrier share 322 out of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. No structural predicate resolves the difference. The only way to determine which elements are actual is to query the actuality tester directly.
+**Theorem 3 (Irreducibility).** Actuality is not determined by structure. Two models (Δ₁ and Δ₁') on the same 18-element carrier share 322 out of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. Their tables are identical outside the `m_I` row, and no single predicate can match both actuality assignments. Determining actuality requires querying the actuality tester directly.
 
 **Extension 1 (Δ₂ -- Flat Quoting).** Δ₁ extended with QUOTE, EVAL, APP, UNAPP restricted to flat (one-level) evaluation. The carrier is finite, the operation is total, and all properties are proved by `decide`. This is the Datalog-level extension: naming without executing, inspecting without reducing.
 
@@ -36,7 +36,7 @@ All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. 
 
 **Result 7 (Sheaf-Theoretic Necessity).** The four ontological categories underlying the self-model — Distinction, Context, Actuality, and Synthesis — are each necessary. A sheaf-theoretic formalization in Lean 4 (`Sheaf.lean`, 593 lines, 50 definitions/theorems, zero `sorry`) defines a 5-level observation poset mirroring the recovery procedure's filtration, a presheaf assigning structural information at each level, and four subsheaves corresponding to the ontological categories. Four machine-checked necessity theorems show that removing any category causes a distinct failure: without Distinction, outputs are unreadable (codes conflate); without Actuality, the model is underdetermined (multiple valid assignments); without Context, the encoding collapses (can't represent two contexts); without Synthesis, behavioral fidelity has no witness.
 
-**Result 8 (SMT Uniqueness).** Δ₁ is the unique 17-element Distinction Structure. A Z3 SMT solver exhaustively searches the space of 17×17 Cayley tables satisfying the full axiom set (boolean absorption, tester partitions, behavioral separability, homomorphism conditions, synthesis, self-identification, and default behavior) and proves UNSAT when Δ₁ is excluded — out of ~10^356 candidate tables, exactly one satisfies all constraints. No smaller DS exists (N<17 requires 17 distinct roles). Larger DS (N=18) exist but their 17×17 core is always identical to Δ₁, with extra elements carrying no structural information. Every table entry is load-bearing: changing any axiom-governed cell to the default value breaks the system.
+**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, UNSAT follows from the encoding's 17 fixed role variables. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). With default behavior enforced, every non-default axiom-governed core entry is load-bearing: changing it to `p` breaks satisfiability.
 
 Nine machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
@@ -46,9 +46,9 @@ Nine machine-checked results, plus a computationally complete extension with har
 
 **The algebra is the computer.** The Kamea is a single finite Cayley table — one binary operation `dot` on 66 elements — that encodes a complete computational system: combinators, booleans, encoders, testers, a 74181 ALU (32 operations via 3 mode atoms x 16 selectors), byte-level IO, 32-bit wide arithmetic, 16-bit multiply, quoting, and recursive evaluation. Random magmas are just tables. This table runs programs.
 
-**Every element's identity is grounded in the algebra's own structure.** The 17-element self-model Δ₁ is not merely a naming scheme — its elements *behave* as the components they represent, under the same operation that defines everything else. Absorbers absorb. Testers test. Encoders encode. The recovery procedure that identifies them is not a heuristic; each of its 8 steps is a uniqueness lemma, machine-checked over the finite domain. Self-representation, behavioral fidelity, and black-box recoverability — all three verified in Lean with zero `sorry`.
+**Every element's identity is grounded in the algebra's own structure.** The 17-element self-model Δ₁ is not merely a naming scheme — its elements *behave* as the components they represent, under the same operation that defines everything else. Absorbers absorb. Testers test. Encoders encode. The recovery procedure is not a heuristic: it is an 8-step filtration with machine-checked constraints and a unique global reconstruction (with Step 3's tester tie resolved by Step 4). Self-representation, behavioral fidelity, and black-box recoverability are all verified in Lean with zero `sorry`.
 
-**Actuality is irreducible.** The framework also shows what structure *cannot* do. Two models on the same 18-element carrier share 322 of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. No structural predicate resolves the difference. The actuality tester carries irreducible information: there is no structural back door.
+**Actuality is irreducible.** The framework also shows what structure *cannot* do. Two models on the same 18-element carrier share 322 of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. Their tables are identical outside the actuality-tester row, and no single predicate matches both actuality assignments. The actuality tester carries irreducible information: there is no structural back door.
 
 **QUALE is meaningful symmetry-breaking.** As the algebra grows to 66 atoms, 26 become structurally indistinguishable (identical Cayley rows), creating an S₂₆ automorphism group. Any injective column would break this symmetry — assign 26 random targets and you get rigidity. But the Kamea's QUALE column is not random. W_XOR maps to its 74181 function code. IO_PUT maps to the actuality marker. QUOTE maps to k. Each mapping encodes *why that atom is what it is*. The column doesn't just break symmetry — it carries the algebra's interpretation of its own parts. That is a semantic property, not a structural one, and no generic discriminator can measure it.
 
@@ -445,16 +445,17 @@ The discoverability procedure has sheaf-like structure: each recovery step is a 
 
 ### Result 8: SMT-Verified Uniqueness of Δ₁
 
-A Z3 SMT solver (`ds_search/ds_search.py`) encodes the full Distinction Structure axioms as integer constraints over an N×N Cayley table and searches exhaustively. The 17 structural roles are fixed to indices 0–16 as symmetry breaking (no generality lost — any DS must contain exactly these roles, and relabeling is an isomorphism).
+A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure constraints as integer formulas over an N×N Cayley table and searches exhaustively. The search uses fixed role indices 0–16 (symmetry breaking for this encoding) and, unless relaxed, enforces default-to-`p` on unconstrained 17×17 core entries.
 
 **Search campaign results:**
 
 | Search | N | Result | Finding |
 |--------|---|--------|---------|
 | Find Δ₁ (verify encoding) | 17 | SAT (≅ Δ₁) | Encoding is correct |
-| Uniqueness at N=17 | 17 | **UNSAT** | **Δ₁ is the unique 17-element DS** |
-| Smaller models (N=14, 16) | 14, 16 | UNSAT | No smaller DS exists |
+| Uniqueness at N=17 | 17 | **UNSAT** | **Δ₁ is unique at N=17 under this encoding** |
+| Smaller models (N=14, 16) | 14, 16 | UNSAT | Unsat under fixed-role encoding (17 roles required) |
 | Larger model (N=18) | 18 | SAT | Core = Δ₁, extra element is inert junk |
+| N=18 with forced core mismatch | 18 | **UNSAT** | No encoded N=18 model can alter the 17×17 core |
 
 **Axiom sensitivity (at N=17, excluding Δ₁):**
 
