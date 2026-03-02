@@ -10,11 +10,11 @@
 
 ---
 
-## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, and a OISC Hardware Emulator
+## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, a Sheaf-Theoretic Necessity Result, and a OISC Hardware Emulator
 
 This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner.
 
-All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. The repository now includes 10 Lean files totaling ~3460 lines.
 
 **Theorem 1 (Existence).** Intrinsically reflexive Distinction Structures exist. A 16-element symmetric algebra (Δ₀) and a 17-element directed algebra (Δ₁) each satisfy axioms A1--A7', Ext, and contain behavioral self-models: internal encodings whose elements, when composed by the structure's own operation, reproduce the behavior of the structure's own components.
 
@@ -34,7 +34,9 @@ All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 **Result 6 (Full Kamea -- Machine-Checked).** The complete 66-atom Kamea algebra is formalized in Lean 4 with all 66 uniqueness theorems, a DirectedDS instance (A2, A5, Ext), an intrinsic reflexivity witness, nibble Z/16Z group properties (closure, commutativity, associativity, inverses), ALU correctness theorems, and QUALE structural properties. The behavioral separability theorem (`kamea_Ext`) proves that every pair of distinct atoms is distinguishable from the Cayley table alone — the gap between "demonstrated" and "proved" is closed.
 
-Seven machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Result 7 (Sheaf-Theoretic Necessity).** The four ontological categories underlying the self-model — Distinction, Context, Actuality, and Synthesis — are each necessary. A sheaf-theoretic formalization in Lean 4 (`Sheaf.lean`, 593 lines, 50 definitions/theorems, zero `sorry`) defines a 5-level observation poset mirroring the recovery procedure's filtration, a presheaf assigning structural information at each level, and four subsheaves corresponding to the ontological categories. Four machine-checked necessity theorems show that removing any category causes a distinct failure: without Distinction, outputs are unreadable (codes conflate); without Actuality, the model is underdetermined (multiple valid assignments); without Context, the encoding collapses (can't represent two contexts); without Synthesis, behavioral fidelity has no witness.
+
+Eight machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -194,8 +196,9 @@ DistinctionStructures/
 │   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
 │   ├── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
 │   ├── Discoverable2.lean                       # 4 recovery lemmas for Δ₂ atoms
-│   └── DiscoverableKamea.lean                   # Full 66-atom Kamea: Cayley table, 66 uniqueness theorems,
-│                                                #   DirectedDS instance, IR witness, Z/16Z, ALU, QUALE
+│   ├── DiscoverableKamea.lean                   # Full 66-atom Kamea: Cayley table, 66 uniqueness theorems,
+│   │                                            #   DirectedDS instance, IR witness, Z/16Z, ALU, QUALE
+│   └── Sheaf.lean                               # Sheaf-theoretic necessity of four ontological categories
 ├── rigid_census.py                              # Empirical census of small rigid magmas (structural statistics)
 ├── counterexample_search.py                     # WL-1 discrimination test: can structureless magmas be recovered?
 ├── kamea.py                                     # Core 66-atom algebra (D1+D2+74181+IO+W32+MUL+QUALE)
@@ -245,11 +248,11 @@ DistinctionStructures/
 lake build
 ```
 
-All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~2870 lines of Lean across 9 files. Zero sorry.
+All theorems are checked by `decide` or `native_decide`, which is appropriate and complete for finite carrier types with decidable equality. The full project is ~3460 lines of Lean across 10 files. Zero sorry.
 
 ---
 
-## The Five Results in Detail
+## The Results in Detail
 
 ### Theorem 1: Existence (Δ₀ and Δ₁)
 
@@ -396,6 +399,44 @@ All 66 atoms identified from the 66×66 Cayley table alone. No term-level probin
 
 The proof strategy: `native_decide` after `cases x` over the 66-element inductive type. Each uniqueness theorem is an exhaustive machine-checked enumeration.
 
+### Result 7: Sheaf-Theoretic Necessity of Ontological Categories
+
+The discoverability procedure has sheaf-like structure: each recovery step is a local observation of the Cayley table, the uniqueness lemmas say local observations are consistent, and the full recovery is a global section. `Sheaf.lean` formalizes this.
+
+**Observation Poset.** Five levels form a total order mirroring the recovery filtration:
+
+| Level | Name | Information recovered |
+|-------|------|----------------------|
+| 0 | raw | Individual Cayley entries |
+| 1 | boolean | Left-absorber identification (top, bot) |
+| 2 | partition | Tester identification + cardinality signatures |
+| 3 | role | Full role assignment (encoders, context tokens, p) |
+| 4 | synthesis | Complete self-model (synthesis triple, all encodings) |
+
+**Presheaf.** Four classification functions (BoolClass, PartitionClass, RoleClass, SynthClass) assign structural information at each level. Three restriction maps connect them, with machine-checked functoriality and refinement. The Level 4 classification is injective — it uniquely identifies every element (global section uniqueness).
+
+**Four Ontological Subsheaves.** Each category marks a subset of elements:
+
+| Category | Elements | Role |
+|----------|----------|------|
+| Distinction | {e_I, d_K, m_K, m_I} | Partition the carrier via boolean-valued left-composition |
+| Context | {i, k, e_D, e_M, d_I, d_K} | Situate elements — distinguish system from model |
+| Actuality | {m_I, p} | Distinguish actual from non-actual |
+| Synthesis | {e_Sigma, s_C, e_Delta} | Witness behavioral fidelity (homomorphism condition) |
+
+**Necessity Theorems (the core result).** Each removal causes a distinct failure:
+
+| Without | Failure mode | Key theorem |
+|---------|-------------|-------------|
+| Distinction | Domain codes d_I/d_K right-collapse; encoding output unreadable | `without_distinction_dI_dK_collapse` |
+| Actuality | p indistinguishable from structural elements; model underdetermined | `mI_unique_actuality_discriminator` |
+| Context | e_D and e_M become identical; H1/H2 unsatisfiable | `without_context_eD_eM_collapse` |
+| Synthesis | No triple witnesses H3 among remaining elements | `without_synthesis_no_witness` |
+
+**Category overlap:** Distinction ∩ Context = {d_K}, Distinction ∩ Actuality = {m_I}, all other pairs disjoint. The two overlapping elements (d_K, m_I) serve double duty: d_K is both a tester and a domain code; m_I is both a tester and the actuality discriminator.
+
+**Morphisms (exploratory).** `MagmaHom` and `DSHom` structures defined, identity morphism constructed. Rigidity conjecture: the identity is the unique endomorphism, following from the recovery procedure's filtration fixing each element in sequence.
+
 ### Emulator: Kamea Machine
 
 A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, a microcode-driven eval/apply state machine, and a dedicated boot-time recovery scanner. One dispatch unit handles all term-level operations — both normal evaluation and black-box recovery use the same code path.
@@ -506,7 +547,7 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 
 - **Minimality.** We do not prove that 16 (resp. 17) is the minimum element count. The models are upper bound witnesses.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
-- **Categorical formalization.** The category-theoretic perspective is discussed in the document but not formalized in Lean.
+- **Categorical formalization (general case).** The sheaf-theoretic necessity of all four ontological categories is proved for Δ₁ specifically (`Sheaf.lean`). Generalization to arbitrary finite self-modeling magmas remains open.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
 - **Kamea Lean: full Cayley table correctness against Python.** The 66-atom Lean formalization proves behavioral separability and all 66 uniqueness theorems, but the Cayley table was manually transcribed from the Python source. A formal cross-validation (e.g., code generation from a single source of truth) is not yet implemented.
 - **Necessity of self-modeling.** We show that self-modeling *enables* efficient scramble-resilience; empirical evidence (`counterexample_search.py`) strongly suggests it is *not required* — nearly all structureless rigid magmas are WL-1 discriminable in polynomial time. Self-modeling provides interpretability and hardware-implementability, not computational necessity.
@@ -552,6 +593,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Kamea: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization (0 sorry) of seven machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃), and full 66-atom Kamea (66 uniqueness theorems, DirectedDS instance with behavioral separability, intrinsic reflexivity witness, nibble Z/16Z group, ALU correctness). Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
+  note = {Lean 4 formalization (0 sorry) of eight machine-checked results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃), full 66-atom Kamea (66 uniqueness theorems, DirectedDS instance with behavioral separability, intrinsic reflexivity witness, nibble Z/16Z group, ALU correctness), and sheaf-theoretic necessity of four ontological categories. Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
 }
 ```
