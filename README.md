@@ -22,7 +22,7 @@ Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`,
 
 **Theorem 2 (Discoverability).** Discoverably reflexive Distinction Structures exist. The 17-element directed model Δ₁ has a self-model that is recoverable from black-box probing alone, with an 8-step recovery filtration whose constraints have a unique global solution (Step 3's 2-way tester tie is resolved at Step 4). An observer with no prior knowledge can identify every structural component purely from the operation table.
 
-**Theorem 3 (Irreducibility).** Actuality is not determined by structure. Two models (Δ₁ and Δ₁') on the same 18-element carrier share 322 out of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. Their tables are identical outside the `m_I` row, and no single predicate can match both actuality assignments. Determining actuality requires querying the actuality tester directly.
+**Theorem 3 (Irreducibility).** Actuality is not determined by structure. Two models (Δ₁ and Δ₁') on the same 18-element carrier share 322 out of 324 operation table entries, both satisfy all axioms and reflexivity conditions, yet differ in actuality assignment. Their tables are identical outside the `m_I` row, so any observation that avoids `m_I` is invariant across the pair. Determining actuality requires querying the actuality tester directly.
 
 **Extension 1 (Δ₂ -- Flat Quoting).** Δ₁ extended with QUOTE, EVAL, APP, UNAPP restricted to flat (one-level) evaluation. The carrier is finite, the operation is total, and all properties are proved by `decide`. This is the Datalog-level extension: naming without executing, inspecting without reducing.
 
@@ -38,7 +38,7 @@ Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`,
 
 **Result 7 (Sheaf-Theoretic Necessity).** The four ontological categories underlying the self-model — Distinction, Context, Actuality, and Synthesis — are each necessary. A sheaf-theoretic formalization in Lean 4 (`Sheaf.lean`, 593 lines, 50 definitions/theorems, zero `sorry`) defines a 5-level observation poset mirroring the recovery procedure's filtration, a presheaf assigning structural information at each level, and four subsheaves corresponding to the ontological categories. Four machine-checked necessity theorems show that removing any category causes a distinct failure: without Distinction, outputs are unreadable (codes conflate); without Actuality, the model is underdetermined (multiple valid assignments); without Context, the encoding collapses (can't represent two contexts); without Synthesis, behavioral fidelity has no witness.
 
-**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus Block F: default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, a separate symbolic role-injection check (with unfixed role slots) is UNSAT, giving a cleaner lower-bound witness independent of fixed index assignment. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). A dedicated independence search (`3.2b`) shows Block F is not derivable from the other encoded constraints: relaxing `default_p` and forcing one Block-F slot to be non-`p` is SAT.
+**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus Block F: default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, a separate symbolic role-injection check (with unfixed role slots) is UNSAT, giving a cleaner lower-bound witness independent of fixed index assignment. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). A dedicated independence search (`3.2b`) shows Block F is not derivable from the other encoded constraints: relaxing `default_p` and forcing one Block-F slot to be non-`p` is SAT. N=18 extensions are not unique up to isomorphism in this encoding (a bounded classification sample found 6 non-isomorphic classes from 6 models, with more SAT models still available).
 
 Nine machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
@@ -317,6 +317,8 @@ Key theorems in `ActualityIrreducibility.lean`:
 | `no_universal_actuality_predicate` | No predicate matches actualM in Δ₁ and actualM' in Δ₁' |
 | `actuality_irreducibility` | Combined 7-conjunct theorem |
 
+SMT classification step `3.4d` complements this: if non-`m_I` rows are fixed at `N=18` and only `actuality` is relaxed, there are exactly 18 valid `m_I`-row variants (one reject index each). So non-`m_I` structure alone does not determine actuality.
+
 ### Extension 1: Δ₂ -- Flat Quoting
 
 Δ₂ adds QUOTE, EVAL, APP, UNAPP to Δ₁'s 17 atoms (21 total). Evaluation is flat: EVAL on a quoted application node looks up Δ₁'s dot table once. No recursion, no unbounded terms. The carrier includes atoms, quoted atoms, application nodes, bundles, and partial applications -- all finite.
@@ -460,6 +462,10 @@ A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure con
 | Smaller full-encoding models (N=14, 16) | 14, 16 | UNSAT | Also unsat in fixed-role table encoding |
 | Larger model (N=18) | 18 | SAT | Core = Δ₁, extra element is inert junk |
 | N=18 with forced core mismatch | 18 | **UNSAT** | No encoded N=18 model can alter the 17×17 core |
+| N=18 sampled isomorphism classes | 18 | CLASSIFIED | 6 sampled models gave 6 isomorphism classes; additional models still SAT |
+| N=18 actuality variants with fixed non-`m_I` rows | 18 | CLASSIFIED | Exactly 18 consistent `m_I`-row choices (one reject index each) |
+
+With non-`m_I` rows fixed, the `3.4d` classification gives an explicit invariance statement: all structural data outside `m_I` can be held constant while actuality assignment varies across all 18 carrier elements.
 
 **Axiom sensitivity (at N=17, excluding Δ₁):**
 
@@ -612,7 +618,7 @@ uv run python gnn_fingerprint.py
 uv run python gnn_fingerprint.py --approach b --epochs-b 5000
 ```
 
-The `ds_search/ds_search.py` module encodes the full DS axiom set as Z3 integer constraints and searches for Cayley tables satisfying them. Includes an independent 30-check brute-force verifier, isomorphism checker, and ontological category analyzer. The full search campaign (`uv run python -m ds_search.ds_search`) completes in under 2 seconds, proving Δ₁ uniqueness at N=17 and testing axiom sensitivity across 10 configurations.
+The `ds_search/ds_search.py` module encodes the full DS axiom set as Z3 integer constraints and searches for Cayley tables satisfying them. It includes an independent 30-check brute-force verifier, permutation-isomorphism checker, and ontological category analyzer. Core SAT/UNSAT checks run in ~0.1s each; the full campaign now also includes bounded N=18 isomorphism-class sampling (`3.4c`), which is intentionally slower.
 
 The `ai_interpretability/` directory contains additional neural network experiments testing whether the recovery procedure transfers to learned approximations of the algebra.
 

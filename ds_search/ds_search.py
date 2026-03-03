@@ -17,6 +17,7 @@ Usage:
 
 from __future__ import annotations
 
+from collections import Counter
 import json
 import time
 from itertools import permutations
@@ -787,6 +788,175 @@ def run_role_injection_bound(
     return result
 
 
+def summarize_extra_element(table: list[list[int]], extra_idx: int = 17) -> dict:
+    """Summarize the extra element's row/column behavior for quick comparison."""
+    N = len(table)
+    row_counts = sorted(Counter(table[extra_idx]).items())
+    col_counts = sorted(Counter(table[i][extra_idx] for i in range(N)).items())
+    return {
+        "extra_index": extra_idx,
+        "row_counts": [{"value": v, "count": c} for v, c in row_counts],
+        "col_counts": [{"value": v, "count": c} for v, c in col_counts],
+        "mI_on_extra": table[M_I][extra_idx],
+        "extra_on_top": table[extra_idx][TOP],
+        "extra_on_bot": table[extra_idx][BOT],
+        "extra_on_extra": table[extra_idx][extra_idx],
+    }
+
+
+def run_n18_extension_classification(
+    label: str,
+    *,
+    max_models: int = 6,
+    timeout_seconds: int = 600,
+    iso_timeout_ms: int = 2000,
+) -> dict:
+    """
+    Sample N=18 models and classify them up to isomorphism.
+
+    This is a bounded classification pass (sampling, not exhaustive counting).
+    """
+    N = 18
+    print(f"\n{'='*60}")
+    print(f"Search: {label} (N=18, timeout={timeout_seconds}s)")
+    print(f"  Sampling up to {max_models} models; iso timeout {iso_timeout_ms}ms")
+    print(f"{'='*60}")
+
+    t0 = time.time()
+    s, dot = encode_ds(N, timeout_seconds=timeout_seconds)
+    sampled_tables: list[list[list[int]]] = []
+    while len(sampled_tables) < max_models and s.check() == sat:
+        table = extract_table(s.model(), dot, N)
+        sampled_tables.append(table)
+        s.add(Or([dot[i][j] != table[i][j] for i in range(N) for j in range(N)]))
+
+    classes: list[dict] = []
+    for table in sampled_tables:
+        placed = False
+        for cls in classes:
+            if check_isomorphism_z3(table, cls["representative"], timeout_ms=iso_timeout_ms) is not None:
+                cls["size"] += 1
+                placed = True
+                break
+        if not placed:
+            classes.append({
+                "representative": table,
+                "size": 1,
+                "summary": summarize_extra_element(table),
+            })
+
+    # Check whether we likely truncated due max_models cap.
+    more_models_possible = False
+    if len(sampled_tables) == max_models:
+        more_models_possible = s.check() == sat
+
+    elapsed = time.time() - t0
+    result = {
+        "label": label,
+        "N": N,
+        "status": "classified",
+        "time_seconds": round(elapsed, 2),
+        "classification_method": "sampled_isomorphism_classes",
+        "sampled_models": len(sampled_tables),
+        "isomorphism_classes": len(classes),
+        "class_sizes": [cls["size"] for cls in classes],
+        "max_models": max_models,
+        "more_models_possible": more_models_possible,
+        "iso_timeout_ms": iso_timeout_ms,
+        "representative_summaries": [cls["summary"] for cls in classes],
+    }
+    print(
+        f"  CLASSIFIED in {elapsed:.1f}s: sampled={len(sampled_tables)}, "
+        f"iso_classes={len(classes)}, more_models_possible={more_models_possible}"
+    )
+    return result
+
+
+def run_n18_actuality_variant_classification(
+    label: str,
+    *,
+    timeout_seconds: int = 120,
+) -> dict:
+    """
+    Classify actuality variants when non-m_I structure is held fixed.
+
+    Procedure:
+    1) get one canonical N=18 model under full constraints;
+    2) relax only `actuality`;
+    3) force all non-m_I rows to equal the canonical model;
+    4) enumerate all possible m_I rows.
+    """
+    N = 18
+    print(f"\n{'='*60}")
+    print(f"Search: {label} (N=18, timeout={timeout_seconds}s)")
+    print("  Fix non-m_I rows; enumerate all consistent m_I rows")
+    print(f"{'='*60}")
+
+    t0 = time.time()
+    s0, dot0 = encode_ds(N, timeout_seconds=timeout_seconds)
+    base_status = s0.check()
+    if base_status != sat:
+        elapsed = time.time() - t0
+        result = {
+            "label": label,
+            "N": N,
+            "status": str(base_status),
+            "time_seconds": round(elapsed, 2),
+            "classification_method": "fixed_non_mI_actuality_variants",
+            "error": "base_model_not_sat",
+        }
+        print(f"  {str(base_status).upper()} in {elapsed:.1f}s")
+        return result
+
+    base_table = extract_table(s0.model(), dot0, N)
+    s, dot = encode_ds(N, relax={"actuality"}, timeout_seconds=timeout_seconds)
+    for x in range(N):
+        if x == M_I:
+            continue
+        for y in range(N):
+            s.add(dot[x][y] == base_table[x][y])
+
+    rows: list[tuple[int, ...]] = []
+    while s.check() == sat:
+        model = s.model()
+        row = tuple(model.evaluate(dot[M_I][j]).as_long() for j in range(N))
+        rows.append(row)
+        s.add(Or([dot[M_I][j] != row[j] for j in range(N)]))
+
+    rejected_indices: list[int] = []
+    non_boolean_rows = 0
+    multi_reject_rows = 0
+    for row in rows:
+        bots = [j for j, v in enumerate(row) if v == BOT]
+        if len(bots) == 1:
+            rejected_indices.append(bots[0])
+        else:
+            multi_reject_rows += 1
+        if any(v not in (TOP, BOT) for v in row):
+            non_boolean_rows += 1
+
+    rejected_indices = sorted(set(rejected_indices))
+    elapsed = time.time() - t0
+    result = {
+        "label": label,
+        "N": N,
+        "status": "classified",
+        "time_seconds": round(elapsed, 2),
+        "classification_method": "fixed_non_mI_actuality_variants",
+        "base_extra_summary": summarize_extra_element(base_table),
+        "actuality_variants": len(rows),
+        "rejected_indices": rejected_indices,
+        "all_rows_boolean": non_boolean_rows == 0,
+        "all_rows_single_reject": multi_reject_rows == 0,
+        "non_mI_rows_fixed_to_base": True,
+    }
+    print(
+        f"  CLASSIFIED in {elapsed:.1f}s: variants={len(rows)}, "
+        f"rejected_indices={rejected_indices}"
+    )
+    return result
+
+
 def print_table(table: list[list[int]]):
     """Pretty-print a Cayley table."""
     N = len(table)
@@ -863,6 +1033,22 @@ def main():
     )
     results.append(r)
 
+    # 3.4c: Bounded N=18 extension classification up to isomorphism
+    r = run_n18_extension_classification(
+        "3.4c: N=18 sampled extension isomorphism classes",
+        max_models=6,
+        timeout_seconds=600,
+        iso_timeout_ms=2000,
+    )
+    results.append(r)
+
+    # 3.4d: Actuality variants with non-m_I structure fixed
+    r = run_n18_actuality_variant_classification(
+        "3.4d: N=18 actuality variants with fixed non-m_I rows",
+        timeout_seconds=120,
+    )
+    results.append(r)
+
     # ───────────────────────────────────────────────────────
     # 3.5: Relaxed searches at N=17 (excluding Δ₁)
     # ───────────────────────────────────────────────────────
@@ -911,6 +1097,16 @@ def main():
             if "verification" in r:
                 extra += f" v={r['verification']}"
             status = f"SAT{extra}"
+        elif status == "classified":
+            extra = ""
+            if "isomorphism_classes" in r:
+                extra += f" classes={r['isomorphism_classes']}"
+                extra += f" sampled={r.get('sampled_models', 0)}"
+                if r.get("more_models_possible"):
+                    extra += " (+)"
+            if "actuality_variants" in r:
+                extra += f" variants={r['actuality_variants']}"
+            status = f"CLASSIFIED{extra}"
         print(f"{r['label']:<45} {r['N']:>3} {status:<30} {r['time_seconds']:>6.1f}s")
 
     # Save

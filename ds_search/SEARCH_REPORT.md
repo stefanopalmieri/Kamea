@@ -4,7 +4,7 @@
 
 Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure constraints encoded in `ds_search.py` (including fixed role indices and Block F default-to-`p` core behavior unless relaxed). The central result:
 
-**Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, a separate symbolic role-injection check (without fixed role-index assignment) is UNSAT. For N=18, SAT models exist, but the 17×17 core is forced to Δ₁.
+**Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, a separate symbolic role-injection check (without fixed role-index assignment) is UNSAT. For N=18, SAT models exist and the 17×17 core is forced to Δ₁, but extensions are not unique up to isomorphism.
 
 ## Method
 
@@ -47,6 +47,8 @@ A separate brute-force verifier (30 checks) validates every model returned by Z3
 | 3.3: N=16 | 16 | UNSAT | 0.0s | Too small |
 | 3.4: N=18 | 18 | SAT | 0.1s | Core = Δ₁, extra element is junk |
 | 3.4b: N=18 with core mismatch forced | 18 | **UNSAT** | 0.1s | Core cannot differ from Δ₁ |
+| 3.4c: N=18 sampled extension isomorphism classes | 18 | CLASSIFIED | 171.4s | 6 sampled models gave 6 iso classes (+ more SAT) |
+| 3.4d: N=18 actuality variants with fixed non-m_I rows | 18 | CLASSIFIED | 0.4s | Exactly 18 consistent `m_I`-row variants |
 | 3.5: Relax default_p | 17 | SAT (NEW) | 0.1s | Junk entries vary freely |
 | 3.5: Relax discovery | 17 | UNSAT | 0.1s | Discovery forced by other axioms |
 | 3.5: Relax synthesis | 17 | UNSAT | 0.1s | Synthesis entries can't be p |
@@ -82,6 +84,16 @@ At N=18, Z3 finds a model, and the 17×17 core is identical to Δ₁. An explici
 
 The 18th element is "actual" (m_I accepts it) and distinguishable from all core elements, but carries no structural information.
 
+### Result 3b: N=18 Extensions Are Not Unique Up To Isomorphism
+
+A bounded classification pass (`3.4c`) sampled 6 SAT models at N=18 and compared them by explicit isomorphism checks. All 6 landed in different isomorphism classes, and the solver still had additional SAT models after the sample cap. So N=18 extensions are not unique up to isomorphism in this encoding.
+
+### Result 3c: Structural Invariance vs Actuality Choice
+
+In `3.4d`, we fixed all non-`m_I` rows to a canonical N=18 model, relaxed only `actuality`, and enumerated all consistent `m_I` rows. The solver returned exactly 18 variants, one for each possible rejected index in the carrier.
+
+This gives a precise invariance statement: non-`m_I` structure can be held fixed while actuality assignment varies, so structural observations that avoid `m_I` underdetermine actuality.
+
 ### Result 4: Axiom Sensitivity
 
 The relaxation results reveal tight coupling between axiom groups:
@@ -113,9 +125,9 @@ Within this encoding, Δ₁ is not merely unique up to isomorphism at N=17 — i
 
 The 174 "default-to-p" entries are not arbitrary padding once Block F is assumed. They are coupled to the non-default entries by Ext and the other constraints. If any axiom-governed entry is changed to p, the system becomes inconsistent under the default-to-p encoding.
 
-### 3. Self-Modeling Forces Minimality
+### 3. N=18 Admits Many Extensions
 
-No smaller carrier can accommodate the 17 fixed role variables in this encoding. At N=18, the extra element does not alter the forced 17×17 core, but this does not by itself prove model-minimality in Lean.
+No smaller carrier can accommodate 17 roles. At N=18, the core remains forced to Δ₁, but extension space is large: even a small sampled classification produced multiple non-isomorphic classes.
 
 ### 4. Actuality Is the Category-Critical Axiom
 
@@ -124,9 +136,9 @@ Among all individual relaxations, only removing the actuality constraint (m_I be
 ## Technical Notes
 
 - **Solver**: Z3 4.13+, invoked via Python bindings
-- **Runtime**: All searches complete in < 0.3 seconds
+- **Runtime**: Core SAT/UNSAT checks complete in ~0.1s; sampled N=18 isomorphism classification (`3.4c`) is the expensive step (~171s for 6-model sample).
 - **Verification**: Independent 30-check brute-force verifier confirms every SAT result
-- **Isomorphism**: Quick literal-equality check (since roles are fixed, isomorphism = identity)
+- **Isomorphism**: Fixed-role N=17 checks use literal equality; N=18 classification (`3.4c`) uses explicit permutation-isomorphism checks via Z3.
 - **Encoding size**: ~5000 Z3 constraints for N=17
 
 ## Conjectures
