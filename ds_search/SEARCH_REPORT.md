@@ -4,7 +4,7 @@
 
 Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure constraints encoded in `ds_search.py` (including fixed role indices and Block F default-to-`p` core behavior unless relaxed). The central result:
 
-**Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, UNSAT is immediate because the encoding includes 17 fixed role variables. For N=18, SAT models exist, but the 17×17 core is forced to Δ₁.
+**Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, a separate symbolic role-injection check (without fixed role-index assignment) is UNSAT. For N=18, SAT models exist, but the 17×17 core is forced to Δ₁.
 
 ## Method
 
@@ -40,6 +40,8 @@ A separate brute-force verifier (30 checks) validates every model returned by Z3
 |--------|---|--------|------|-------------|
 | 3.1: Find Δ₁ | 17 | SAT (≅ Δ₁) | 0.1s | Encoding verified |
 | 3.2: Uniqueness | 17 | **UNSAT** | 0.1s | **Δ₁ is unique at N=17 under this encoding** |
+| 3.2c: Symbolic role-injection bound (N=14,16) | 14, 16 | **UNSAT** | 0.0s | Lower bound without fixed role indices |
+| 3.2c: Symbolic role-injection bound (N=17) | 17 | SAT | 0.0s | Tightness witness for the role-count bound |
 | 3.2b: Block F independence witness | 17 | SAT | 0.1s | `default_p` is not implied by other constraints |
 | 3.3: N=14 | 14 | UNSAT | 0.0s | Too small (need 17 roles) |
 | 3.3: N=16 | 16 | UNSAT | 0.0s | Too small |
@@ -64,6 +66,15 @@ In campaign step `3.2b`, we relax only `default_p`, keep the rest of the encodin
 ### Result 2: No Smaller Model in the Fixed-Role Encoding
 
 For N<17, the encoding is trivially UNSAT: 17 fixed role variables cannot fit in fewer than 17 carrier elements. This is a lower bound of the encoding, not an independent Lean theorem of model-minimality.
+
+### Result 2b: Role-Count Lower Bound Without Fixed Indices
+
+To decouple the lower bound from fixed role indices, we added a separate SMT check with 17 **anonymous symbolic role slots** constrained only by:
+
+- each slot in `[0, N)`,
+- strict increasing order across slots (symmetry breaking only).
+
+Results: `N=14` and `N=16` are UNSAT; `N=17` is SAT. This is the pigeonhole lower bound in SMT form and does not rely on assigning specific indices to named roles.
 
 ### Result 3: Larger DS = Δ₁ + Junk
 

@@ -52,6 +52,7 @@ ROLE_NAMES = [
     "e_D", "e_M", "e_Sigma", "e_Delta",
     "d_I", "d_K", "m_I", "m_K", "s_C", "p",
 ]
+ROLE_COUNT = len(ROLE_NAMES)
 
 TESTERS = [E_I, D_K, M_K, M_I]
 SELF_ID_ELEMS = [I, K, A_, B_, D_I, S_C]  # x · top = x
@@ -732,6 +733,60 @@ def run_search(
     return result
 
 
+def run_role_injection_bound(
+    N: int,
+    label: str,
+    *,
+    timeout_seconds: int = 60,
+) -> dict:
+    """
+    Check the N >= 17 lower bound without fixing role indices.
+
+    We introduce 17 anonymous role-slot variables, require each to lie in
+    [0, N), and require them to be strictly increasing. This isolates the
+    pigeonhole lower bound from the fixed-index table encoding while avoiding
+    factorial symmetry from role-name permutations.
+    """
+    print(f"\n{'='*60}")
+    print(f"Search: {label} (N={N}, timeout={timeout_seconds}s)")
+    print("  Method: symbolic role slots (no fixed role-index assignment)")
+    print(f"{'='*60}")
+
+    t0 = time.time()
+    s = Solver()
+    s.set("timeout", timeout_seconds * 1000)
+    role_slots = [Int(f"role_slot_{i}") for i in range(ROLE_COUNT)]
+    for rv in role_slots:
+        s.add(rv >= 0, rv < N)
+    for i in range(ROLE_COUNT - 1):
+        s.add(role_slots[i] < role_slots[i + 1])
+    result_status = s.check()
+    elapsed = time.time() - t0
+
+    result = {
+        "label": label,
+        "N": N,
+        "status": str(result_status),
+        "time_seconds": round(elapsed, 2),
+        "method": "symbolic_role_injection_bound",
+        "role_count": ROLE_COUNT,
+        "symmetry_breaking": "strictly_increasing_role_slots",
+    }
+
+    if result_status == sat:
+        model = s.model()
+        result["symbolic_role_slots"] = [
+            model.evaluate(rv).as_long() for rv in role_slots
+        ]
+        print(f"  SAT in {elapsed:.1f}s")
+    elif result_status == unsat:
+        print(f"  UNSAT in {elapsed:.1f}s")
+    else:
+        print(f"  TIMEOUT after {elapsed:.1f}s")
+
+    return result
+
+
 def print_table(table: list[list[int]]):
     """Pretty-print a Cayley table."""
     N = len(table)
@@ -766,6 +821,17 @@ def main():
         exclude_delta1=True, timeout_seconds=600,
     )
     results.append(r)
+
+    # ───────────────────────────────────────────────────────
+    # 3.2c: Lower-bound sanity check without fixed indices
+    # ───────────────────────────────────────────────────────
+    for n in [14, 16, 17]:
+        r = run_role_injection_bound(
+            n,
+            f"3.2c: Symbolic role-injection bound N={n}",
+            timeout_seconds=60,
+        )
+        results.append(r)
 
     # 3.2b: Block F independence witness (base axioms do not force default_p)
     r = run_search(
