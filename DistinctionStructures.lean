@@ -8,3 +8,4 @@ import DistinctionStructures.Delta3
 import DistinctionStructures.DiscoverableKamea
 import DistinctionStructures.OntologicalDerivation
 import DistinctionStructures.OntologicalMinimality
+import DistinctionStructures.OntologicalSchema
