@@ -6,3 +6,5 @@ import DistinctionStructures.ActualityIrreducibility
 import DistinctionStructures.Delta2
 import DistinctionStructures.Delta3
 import DistinctionStructures.DiscoverableKamea
+import DistinctionStructures.OntologicalDerivation
+import DistinctionStructures.OntologicalMinimality

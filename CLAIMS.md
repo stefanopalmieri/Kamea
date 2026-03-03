@@ -24,6 +24,8 @@ This file is the canonical status registry for claims made in this repository.
 | Actuality irreducibility on 18-element carrier (`Δ₁`, `Δ₁'`) | Lean-proved | `DistinctionStructures/ActualityIrreducibility.lean` | `lake build` |
 | Sheaf-style filtration + four-category necessity for `Δ₁` | Lean-proved | `DistinctionStructures/Sheaf.lean` | `lake build` |
 | Full 66-atom Kamea uniqueness/Ext package | Lean-proved | `DistinctionStructures/DiscoverableKamea.lean` | `lake build` |
+| Δ₂ primitives (`QUOTE`,`EVAL`,`APP`,`UNAPP`) are uniquely forced by four lift-signatures | Lean-proved | `DistinctionStructures/OntologicalDerivation.lean` | `lake build` |
+| Δ₂ internal minimal basis: any signature-covering set has card ≥ 4; card-4 cover is uniquely `{QUOTE,EVAL,APP,UNAPP}` | Lean-proved | `DistinctionStructures/OntologicalMinimality.lean` | `lake build` |
 | `Δ₁` uniqueness at `N=17` | SMT-encoding-qualified | `ds_search/ds_search.py`, `ds_search/results/campaign.json` | `uv run python -m ds_search.ds_search` |
 | No `N<17` model in search campaign | SMT-encoding-qualified | Encoding uses 17 fixed role variables in `encode_ds` | `uv run python -m ds_search.ds_search` |
 | At `N=18`, 17x17 core forced to `Δ₁` | SMT-encoding-qualified | `3.4b` core-mismatch UNSAT in campaign | `uv run python -m ds_search.ds_search` |
