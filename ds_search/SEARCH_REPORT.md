@@ -2,7 +2,7 @@
 
 ## Summary
 
-Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure constraints encoded in `ds_search.py` (including fixed role indices and default-to-`p` core behavior unless relaxed). The central result:
+Using Z3 SMT solver, we searched for finite magmas satisfying the Distinction Structure constraints encoded in `ds_search.py` (including fixed role indices and Block F default-to-`p` core behavior unless relaxed). The central result:
 
 **Δ₁ is unique at N=17 under this encoding.** No other 17-element magma satisfies the full encoded constraint set. For N<17, UNSAT is immediate because the encoding includes 17 fixed role variables. For N=18, SAT models exist, but the 17×17 core is forced to Δ₁.
 
@@ -23,10 +23,10 @@ The constraint groups correspond directly to the Lean axioms:
 | H conditions | H1–H3 | e_D·i=d_I, e_D·k=d_K, e_M·i=m_I, e_M·k=m_K, e_Sigma·s_C=e_Delta |
 | Structural novelty | A7' | e_Delta·e_D=d_I, distinct from e_I/e_D/e_M/e_Sigma applied to e_D |
 | Self-identification | Block E | i·top=i, k·top=k, a·top=a, b·top=b, d_I·top=d_I, s_C·top=s_C |
-| Default behavior | Block F | All unconstrained entries default to p |
+| Default behavior (encoding assumption) | Block F | All unconstrained entries default to p |
 | Discovery | D4–D5 | Encoder pair uniqueness, inert κ-tokens |
 
-The "default behavior" constraint (Block F) is critical: in Δ₁, all 174 entries not governed by an explicit axiom evaluate to p. Without this constraint, Z3 finds infinite families of tables differing only in these "junk" entries.
+Block F is critical: in Δ₁, all 174 entries not governed by an explicit axiom evaluate to p. A dedicated independence check (`3.2b`) shows Block F is **not derivable** from the remaining constraints: with `default_p` relaxed, forcing one unconstrained Block-F slot to be non-`p` is SAT.
 
 ### Independent Verifier
 
@@ -40,6 +40,7 @@ A separate brute-force verifier (30 checks) validates every model returned by Z3
 |--------|---|--------|------|-------------|
 | 3.1: Find Δ₁ | 17 | SAT (≅ Δ₁) | 0.1s | Encoding verified |
 | 3.2: Uniqueness | 17 | **UNSAT** | 0.1s | **Δ₁ is unique at N=17 under this encoding** |
+| 3.2b: Block F independence witness | 17 | SAT | 0.1s | `default_p` is not implied by other constraints |
 | 3.3: N=14 | 14 | UNSAT | 0.0s | Too small (need 17 roles) |
 | 3.3: N=16 | 16 | UNSAT | 0.0s | Too small |
 | 3.4: N=18 | 18 | SAT | 0.1s | Core = Δ₁, extra element is junk |
@@ -52,9 +53,13 @@ A separate brute-force verifier (30 checks) validates every model returned by Z3
 
 ### Result 1: Uniqueness at N=17 (Encoding-Qualified)
 
-With the full encoded constraint set (including default behavior), Z3 proves UNSAT when excluding Δ₁. The search space is 17^289 ≈ 10^356 possible Cayley tables, yet only ONE satisfies all encoded constraints.
+With the full encoded constraint set (including Block F default behavior), Z3 proves UNSAT when excluding Δ₁. The search space is 17^289 ≈ 10^356 possible Cayley tables, yet only ONE satisfies all encoded constraints.
 
-This uniqueness is not trivial — it relies on the interplay of ALL axiom groups. The Ext axiom (behavioral separability) forces every row to be distinct, which combined with the tester structure and default behavior, pins down every table entry.
+This uniqueness is not trivial — it relies on the interplay of ALL axiom groups plus Block F. The Ext axiom (behavioral separability) forces every row to be distinct, which combined with the tester structure and default behavior, pins down every table entry.
+
+### Result 1b: Block F Is Independent (Encoding-Qualified)
+
+In campaign step `3.2b`, we relax only `default_p`, keep the rest of the encoding intact, and force at least one unconstrained Block-F core entry to be non-`p`. Z3 returns SAT in 0.1s (verification 30/30, all categories present). Therefore Block F is not a consequence of the other encoded constraints.
 
 ### Result 2: No Smaller Model in the Fixed-Role Encoding
 
@@ -91,11 +96,11 @@ The actuality relaxation is notable: it's the only one that breaks a category. W
 
 ### 1. The Distinction Structure Is Rigid in the Strongest Sense
 
-Within this encoding, Δ₁ is not merely unique up to isomorphism at N=17 — it is the unique table with fixed role names and default core behavior. The symmetry-breaking argument (fixed role indices) combined with UNSAT at N=17 excluding Δ₁ yields a single satisfying Cayley table.
+Within this encoding, Δ₁ is not merely unique up to isomorphism at N=17 — it is the unique table with fixed role names **given Block F**. The symmetry-breaking argument (fixed role indices) combined with UNSAT at N=17 excluding Δ₁ yields a single satisfying Cayley table.
 
 ### 2. Every Table Entry Is Necessary
 
-The 174 "default-to-p" entries are not arbitrary padding in this encoding. They are coupled to the non-default entries by Ext and the other constraints. If any axiom-governed entry is changed to p, the system becomes inconsistent under the default-to-p encoding.
+The 174 "default-to-p" entries are not arbitrary padding once Block F is assumed. They are coupled to the non-default entries by Ext and the other constraints. If any axiom-governed entry is changed to p, the system becomes inconsistent under the default-to-p encoding.
 
 ### 3. Self-Modeling Forces Minimality
 

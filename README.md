@@ -12,7 +12,7 @@
 
 ## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, a Sheaf-Theoretic Necessity Result, SMT-Verified Uniqueness, and a OISC Hardware Emulator
 
-This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + default-to-p encoding used in `ds_search.py`.
+This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + Block-F (`default_p`) encoding assumptions used in `ds_search.py`.
 
 All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. The repository includes 10 Lean files totaling ~3460 lines.
 
@@ -38,7 +38,7 @@ Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`,
 
 **Result 7 (Sheaf-Theoretic Necessity).** The four ontological categories underlying the self-model — Distinction, Context, Actuality, and Synthesis — are each necessary. A sheaf-theoretic formalization in Lean 4 (`Sheaf.lean`, 593 lines, 50 definitions/theorems, zero `sorry`) defines a 5-level observation poset mirroring the recovery procedure's filtration, a presheaf assigning structural information at each level, and four subsheaves corresponding to the ontological categories. Four machine-checked necessity theorems show that removing any category causes a distinct failure: without Distinction, outputs are unreadable (codes conflate); without Actuality, the model is underdetermined (multiple valid assignments); without Context, the encoding collapses (can't represent two contexts); without Synthesis, behavioral fidelity has no witness.
 
-**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, UNSAT follows from the encoding's 17 fixed role variables. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). With default behavior enforced, every non-default axiom-governed core entry is load-bearing: changing it to `p` breaks satisfiability.
+**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus Block F: default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, UNSAT follows from the encoding's 17 fixed role variables. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). A dedicated independence search (`3.2b`) shows Block F is not derivable from the other encoded constraints: relaxing `default_p` and forcing one Block-F slot to be non-`p` is SAT.
 
 Nine machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
@@ -447,7 +447,7 @@ The discoverability procedure has sheaf-like structure: each recovery step is a 
 
 ### Result 8: SMT-Verified Uniqueness of Δ₁
 
-A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure constraints as integer formulas over an N×N Cayley table and searches exhaustively. The search uses fixed role indices 0–16 (symmetry breaking for this encoding) and, unless relaxed, enforces default-to-`p` on unconstrained 17×17 core entries.
+A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure constraints as integer formulas over an N×N Cayley table and searches exhaustively. The search uses fixed role indices 0–16 (symmetry breaking for this encoding) and, unless relaxed, enforces Block F: default-to-`p` on unconstrained 17×17 core entries.
 
 **Search campaign results:**
 
@@ -455,6 +455,7 @@ A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure con
 |--------|---|--------|---------|
 | Find Δ₁ (verify encoding) | 17 | SAT (≅ Δ₁) | Encoding is correct |
 | Uniqueness at N=17 | 17 | **UNSAT** | **Δ₁ is unique at N=17 under this encoding** |
+| Block F independence witness | 17 | SAT | `default_p` is not implied by the other constraints |
 | Smaller models (N=14, 16) | 14, 16 | UNSAT | Unsat under fixed-role encoding (17 roles required) |
 | Larger model (N=18) | 18 | SAT | Core = Δ₁, extra element is inert junk |
 | N=18 with forced core mismatch | 18 | **UNSAT** | No encoded N=18 model can alter the 17×17 core |
@@ -469,7 +470,7 @@ A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure con
 | No self-identification | UNSAT | SAT (loses self-id) |
 | No actuality | — | SAT (**loses actuality category**) |
 
-Every axiom-governed entry is structurally load-bearing: with default behavior enforced, relaxing any single axiom group while excluding Δ₁ yields UNSAT — you cannot replace those specific entries with the default value and still have a valid DS. Without the default constraint, relaxations produce models differing only in the 174 "junk" entries, with exactly the expected verification failures.
+Every axiom-governed entry is structurally load-bearing: with Block F enforced, relaxing any single axiom group while excluding Δ₁ yields UNSAT — you cannot replace those specific entries with the default value and still have a valid DS. Without Block F, relaxations produce models differing only in the 174 "junk" entries, with exactly the expected verification failures.
 
 The actuality relaxation is the only one that destroys an ontological category, aligning with the Lean-verified Actuality Irreducibility theorem.
 

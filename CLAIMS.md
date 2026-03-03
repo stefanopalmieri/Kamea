@@ -27,7 +27,8 @@ This file is the canonical status registry for claims made in this repository.
 | Δ₂ primitives (`QUOTE`,`EVAL`,`APP`,`UNAPP`) are uniquely forced by four lift-signatures | Lean-proved | `DistinctionStructures/OntologicalDerivation.lean` | `lake build` |
 | Δ₂ internal minimal basis: any signature-covering set has card ≥ 4; card-4 cover is uniquely `{QUOTE,EVAL,APP,UNAPP}` | Lean-proved | `DistinctionStructures/OntologicalMinimality.lean` | `lake build` |
 | Abstract schema theorem: any `FourLiftSchema` has unique lift witnesses and unique minimal card-4 covering basis | Lean-proved | `DistinctionStructures/OntologicalSchema.lean` | `lake build` |
-| `Δ₁` uniqueness at `N=17` | SMT-encoding-qualified | `ds_search/ds_search.py`, `ds_search/results/campaign.json` | `uv run python -m ds_search.ds_search` |
+| `Δ₁` uniqueness at `N=17` under fixed-role + `default_p` encoding assumptions | SMT-encoding-qualified | `ds_search/ds_search.py`, `ds_search/results/campaign.json` | `uv run python -m ds_search.ds_search` |
+| `default_p` is independent of the other encoded constraints (countermodel exists with `default_p` relaxed and at least one Block-F slot forced non-`p`) | SMT-encoding-qualified | `3.2b: Block F independence witness` in `ds_search/results/campaign.json` | `uv run python -m ds_search.ds_search` |
 | No `N<17` model in search campaign | SMT-encoding-qualified | Encoding uses 17 fixed role variables in `encode_ds` | `uv run python -m ds_search.ds_search` |
 | At `N=18`, 17x17 core forced to `Δ₁` | SMT-encoding-qualified | `3.4b` core-mismatch UNSAT in campaign | `uv run python -m ds_search.ds_search` |
 | Removing `default_p` permits additional non-isomorphic models | SMT-encoding-qualified | `3.5: Relaxed (No default-to-p)` campaign result | `uv run python -m ds_search.ds_search` |

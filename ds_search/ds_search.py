@@ -55,6 +55,7 @@ ROLE_NAMES = [
 
 TESTERS = [E_I, D_K, M_K, M_I]
 SELF_ID_ELEMS = [I, K, A_, B_, D_I, S_C]  # x · top = x
+CORE_SIZE = 17
 
 
 def build_delta1_table() -> list[list[int]]:
@@ -83,6 +84,56 @@ def build_delta1_table() -> list[list[int]]:
 DELTA1_TABLE = build_delta1_table()
 
 
+def core_default_constrained_pairs(relax: set[str] | None = None) -> set[tuple[int, int]]:
+    """
+    Return the 17×17 core entries that are fixed by non-default constraints.
+
+    This corresponds to the positions explicitly governed by Blocks A–E + H/A7'
+    in the fixed-role encoding.
+    """
+    relax = relax or set()
+    constrained: set[tuple[int, int]] = set()
+
+    # Rows TOP, BOT fully constrained.
+    for j in range(CORE_SIZE):
+        constrained.add((TOP, j))
+        constrained.add((BOT, j))
+
+    # Tester rows fully constrained.
+    for tester in TESTERS:
+        for j in range(CORE_SIZE):
+            constrained.add((tester, j))
+
+    # H conditions.
+    if "h_conditions" not in relax:
+        constrained.update({(E_D, I), (E_D, K), (E_M, I), (E_M, K)})
+
+    # H3 + A7'.
+    if "synthesis" not in relax:
+        constrained.update({(E_SIGMA, S_C), (E_DELTA, E_D)})
+
+    # Block D.
+    constrained.add((P, TOP))
+
+    # Self-identification.
+    if "self_id" not in relax:
+        for x in SELF_ID_ELEMS:
+            constrained.add((x, TOP))
+
+    return constrained
+
+
+def core_default_unconstrained_pairs(relax: set[str] | None = None) -> list[tuple[int, int]]:
+    """Return 17×17 core positions that Block F sends to `p` when active."""
+    constrained = core_default_constrained_pairs(relax)
+    return [
+        (i, j)
+        for i in range(CORE_SIZE)
+        for j in range(CORE_SIZE)
+        if (i, j) not in constrained
+    ]
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # Z3 Encoding
 # ═══════════════════════════════════════════════════════════════════════
@@ -94,6 +145,7 @@ def encode_ds(
     exclude_delta1: bool = False,
     exclude_delta1_core: bool = False,
     relax: set[str] | None = None,
+    force_nondefault_unconstrained_core: bool = False,
     timeout_seconds: int = 3600,
 ) -> tuple[Solver, list[list]]:
     """
@@ -111,6 +163,11 @@ def encode_ds(
 
     exclude_delta1_core:
       For N>=17, force at least one entry in the 17×17 core to differ from Δ₁.
+
+    force_nondefault_unconstrained_core:
+      Requires `default_p` to be relaxed and forces at least one otherwise
+      Block-F slot in the 17×17 core to take a non-`p` value. Useful for
+      proving Block F is not derivable from the other encoded constraints.
     """
     if N < 17:
         # Can't have 17 distinct roles with < 17 elements
@@ -285,41 +342,27 @@ def encode_ds(
     # Block F: Default behavior (unconstrained entries → p)
     # ═══════════════════════════════════════════════════════════════
     #
-    # In Δ₁, all entries not explicitly specified by Blocks A–E
-    # default to p. This is part of the structure, not an axiom.
-    # Without this, Z3 can freely assign junk entries.
+    # In Δ₁, all entries not explicitly specified by Blocks A–E + H/A7'
+    # default to p. In this encoding this is an explicit assumption (Block F),
+    # not a theorem of the remaining constraints.
+
+    core_unconstrained = core_default_unconstrained_pairs(relax)
 
     if "default_p" not in relax:
-        # Build set of constrained (row, col) pairs
-        constrained: set[tuple[int, int]] = set()
-        # Rows TOP, BOT fully constrained
-        for j in range(N):
-            constrained.add((TOP, j))
-            constrained.add((BOT, j))
-        # Tester rows fully constrained
-        for t in TESTERS:
-            for j in range(N):
-                constrained.add((t, j))
-        # H conditions
-        if "h_conditions" not in relax:
-            constrained.update({(E_D, I), (E_D, K), (E_M, I), (E_M, K)})
-        # H3 + A7'
-        if "synthesis" not in relax:
-            constrained.update({(E_SIGMA, S_C), (E_DELTA, E_D)})
-        # Block D
-        constrained.add((P, TOP))
-        # Self-id
-        if "self_id" not in relax:
-            for x in SELF_ID_ELEMS:
-                constrained.add((x, TOP))
-
         # All unconstrained entries in the 17×17 core → p
-        for i in range(min(N, 17)):
-            for j in range(min(N, 17)):
-                if (i, j) not in constrained:
-                    s.add(dot[i][j] == P)
+        for i, j in core_unconstrained:
+            s.add(dot[i][j] == P)
 
         # For N > 17: do NOT constrain extra rows/cols (they're genuinely new)
+
+    if force_nondefault_unconstrained_core:
+        if "default_p" not in relax:
+            raise ValueError(
+                "force_nondefault_unconstrained_core requires relax to include 'default_p'"
+            )
+        if not core_unconstrained:
+            raise ValueError("No unconstrained core entries available for witness forcing")
+        s.add(Or([dot[i][j] != P for i, j in core_unconstrained]))
 
     # ═══════════════════════════════════════════════════════════════
     # Exclude Δ₁ / Δ₁ core
@@ -596,6 +639,7 @@ def run_search(
     exclude_delta1: bool = False,
     exclude_delta1_core: bool = False,
     relax: set[str] | None = None,
+    force_nondefault_unconstrained_core: bool = False,
     timeout_seconds: int = 3600,
 ) -> dict:
     """Run a single search."""
@@ -603,6 +647,8 @@ def run_search(
     print(f"Search: {label} (N={N}, timeout={timeout_seconds}s)")
     if relax:
         print(f"  Relaxed: {relax}")
+    if force_nondefault_unconstrained_core:
+        print("  Witness: force at least one unconstrained core entry != p")
     print(f"{'='*60}")
 
     t0 = time.time()
@@ -611,6 +657,7 @@ def run_search(
         exclude_delta1=exclude_delta1,
         exclude_delta1_core=exclude_delta1_core,
         relax=relax,
+        force_nondefault_unconstrained_core=force_nondefault_unconstrained_core,
         timeout_seconds=timeout_seconds,
     )
     result_status = solver.check()
@@ -622,6 +669,7 @@ def run_search(
         "exclude_delta1": exclude_delta1,
         "exclude_delta1_core": exclude_delta1_core,
         "relax": list(relax) if relax else [],
+        "force_nondefault_unconstrained_core": force_nondefault_unconstrained_core,
     }
 
     if result_status == sat:
@@ -656,6 +704,18 @@ def run_search(
             if k in ("distinction", "context", "actuality", "synthesis",
                      "all_four", "num_testers")
         }
+
+        if N >= CORE_SIZE and relax and "default_p" in relax:
+            varied = [
+                (i, j, table[i][j])
+                for i, j in core_default_unconstrained_pairs(relax)
+                if table[i][j] != P
+            ]
+            result["nondefault_unconstrained_core_count"] = len(varied)
+            result["nondefault_unconstrained_core_examples"] = [
+                {"row": i, "col": j, "value": v} for i, j, v in varied[:12]
+            ]
+            print(f"  Non-default values in Block-F slots: {len(varied)}")
 
         result["table"] = table
 
@@ -704,6 +764,16 @@ def main():
     r = run_search(
         17, "3.2: Uniqueness at N=17 (exclude Δ₁)",
         exclude_delta1=True, timeout_seconds=600,
+    )
+    results.append(r)
+
+    # 3.2b: Block F independence witness (base axioms do not force default_p)
+    r = run_search(
+        17,
+        "3.2b: Block F independence witness",
+        relax={"default_p"},
+        force_nondefault_unconstrained_core=True,
+        timeout_seconds=600,
     )
     results.append(r)
 
