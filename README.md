@@ -16,6 +16,8 @@ This repository contains Lean 4 formalizations of six results about finite algeb
 
 All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. The repository includes 10 Lean files totaling ~3460 lines.
 
+Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`, `Empirical`, `Conjecture/Open`).
+
 **Theorem 1 (Existence).** Intrinsically reflexive Distinction Structures exist. A 16-element symmetric algebra (Δ₀) and a 17-element directed algebra (Δ₁) each satisfy axioms A1--A7', Ext, and contain behavioral self-models: internal encodings whose elements, when composed by the structure's own operation, reproduce the behavior of the structure's own components.
 
 **Theorem 2 (Discoverability).** Discoverably reflexive Distinction Structures exist. The 17-element directed model Δ₁ has a self-model that is recoverable from black-box probing alone, with an 8-step recovery filtration whose constraints have a unique global solution (Step 3's 2-way tester tie is resolved at Step 4). An observer with no prior knowledge can identify every structural component purely from the operation table.
