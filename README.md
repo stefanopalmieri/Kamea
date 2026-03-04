@@ -10,11 +10,11 @@
 
 ---
 
-## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, a Sheaf-Theoretic Necessity Result, SMT-Verified Uniqueness, and a OISC Hardware Emulator
+## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, Abstract Δ₁ Minimality/Uniqueness, SMT Campaign Results, a Lean SMT Mirror, and a OISC Hardware Emulator
 
-This repository contains Lean 4 formalizations of six results about finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + Block-F (`default_p`) encoding assumptions used in `ds_search.py`.
+This repository contains Lean 4 formalizations of finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability and an encoding-independent abstract theorem for Δ₁ role minimality/uniqueness — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + Block-F (`default_p`) encoding assumptions used in `ds_search.py`, and `SMTEncodingLean.lean` now mirrors those same assumptions in Lean and proves the corresponding exclusion problem is UNSAT there as well.
 
-All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0. The repository includes 10 Lean files totaling ~3460 lines.
+All Lean proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`, `Empirical`, `Conjecture/Open`).
 
@@ -38,9 +38,13 @@ Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`,
 
 **Result 7 (Sheaf-Theoretic Necessity).** The four ontological categories underlying the self-model — Distinction, Context, Actuality, and Synthesis — are each necessary. A sheaf-theoretic formalization in Lean 4 (`Sheaf.lean`, 593 lines, 50 definitions/theorems, zero `sorry`) defines a 5-level observation poset mirroring the recovery procedure's filtration, a presheaf assigning structural information at each level, and four subsheaves corresponding to the ontological categories. Four machine-checked necessity theorems show that removing any category causes a distinct failure: without Distinction, outputs are unreadable (codes conflate); without Actuality, the model is underdetermined (multiple valid assignments); without Context, the encoding collapses (can't represent two contexts); without Synthesis, behavioral fidelity has no witness.
 
-**Result 8 (SMT Uniqueness).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus Block F: default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, a separate symbolic role-injection check (with unfixed role slots) is UNSAT, giving a cleaner lower-bound witness independent of fixed index assignment. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). A dedicated independence search (`3.2b`) shows Block F is not derivable from the other encoded constraints: relaxing `default_p` and forcing one Block-F slot to be non-`p` is SAT. N=18 extensions are not unique up to isomorphism in this encoding (a bounded classification sample found 6 non-isomorphic classes from 6 models, with more SAT models still available).
+**Result 8 (Abstract Δ₁ Role-Schema Minimality/Uniqueness).** `Delta1RoleSchema.lean` states an encoding-independent axiom schema with 17 distinguished roles and proves: (i) any realizing carrier has cardinality at least 17, (ii) any role-covering finite set has cardinality at least 17, (iii) any role-covering set of cardinality 17 is uniquely the canonical role core, and (iv) at carrier size 17, role-preserving transport/equivalence is unique.
 
-Nine machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Result 9 (SMT Uniqueness Campaign).** Under the SMT encoding in `ds_search.py` (fixed role indices 0–16 plus Block F: default-to-`p` on unconstrained 17×17 core entries), Δ₁ is unique at N=17. Z3 proves UNSAT when that encoded Δ₁ table is excluded — out of ~10^356 candidate 17×17 tables, exactly one satisfies the full encoded constraints. For N<17, a separate symbolic role-injection check (with unfixed role slots) is UNSAT, giving a cleaner lower-bound witness independent of fixed index assignment. For N=18, SAT models exist, and the 17×17 core is forced to Δ₁ (forcing any core mismatch is UNSAT). A dedicated independence search (`3.2b`) shows Block F is not derivable from the other encoded constraints: relaxing `default_p` and forcing one Block-F slot to be non-`p` is SAT. N=18 extensions are not unique up to isomorphism in this encoding (a bounded classification sample found 6 non-isomorphic classes from 6 models, with more SAT models still available).
+
+**Result 10 (Lean Mirror of SMT N=17 Encoding).** `SMTEncodingLean.lean` formalizes the same fixed-role + Block-F N=17 assumptions directly in Lean over the abstract table variable `tbl : D1ι → D1ι → D1ι`, proves `dot` satisfies them, proves any satisfying table equals `dot`, and concludes `¬ ∃ tbl, SMT17Assumptions tbl ∧ excludeDelta1 tbl` (UNSAT for the same exclusion query inside Lean).
+
+Eleven machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -193,16 +197,28 @@ DistinctionStructures/
 ├── lean-toolchain                               # Lean version pin
 ├── DistinctionStructures/
 │   ├── Basic.lean                               # Abstract DS definitions and axioms
+│   ├── BaseAxiomDerivation.lean                 # Base-axiom limitation: A2+A5+Ext imply only card >= 2 (tight)
+│   ├── BasePlusA7Derivation.lean                # Even with generic directed A7′, small (<17) countermodels exist
+│   ├── StrengthenedBaseAxioms.lean              # Strengthened DirectedDS bundle with RoleComplete17 => card >= 17
+│   ├── IntermediateAxiomLadder.lean             # Axiom-ladder equivalences: RoleComplete17 ↔ Embedding17 ↔ card >= 17
 │   ├── Delta0.lean                              # Δ₀: 16-element symmetric model
 │   ├── Delta1.lean                              # Δ₁: 17-element directed model
+│   ├── Delta1RoleSchema.lean                    # Abstract 17-role schema: encoding-independent minimality/uniqueness
+│   ├── Delta1RoleDerivation.lean                # Concrete bridge: Δ₁ behavioral fingerprints instantiate the abstract role schema
+│   ├── Delta1Strengthened.lean                  # Δ₁ instantiation of strengthened DirectedDS axioms
+│   ├── SMTEncodingLean.lean                     # Lean mirror of fixed-role SMT assumptions; N=17 uniqueness + exclusion UNSAT
 │   ├── Discoverable.lean                        # 8 recovery lemmas (discoverability)
 │   ├── ActualityIrreducibility.lean             # Actuality irreducibility theorem
 │   ├── Delta2.lean                              # Δ₂: flat quoting (finite, decidable)
 │   ├── Delta3.lean                              # Δ₃: recursive eval (fuel-bounded)
+│   ├── Delta3Strategies.lean                    # Δ₃ strategy examples and helper theorems
 │   ├── Discoverable2.lean                       # 4 recovery lemmas for Δ₂ atoms
 │   ├── DiscoverableKamea.lean                   # Full 66-atom Kamea: Cayley table, 66 uniqueness theorems,
 │   │                                            #   DirectedDS instance, IR witness, Z/16Z, ALU, QUALE
-│   └── Sheaf.lean                               # Sheaf-theoretic necessity of four ontological categories
+│   ├── Sheaf.lean                               # Sheaf-theoretic necessity of four ontological categories
+│   ├── OntologicalDerivation.lean               # Δ₂ primitive forcing from four lift signatures
+│   ├── OntologicalMinimality.lean               # Δ₂-internal minimal primitive basis
+│   └── OntologicalSchema.lean                   # Abstract four-lift schema theorem
 ├── rigid_census.py                              # Empirical census of small rigid magmas (structural statistics)
 ├── counterexample_search.py                     # WL-1 discrimination test: can structureless magmas be recovered?
 ├── kamea.py                                     # Core 66-atom algebra (D1+D2+74181+IO+W32+MUL+QUALE)
@@ -447,7 +463,27 @@ The discoverability procedure has sheaf-like structure: each recovery step is a 
 
 **Morphisms (exploratory).** `MagmaHom` and `DSHom` structures defined, identity morphism constructed. Rigidity conjecture: the identity is the unique endomorphism, following from the recovery procedure's filtration fixing each element in sequence.
 
-### Result 8: SMT-Verified Uniqueness of Δ₁
+### Result 8: Abstract Δ₁ Role-Schema Minimality/Uniqueness
+
+`Delta1RoleSchema.lean` provides an encoding-independent theorem over an abstract axiom set (17 roles + unique/disjoint role witnesses on a finite carrier), independent of SMT table encodings.
+
+Key theorems:
+
+| Theorem | What it proves |
+|---------|---------------|
+| `card_ge_17` | Any schema-realizing carrier must satisfy `card ≥ 17` |
+| `no_model_below_17` | Immediate corollary: no schema-realizing model can have `card < 17` |
+| `cover_card_ge_seventeen` | Any finite role-covering set has cardinality at least 17 |
+| `cover_card_eq_seventeen_unique` | Any role-covering set of size 17 is uniquely the canonical 17-role core |
+| `existsUnique_roleEquiv` | At `card = 17`, role-preserving equivalence between two schemas is unique |
+
+`Delta1RoleDerivation.lean` then supplies the concrete bridge for `Δ₁`: it defines quantifier-free behavioral fingerprints for all 17 roles, proves each has a unique witness, packages `Δ₁` as a `Delta1RoleSchema`, and applies the abstract lower-bound/uniqueness theorems without SMT encoding assumptions.
+
+`StrengthenedBaseAxioms.lean` strengthens the base DirectedDS axiom set with a role-completeness axiom (`RoleComplete17`) and proves generally that this strengthened bundle forces `card ≥ 17` (and therefore excludes all `N < 17`). `Delta1Strengthened.lean` shows `Δ₁` satisfies that strengthened bundle via the fingerprint bridge.
+
+`IntermediateAxiomLadder.lean` compares strengthening levels and proves the current minimal forcing condition found in this development: `Embedding17 := Nonempty (Fin 17 ↪ D)`. It proves `Embedding17 ↔ card ≥ 17` and `RoleComplete17 ↔ Embedding17`, and (with the 3-element countermodel) shows base+generic novelty does not imply it.
+
+### Result 9: SMT-Verified Uniqueness of Δ₁
 
 A Z3 SMT solver (`ds_search/ds_search.py`) encodes the Distinction Structure constraints as integer formulas over an N×N Cayley table and searches exhaustively. The search uses fixed role indices 0–16 (symmetry breaking for this encoding) and, unless relaxed, enforces Block F: default-to-`p` on unconstrained 17×17 core entries.
 
@@ -480,6 +516,21 @@ With non-`m_I` rows fixed, the `3.4d` classification gives an explicit invarianc
 Every axiom-governed entry is structurally load-bearing: with Block F enforced, relaxing any single axiom group while excluding Δ₁ yields UNSAT — you cannot replace those specific entries with the default value and still have a valid DS. Without Block F, relaxations produce models differing only in the 174 "junk" entries, with exactly the expected verification failures.
 
 The actuality relaxation is the only one that destroys an ontological category, aligning with the Lean-verified Actuality Irreducibility theorem.
+
+### Result 10: Lean-Formalized Fixed-Role SMT UNSAT (N=17)
+
+`SMTEncodingLean.lean` restates the fixed-role + Block-F N=17 SMT assumption bundle as Lean predicates over an abstract table `tbl : D1ι → D1ι → D1ι`.
+
+Key theorems:
+
+| Theorem | What it proves |
+|---------|----------------|
+| `dot_satisfies_smt17` | The concrete `Δ₁` table `dot` satisfies the full fixed-role SMT assumption set |
+| `table_eq_dot` | Any table satisfying those assumptions is definitionally equal to `dot` |
+| `uniqueness_smt17` | There exists exactly one satisfying table (`∃! tbl, SMT17Assumptions tbl`) |
+| `unsat_exclude_delta1` | The exclusion query is UNSAT in Lean: `¬ ∃ tbl, SMT17Assumptions tbl ∧ excludeDelta1 tbl` |
+
+This closes the prior “SMT-only” gap for the core N=17 fixed-role exclusion claim by giving a machine-checked Lean proof of the same encoded statement.
 
 ### Emulator: Kamea Machine
 
@@ -589,7 +640,7 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 
 ## What Is Not Proved
 
-- **Minimality.** Z3 confirms no DS exists at N<17 in the fixed-role encoding, and an additional symbolic role-injection check (without fixed role-index assignment) also gives UNSAT for N<17; together these support 17 as the tight lower bound for directed DS under the current encoding assumptions. For symmetric DS (Δ₀, 16 elements), minimality remains unproved.
+- **Minimality (full DS axioms).** We now have: (1) an encoding-independent schema theorem (`Delta1RoleSchema.lean`), (2) a concrete `Δ₁` bridge (`Delta1RoleDerivation.lean`), and (3) a strengthened-base derivation (`StrengthenedBaseAxioms.lean`) showing `A2+A5+Ext+RoleComplete17 => card ≥ 17` (instantiated in `Delta1Strengthened.lean`). We also formalized two limitation theorems: `BaseAxiomDerivation.lean` shows base `DirectedDS` axioms alone imply only `card ≥ 2` (tight), and `BasePlusA7Derivation.lean` shows that even adding a generic directed novelty axiom (`DirectedA7Prime`) still does not force `card ≥ 17` (3-element countermodel). `IntermediateAxiomLadder.lean` proves the current weakest forcing condition in this framework is `Embedding17` (equivalent to both `card ≥ 17` and `RoleComplete17`). What remains open is deriving that forcing condition from only base DS axioms.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization (general case).** The sheaf-theoretic necessity of all four ontological categories is proved for Δ₁ specifically (`Sheaf.lean`). Generalization to arbitrary finite self-modeling magmas remains open.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
@@ -639,6 +690,6 @@ If you use this work, please cite:
   author = {Stefano Palmieri},
   title = {Kamea: A Minimal Self-Modeling Framework},
   year = {2026},
-  note = {Lean 4 formalization (0 sorry) of nine results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃), full 66-atom Kamea (66 uniqueness theorems, DirectedDS instance with behavioral separability, intrinsic reflexivity witness, nibble Z/16Z group, ALU correctness), sheaf-theoretic necessity of four ontological categories, and Z3 SMT-verified uniqueness of Δ₁ at N=17. Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
+  note = {Lean 4 formalization (0 sorry) of eleven results: existence (Δ₀, Δ₁), discoverability (8 recovery lemmas), actuality irreducibility, flat quoting (Δ₂), recursive evaluation (Δ₃), full 66-atom Kamea (66 uniqueness theorems, DirectedDS instance with behavioral separability, intrinsic reflexivity witness, nibble Z/16Z group, ALU correctness), sheaf-theoretic necessity of four ontological categories, abstract Δ₁ role-schema minimality/uniqueness (encoding-independent) plus concrete behavioral-fingerprint bridge for Δ₁, and a Lean mirror of the fixed-role SMT N=17 exclusion UNSAT query. Includes Z3 campaign results for broader encoding sensitivity/classification at N=17/18. Hardware emulator with fingerprint-addressed ROM. WL-derived canonical identifiers. GNN learns meaningful permutation-invariant embeddings (66/66 discrimination, invariance variance < 10⁻⁸). 100\% black-box recovery across 1000+ seeds.}
 }
 ```
