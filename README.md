@@ -10,7 +10,7 @@
 
 ---
 
-## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, Abstract Δ₁ Minimality/Uniqueness, SMT Campaign Results, a Lean SMT Mirror, and a OISC Hardware Emulator
+## Three Theorems, Five Extensions, a Machine-Checked 66-Atom Proof, Abstract Δ₁ Minimality/Uniqueness, SMT Campaign Results, a Lean SMT Mirror, Automorphism Rigidity, and a OISC Hardware Emulator
 
 This repository contains Lean 4 formalizations of finite algebraic structures that model themselves — including the full 66-atom Kamea algebra with machine-checked behavioral separability and an encoding-independent abstract theorem for Δ₁ role minimality/uniqueness — plus a Python implementation with a full 74181 ALU, 32-bit wide arithmetic, 16-bit multiply, byte-level IO, and a QUALE symmetry-breaker — all uniquely recoverable from a scrambled Cayley ROM by a dedicated hardware scanner. A Z3 SMT solver confirms that Δ₁ is the unique 17-element Distinction Structure under the fixed-role + Block-F (`default_p`) encoding assumptions used in `ds_search.py`, and `SMTEncodingLean.lean` now mirrors those same assumptions in Lean and proves the corresponding exclusion problem is UNSAT there as well.
 
@@ -44,7 +44,9 @@ Claim status is tracked in `CLAIMS.md` (`Lean-proved`, `SMT-encoding-qualified`,
 
 **Result 10 (Lean Mirror of SMT N=17 Encoding).** `SMTEncodingLean.lean` formalizes the same fixed-role + Block-F N=17 assumptions directly in Lean over the abstract table variable `tbl : D1ι → D1ι → D1ι`, proves `dot` satisfies them, proves any satisfying table equals `dot`, and concludes `¬ ∃ tbl, SMT17Assumptions tbl ∧ excludeDelta1 tbl` (UNSAT for the same exclusion query inside Lean).
 
-Eleven machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
+**Result 11 (Automorphism Rigidity of Δ₁).** `Rigidity.lean` proves that every injective magma endomorphism of Δ₁ is the identity (`rigid_automorphism`). The proof follows the recovery filtration from `Discoverable.lean`, chaining 17 lemmas that fix each element in turn. Three counterexample theorems show that injectivity is necessary: the constant maps to `top`, `bot`, and `p` are non-identity endomorphisms. This means Δ₁ has trivial automorphism group — there is no non-trivial way to permute its elements while preserving the operation.
+
+Twelve machine-checked results, plus a computationally complete extension with hardware emulator. Self-description is possible. Communication is possible. Computation is possible. But the question of what's real cannot be settled by structure alone.
 
 ---
 
@@ -471,7 +473,7 @@ The discoverability procedure has sheaf-like structure: each recovery step is a 
 
 **Category overlap:** Distinction ∩ Context = {d_K}, Distinction ∩ Actuality = {m_I}, all other pairs disjoint. The two overlapping elements (d_K, m_I) serve double duty: d_K is both a tester and a domain code; m_I is both a tester and the actuality discriminator.
 
-**Morphisms (exploratory).** `MagmaHom` and `DSHom` structures defined, identity morphism constructed. Rigidity conjecture: the identity is the unique endomorphism, following from the recovery procedure's filtration fixing each element in sequence.
+**Morphisms and Rigidity.** `MagmaHom` and `DSHom` structures defined, identity morphism constructed. The rigidity conjecture is now **resolved** (`Rigidity.lean`): every injective magma endomorphism of Δ₁ is the identity (`rigid_automorphism`). The proof chains through the recovery filtration from `Discoverable.lean`, fixing each of the 17 elements in order. The original conjecture (Sheaf.lean) omitted injectivity; the constant maps to `top`, `bot`, and `p` are non-identity endomorphisms, so the injectivity hypothesis is necessary.
 
 ### Result 8: Abstract Δ₁ Role-Schema Minimality/Uniqueness
 

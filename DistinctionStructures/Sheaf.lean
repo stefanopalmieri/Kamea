@@ -574,20 +574,18 @@ def idDSHom : DSHom D1ι dot dot actual_ι actual_ι where
   hom := fun _ _ => rfl
   pres_actual := fun _ h => h
 
--- CONJECTURE: rigid_endomorphism
+-- RESOLVED: rigid_automorphism (see Rigidity.lean)
+--
+-- The original conjecture omitted injectivity:
 --   ∀ f : D1ι → D1ι, (∀ x y, f (dot x y) = dot (f x) (f y)) → ∀ x, f x = x
+-- This is FALSE — the constant maps to top, bot, and p are non-identity
+-- endomorphisms. The correct statement requires injectivity:
+--   ∀ f : D1ι → D1ι, (∀ x y, f (dot x y) = dot (f x) (f y)) →
+--     Function.Injective f → ∀ x, f x = x
 --
--- The full rigidity proof would chain through the recovery procedure:
--- f must fix top, bot (absorbers — proven above), then the four testers
--- (by cardinality signatures of their decoded sets), then the encoders,
--- context tokens, and finally the synthesis triple. Each step uses the
--- previous fixed points plus the homomorphism condition to constrain f.
---
--- native_decide cannot handle quantification over D1ι → D1ι (17^17 functions).
--- The proof requires ~17 chained lemmas, one per element, following the
--- recovery order from Discoverable.lean. This mirrors the sheaf-theoretic
--- observation that the recovery filtration IS the proof structure:
--- each level of the observation sheaf fixes more elements of f.
---
--- The conjecture is verified empirically by rigid_census.py and the
--- WL-1 canonical fingerprinting (kamea_fingerprint.py).
+-- The proof chains through the recovery filtration from Discoverable.lean,
+-- fixing each element in turn: top → bot → m_I → m_K → e_I → d_K →
+-- i → k → e_M → e_D → d_I → p → e_Delta → e_Sigma → s_C → a → b.
+-- This mirrors the sheaf-theoretic observation that the recovery filtration
+-- IS the proof structure: each level of the observation sheaf fixes more
+-- elements of f. Machine-checked in Rigidity.lean.

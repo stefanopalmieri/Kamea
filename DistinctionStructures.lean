@@ -21,3 +21,4 @@ import DistinctionStructures.Delta1RoleSchema
 import DistinctionStructures.Delta1RoleDerivation
 import DistinctionStructures.Delta1Strengthened
 import DistinctionStructures.SMTEncodingLean
+import DistinctionStructures.Rigidity

@@ -49,7 +49,7 @@ This file is the canonical status registry for claims made in this repository.
 | GNN learns permutation-invariant discriminative embeddings for Kamea atoms | Empirical | `gnn_fingerprint.py`, `gnn_output/` | `uv run python gnn_fingerprint.py` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
-| Unique endomorphism rigidity of `Δ₁` | Conjecture/Open | Marked as conjecture in `Sheaf.lean` | N/A |
+| Automorphism rigidity of `Δ₁`: every injective magma endomorphism is the identity; injectivity is necessary (constant maps to `top`, `bot`, `p` are non-identity endomorphisms) | Lean-proved | `DistinctionStructures/Rigidity.lean` | `lake build DistinctionStructures.Rigidity` |
 
 ## Scope Notes
 
