@@ -201,6 +201,8 @@ DistinctionStructures/
 │   ├── BasePlusA7Derivation.lean                # Even with generic directed A7′, small (<17) countermodels exist
 │   ├── StrengthenedBaseAxioms.lean              # Strengthened DirectedDS bundle with RoleComplete17 => card >= 17
 │   ├── IntermediateAxiomLadder.lean             # Axiom-ladder equivalences: RoleComplete17 ↔ Embedding17 ↔ card >= 17
+│   ├── FullAbstractAxiomGap.lean                # Base+A7′+DirectedIR still doesn't force 17 (6-element countermodel)
+│   ├── NondegenerateIRBridge.lean               # Adding nondegenerate IR codes gives card >= 7, still not 17
 │   ├── Delta0.lean                              # Δ₀: 16-element symmetric model
 │   ├── Delta1.lean                              # Δ₁: 17-element directed model
 │   ├── Delta1RoleSchema.lean                    # Abstract 17-role schema: encoding-independent minimality/uniqueness
@@ -352,6 +354,14 @@ Key theorems in `Delta2.lean`:
 | `quoted_inert_d1` | ∀ d : D1ι, d · quoted(y) = p |
 
 All proofs by `decide` over finite types.
+
+**QUOTE/EVAL is nontrivial (not just reversible encoding).** Δ₂ has a total operation on `T2`, but `EVAL` does more than decode `QUOTE`:
+
+- `QUOTE · (at x) = qu x` embeds atoms as code-like quoted terms.
+- `EVAL · (qu x) = at x` gives left-inverse decoding on quoted atoms.
+- `EVAL · (ap f x) = at (dotA f x)` evaluates application nodes, so evaluation is defined beyond quoted-atom decoding.
+
+This already yields many-to-one evaluation on distinct code terms: `ap(top, i) ≠ ap(top, k)` but both evaluate to `top` (since `top` is a left absorber in Δ₁). In Δ₃ form: `EVAL · quote(app(top, i)) = top` and `EVAL · quote(app(top, k)) = top` with distinct quoted programs.
 
 ### Extension 2: Δ₃ -- Recursive Evaluation
 
@@ -640,7 +650,7 @@ Each step adds exactly one capability. The formalizability boundary falls betwee
 
 ## What Is Not Proved
 
-- **Minimality (full DS axioms).** We now have: (1) an encoding-independent schema theorem (`Delta1RoleSchema.lean`), (2) a concrete `Δ₁` bridge (`Delta1RoleDerivation.lean`), and (3) a strengthened-base derivation (`StrengthenedBaseAxioms.lean`) showing `A2+A5+Ext+RoleComplete17 => card ≥ 17` (instantiated in `Delta1Strengthened.lean`). We also formalized two limitation theorems: `BaseAxiomDerivation.lean` shows base `DirectedDS` axioms alone imply only `card ≥ 2` (tight), and `BasePlusA7Derivation.lean` shows that even adding a generic directed novelty axiom (`DirectedA7Prime`) still does not force `card ≥ 17` (3-element countermodel). `IntermediateAxiomLadder.lean` proves the current weakest forcing condition in this framework is `Embedding17` (equivalent to both `card ≥ 17` and `RoleComplete17`). What remains open is deriving that forcing condition from only base DS axioms.
+- **Minimality (full DS axioms).** We now have: (1) an encoding-independent schema theorem (`Delta1RoleSchema.lean`), (2) a concrete `Δ₁` bridge (`Delta1RoleDerivation.lean`), and (3) a strengthened-base derivation (`StrengthenedBaseAxioms.lean`) showing `A2+A5+Ext+RoleComplete17 => card ≥ 17` (instantiated in `Delta1Strengthened.lean`). We also formalized four limitation theorems: `BaseAxiomDerivation.lean` shows base `DirectedDS` axioms alone imply only `card ≥ 2` (tight); `BasePlusA7Derivation.lean` shows that adding generic directed novelty (`DirectedA7Prime`) still does not force `card ≥ 17` (3-element countermodel); `FullAbstractAxiomGap.lean` shows that even base + `DirectedA7Prime` + existence of a `DirectedIR` witness still does not force `Embedding17`/`card ≥ 17` (6-element countermodel); and `NondegenerateIRBridge.lean` shows that even adding a nondegenerate IR code/context constraint only forces `card ≥ 7`, still not `card ≥ 17` (13-element countermodel). `IntermediateAxiomLadder.lean` proves the current weakest forcing condition in this framework is `Embedding17` (equivalent to both `card ≥ 17` and `RoleComplete17`). What remains open is deriving that forcing condition from only base DS axioms.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Categorical formalization (general case).** The sheaf-theoretic necessity of all four ontological categories is proved for Δ₁ specifically (`Sheaf.lean`). Generalization to arbitrary finite self-modeling magmas remains open.
 - **Δ₃ termination.** The fuel parameter makes Δ₃ total, but we do not prove that for every finite term there exists sufficient fuel (this is true but requires a separate well-foundedness argument).
