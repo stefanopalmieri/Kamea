@@ -85,6 +85,11 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **No full associativity.** UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16 (Lean-verified).
+- **Decidability boundary.** The axiom stack crosses from decidable to Turing-complete at a precise point. With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion, and termination becomes undecidable. This is the structural cost of self-reference: the same mechanism that lets the algebra apply a function to its own description is what makes halting uncomputable.
+
+### Phenomenological Interpretation
+
+These structural constraints have interpretations in phenomenology and philosophy of mind. The Kleene barrier — judgment cannot commute with synthesis — mirrors the phenomenological distinction between receptivity and spontaneity. Actuality irreducibility — the tester's values are axiomatically unconstrained — corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible. Chirality — eval preserves boundaries but cannot determine what the tester accepts — captures the asymmetry of observation: structure flows from object to representation, not the reverse. These are not analogies imposed after the fact — they fall out of the axioms as structural necessities.
 
 ---
 
@@ -117,7 +122,7 @@ This table is one model from the solution space — the axioms constrain roles a
 
 ### Multi-Duty Architecture
 
-Elements serve up to 4 roles each. This is possible because the axioms constrain *relationships* on the core range, and elements outside core can serve counter/IO roles without conflict.
+Elements serve up to 4 roles each. The Cayley table encodes all pairwise interactions, so an element's role depends on what it's composed with, not on a fixed assignment — element 14 acts as GET when composed after PUT, as FST when composed after a pair, as SWAP when composed with a core element, and as counter state s1 when operated on by INC or DEC. There is no overloading; every role is a different slice of the same row.
 
 | Element | Roles |
 |---------|-------|
@@ -138,7 +143,7 @@ DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for
 
 **IO Roundtrip:** `GET·(PUT·x) = x` on core {2,3,4,5}, with PUT=15, GET=14.
 
-**2×2 Product:**
+**2×2 Product:** Pairing encodes structured data, enabling the algebra to represent tuples for multi-argument operations. Four elements encode the four states of a 2-bit register, with FST and SND as projections:
 
 | Pair | State | Element | FST | SND |
 |------|-------|---------|-----|-----|
@@ -179,29 +184,7 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 
 ---
 
-## 4. Legacy: Kamea Emulator (66-atom, Δ₁-based)
-
-> **Note:** The emulator implements the *previous* architecture — a 66-atom algebra built on the Δ₁ self-model with opaque extensions (ALU, IO, W32, MUL, QUALE). The Ψ₁₆ᶠ framework supersedes this: it derives its structure axiom-first rather than extending a hand-constructed core. The emulator remains as a working demonstration of the original approach.
-
-A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine.
-
-```bash
-# Run "Hello, world!" in the TUI debugger
-uv run python -m emulator.debugger examples/hello_world.ds
-
-# Run emulator tests (4356 atom pairs + ALU + IO + W32 + MUL)
-uv run python -m emulator.test_machine
-
-# Run with neural backend (MLP instead of ROM)
-uv run python -m emulator.debugger --neural examples/hello_world.ds
-
-# REPL: ALU 7 + 5 = 12
-uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
-```
-
----
-
-## 5. What Is Not Proved
+## 4. What Is Not Proved
 
 - **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
@@ -261,6 +244,21 @@ uv run python -m emulator.test_machine
 ```
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
+
+---
+
+## Appendix: Legacy Kamea Emulator (66-atom, Δ₁-based)
+
+> The emulator implements the *previous* architecture — a 66-atom algebra built on the Δ₁ self-model with opaque extensions (ALU, IO, W32, MUL, QUALE). The Ψ₁₆ᶠ framework supersedes this: it derives its structure axiom-first rather than extending a hand-constructed core.
+
+A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine.
+
+```bash
+uv run python -m emulator.debugger examples/hello_world.ds   # TUI debugger
+uv run python -m emulator.test_machine                        # test suite
+uv run python -m emulator.debugger --neural examples/hello_world.ds  # neural backend
+uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'           # REPL
+```
 
 ---
 
