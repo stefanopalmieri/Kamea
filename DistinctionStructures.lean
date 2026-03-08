@@ -22,3 +22,5 @@ import DistinctionStructures.Delta1RoleDerivation
 import DistinctionStructures.Delta1Strengthened
 import DistinctionStructures.SMTEncodingLean
 import DistinctionStructures.Rigidity
+import DistinctionStructures.Psi16
+import DistinctionStructures.Psi16Full
