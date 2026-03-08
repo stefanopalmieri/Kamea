@@ -20,7 +20,7 @@ The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite al
 
 The answer is yes, and it fits in a 16×16 table.
 
-What this establishes is theoretical: the minimum algebraic structure sufficient for self-description, and exactly where the degrees of freedom lie. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free. Whether this has practical applications — in self-verifying hardware, sandboxed execution, or verified protocols — is an open question, not a demonstrated result.
+What this establishes is theoretical: the minimum algebraic structure sufficient for self-description, and exactly where the degrees of freedom lie. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free. Whether these properties translate to practical self-verifying systems is an open question.
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
