@@ -8,7 +8,7 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-A finite magma can be forced by axioms to contain an internal representation layer: quoting, evaluation, branching, recursion, and small-state computation all arise from a single binary operation. A canonical 16-element model satisfies these constraints, with 83 Lean-checked theorems and efficient black-box reconstruction.
+Kamea studies finite magmas whose axioms force an internal representation layer. Using SAT-based search, we identify finite models in which a single binary operation supports quote/eval behavior, tester-mediated branching, fixed-point recursion, finite-state counter dynamics, and small structured-data operations. We then verify both universal consequences of the axiom class and concrete properties of a canonical 16-element model in Lean 4. The main contribution is methodological: a pipeline for discovering and machine-verifying self-describing finite algebras.
 
 ---
 
@@ -37,7 +37,7 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 
 What is the simplest finite structure that can identify its own components through its own operation?
 
-The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing: it contains everything needed to inspect and reconstruct itself from within.
+The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing: it contains distinguished elements behaving as an internal representation and evaluation interface for elements of the same algebra.
 
 ### The Axiom System
 
@@ -94,11 +94,11 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
-- **Decidability boundary.** `[Open]` The axiom stack crosses from decidable to Turing-complete at a precise point. With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion, and termination becomes undecidable. This is the structural cost of self-reference: the same mechanism that lets the algebra apply a function to its own description is what makes halting uncomputable. (The structural argument is clear; the formal proof that Y makes the system Turing-complete is not yet in Lean.)
+- **Decidability boundary.** `[Open]` With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion and appears to cross the boundary where termination is no longer guaranteed. A formal Turing-completeness or undecidability proof is still open.
 
-### Phenomenological Interpretation
+### Interpretive Note (Optional)
 
-These structural constraints admit natural readings in phenomenological terms, though the correspondence is interpretive rather than deductive. The Kleene barrier — judgment cannot commute with synthesis — mirrors the phenomenological distinction between receptivity and spontaneity. Actuality irreducibility — the tester's values are axiomatically unconstrained — corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible. Chirality — eval preserves boundaries but cannot determine what the tester accepts — captures the asymmetry of observation: structure flows from object to representation, not the reverse.
+> These structural constraints admit natural readings in phenomenological terms, though the correspondence is interpretive rather than deductive and is not part of the formal results. The Kleene barrier mirrors the distinction between receptivity and spontaneity; actuality irreducibility corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible; chirality captures the asymmetry of observation — structure flows from object to representation, not the reverse.
 
 ---
 
