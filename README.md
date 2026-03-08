@@ -20,7 +20,7 @@ The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite al
 
 The answer is yes, and it fits in a 16×16 table.
 
-What this establishes is theoretical: the minimum algebraic structure sufficient for self-description, and exactly where the degrees of freedom lie. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free. Whether these properties translate to practical self-verifying systems is an open question.
+The primary contribution is methodological: a demonstration that axiom-driven SAT search combined with Lean verification can systematically explore the space of self-describing finite structures, producing both universal theorems about the axiom class and specific verified models. The specific algebra Ψ₁₆ᶠ is one output of this methodology. The universal theorems — forced rigidity, actuality irreducibility, separation of judgment and synthesis — are the more durable results. Whether these properties translate to practical self-verifying systems is an open question.
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
