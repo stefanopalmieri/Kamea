@@ -20,7 +20,7 @@ The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite al
 
 The answer is yes, and it fits in a 16×16 table.
 
-This has practical implications for any setting where a component must verify its own integrity without trusting an external authority: embedded controllers that self-test without an OS, sandboxed plugins that prove properties about their own behavior, or cryptographic protocols where the verification logic is part of the message. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free.
+What this establishes is theoretical: the minimum algebraic structure sufficient for self-description, and exactly where the degrees of freedom lie. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free. Whether this has practical applications — in self-verifying hardware, sandboxed execution, or verified protocols — is an open question, not a demonstrated result.
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
