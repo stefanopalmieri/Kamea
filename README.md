@@ -10,64 +10,29 @@
 
 ---
 
-## The Ψ Framework
+## Why It Matters
 
-What is the simplest finite structure that can identify its own components through its own operation?
+Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete.
 
-The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`) until the structure contains its own quote/eval pair, branch/compose/Y combinators, IO channels, an 8-state counter, and a 2×2 product space — all in a single 16×16 Cayley table.
+The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all arising from the same operation that defines the structure? And can you *prove* it does, not by running tests, but by machine-checking the axioms?
 
-The canonical result is **Ψ₁₆ᶠ**: a 16-element algebra with **83 machine-checked Lean theorems** covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+The answer is yes, and it fits in a 16×16 table.
+
+This has practical implications for any setting where a component must verify its own integrity without trusting an external authority: embedded controllers that self-test without an OS, sandboxed plugins that prove properties about their own behavior, or cryptographic protocols where the verification logic is part of the message. The Ψ axioms specify exactly what self-description requires and what it leaves free — a formal boundary between structure and choice.
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
 ---
 
-## Key Results
+## 1. The Ψ Framework
 
-### Ψ₁₆ᶠ: Full Operational Saturation (83 Lean Theorems)
+What is the simplest finite structure that can identify its own components through its own operation?
 
-A single 16×16 Cayley table satisfying all axioms simultaneously:
+The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing: it contains everything needed to inspect and reconstruct itself from within.
 
-- **Structural**: L0–L8, Kleene (C), Inert Propagation (D), Power-Associativity (PA), Inert Self-Application (VV)
-- **Reflective**: Quote/Eval inverse pair (QE), E-transparency, 1-inert
-- **Computational**: Branch, Compose, Y-combinator, Selection (η·ρ = τ)
-- **Arithmetic**: 8-state counter (INC + DEC), 4-state sub-counter (INC2)
-- **IO**: PUT/GET roundtrip on core, SEQ sequencer
-- **Data**: PAIR/FST/SND (curried 2×2 product), SWAP involution on core
+### The Axiom System
 
-Properties:
-- **WL-1 discrete** (rigid): all 16 elements distinguishable after 1 Weisfeiler-Leman refinement
-- **Fully producible**: every element appears as some `a·b`
-- **{⊤,⊥,Q,E} generates all 16** elements in ≤4 steps (Lean-verified)
-- **Only 2 idempotents**: {⊤, ⊥}
-- **No associative sub-magma of size ≥ 4**
-
-### Multi-Duty Architecture
-
-Elements serve up to 4 roles each:
-
-| Element | Roles |
-|---------|-------|
-| 14 | GET / FST / SWAP / s1 (4 roles) |
-| 6 (Q) | Q / SND / s2 / p01 (4 roles) |
-| 7 (E) | E / INC2 / s7 (3 roles) |
-| 15 | DEC / PUT / s5 (3 roles) |
-| 11 | PAIR / s3 / p11 (3 roles) |
-| 9 (η) | η / p10 (2 roles) |
-| 12 | s0 / p00 (2 roles) |
-| 8 (ρ) | ρ / s6 (2 roles) |
-| 10 (Y) | Y / s4 (2 roles) |
-| 13 (INC) | INC only (1 role) |
-
-### Actuality Irreducibility
-
-The tester row is **completely free**: at N=16, all 14 core tester cells can independently flip between ⊤ and ⊥ (SAT-verified with push/pop). The distinction the tester draws is a genuine choice, not determined by the structural axioms.
-
----
-
-## The Axiom System
-
-### Structural Ladder (L0–L8)
+**Structural Ladder (L0–L8)** — forces the basic role architecture:
 
 | Level | Name | What It Forces |
 |-------|------|----------------|
@@ -81,7 +46,7 @@ The tester row is **completely free**: at N=16, all 14 core tester cells can ind
 | L7 | Inert exists | At least one "substrate" element |
 | L8 | Encoder separation | ≥2 encoders with distinct output sets |
 
-### Additional Axioms
+**Operational Axioms** — force specific computational capabilities:
 
 | Axiom | What It Forces |
 |-------|----------------|
@@ -97,7 +62,7 @@ The tester row is **completely free**: at N=16, all 14 core tester cells can ind
 | **Y-Combinator** | `Y·ρ = ρ·(Y·ρ)`, with `Y·ρ ≥ 2` — fixed-point combinator |
 | **Selection** | `η·ρ = τ` — composing then branching yields a judgment |
 
-### Minimum N by Feature
+### Scale
 
 | Feature | Min N |
 |---------|-------|
@@ -106,9 +71,30 @@ The tester row is **completely free**: at N=16, all 14 core tester cells can ind
 | + Branch/Compose/Y | 12 |
 | + IO + 8-state counter + Selection | 16 |
 
+### Universal Theorems
+
+These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra. This is the strongest part of the theoretical contribution: the axioms constrain *every* model, not one table.
+
+- **Exactly 2 absorbers.** L5 forces no additional absorbers beyond ⊤ and ⊥.
+- **Separation of judgment and operation.** Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
+- **Actuality irreducibility.** The tester row is **completely free**. At N=16, all 14 core tester cells can independently flip between ⊤ and ⊥ (SAT-verified with push/pop). At N=12, all 12 core tester cells are free. No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
+- **Rigidity.** Ψ₁₆ᶠ is WL-1 discrete: all 16 elements distinguishable after 1 Weisfeiler-Leman refinement. No non-trivial automorphism exists.
+- **Chirality.** E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
+- **Encoder-tester non-commutativity.** Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
+- **No right identity.** UNSAT at N≥6.
+- **No full associativity.** UNSAT. No associative sub-magma of size ≥ 4.
+- **Encoder dominance.** As N grows, encoder count grows; tester and inert counts stay bounded.
+- **Constructibility.** {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16 (Lean-verified).
+
 ---
 
-## Element Assignments (Ψ₁₆ᶠ)
+## 2. Ψ₁₆ᶠ: The Specific Algebra
+
+The canonical representative: a single 16×16 Cayley table with **83 machine-checked Lean theorems** (`Psi16Full.lean`), covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+
+This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
+
+### Element Assignments
 
 | Index | Symbol | Role | Computational | Counter | IO | Product |
 |-------|--------|------|---------------|---------|----|---------|
@@ -129,20 +115,30 @@ The tester row is **completely free**: at N=16, all 14 core tester cells can ind
 | 14 | — | encoder | — | s1 | GET/FST | SWAP |
 | 15 | — | encoder | decrement | s5 | PUT/DEC | — |
 
-### 8-State Counter
+### Multi-Duty Architecture
 
+Elements serve up to 4 roles each. This is possible because the axioms constrain *relationships* on the core range, and elements outside core can serve counter/IO roles without conflict.
+
+| Element | Roles |
+|---------|-------|
+| 14 | GET / FST / SWAP / s1 (4 roles) |
+| 6 (Q) | Q / SND / s2 / p01 (4 roles) |
+| 7 (E) | E / INC2 / s7 (3 roles) |
+| 15 | DEC / PUT / s5 (3 roles) |
+| 11 | PAIR / s3 / p11 (3 roles) |
+
+### Operations
+
+**8-State Counter:**
 ```
 s0(12) →INC→ s1(14) →INC→ s2(Q=6) →INC→ s3(11) →INC→
 s4(Y=10) →INC→ s5(15) →INC→ s6(ρ=8) →INC→ s7(E=7) →INC→ s0(12)
 ```
-
 DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for k≠0.
 
-### IO Roundtrip
+**IO Roundtrip:** `GET·(PUT·x) = x` on core {2,3,4,5}, with PUT=15, GET=14.
 
-`GET·(PUT·x) = x` on core {2,3,4,5}, with PUT=15, GET=14.
-
-### 2×2 Product
+**2×2 Product:**
 
 | Pair | State | Element | FST | SND |
 |------|-------|---------|-----|-----|
@@ -151,7 +147,9 @@ DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for
 | (s1,s0) | p10 | 9 (=η) | s1 | s0 |
 | (s1,s1) | p11 | 11 (=PAIR) | s1 | s1 |
 
-### Black-Box Recovery
+---
+
+## 3. Black-Box Recovery
 
 All 16 elements can be identified from a shuffled, opaque dot oracle — no ground truth, no labels. Three methods (`psi_blackbox.py`), all 100% on 1000 seeds:
 
@@ -161,7 +159,17 @@ All 16 elements can be identified from a shuffled, opaque dot oracle — no grou
 | **Generation** | 658 | Steps 1–7, then depth-2 generation from {⊤,⊥,Q,E} |
 | **Adaptive** | **62** | Absorber-probe signatures + Kleene/QE targeting + generation |
 
-The adaptive method never reads a full row. The 2-probe signature `(x·⊤, x·⊥)` partitions all non-absorbers into 5 classes, uniquely locating g (orients ⊤), E (Kleene separates it from testers), and Q (QE round-trip on E). Then 12 generation calls produce all remaining elements.
+The adaptive method never reads a full row. The 2-probe absorber signature `(x·⊤, x·⊥)` partitions all 14 non-absorbers into 5 disjoint classes:
+
+| Signature | Elements | What it reveals |
+|-----------|----------|-----------------|
+| full-preserver | τ, SEQ, E, s0 | E is here (Kleene separates it from testers) |
+| semi(⊤) | g | **unique** — orients ⊤ |
+| semi(⊥) | f, ρ, Y, PAIR | — |
+| swap(⊥→⊤) | Q, INC, s1 | Q is here (QE round-trip on E identifies it) |
+| swap(⊤→⊥) | η, DEC | — |
+
+Once ⊤, ⊥, Q, E are found (~50 probes), 12 generation calls produce all remaining elements via the depth-2 generation tree.
 
 ```bash
 uv run python psi_blackbox.py --method adaptive              # single demo
@@ -171,9 +179,11 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 
 ---
 
-## Emulator: Kamea Machine
+## 4. Legacy: Kamea Emulator (66-atom, Δ₁-based)
 
-A cycle-accurate emulator of the hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine. The emulator implements the full 66-atom Kamea algebra (the original Δ-based extension with ALU, IO, W32, MUL, and QUALE atoms).
+> **Note:** The emulator implements the *previous* architecture — a 66-atom algebra built on the Δ₁ self-model with opaque extensions (ALU, IO, W32, MUL, QUALE). The Ψ₁₆ᶠ framework supersedes this: it derives its structure axiom-first rather than extending a hand-constructed core. The emulator remains as a working demonstration of the original approach.
+
+A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine.
 
 ```bash
 # Run "Hello, world!" in the TUI debugger
@@ -185,12 +195,19 @@ uv run python -m emulator.test_machine
 # Run with neural backend (MLP instead of ROM)
 uv run python -m emulator.debugger --neural examples/hello_world.ds
 
-# Run with LLM backend (Ollama)
-uv run python -m emulator.debugger --llm examples/llm_demo.ds
-
 # REPL: ALU 7 + 5 = 12
 uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
 ```
+
+---
+
+## 5. What Is Not Proved
+
+- **Cell-by-cell freedom at N=16.** The push/pop analysis has been done at N=12 (117/144 free cells, 18.8% determination) and N=8 (46/64 free, 28.1%). The N=16 analysis remains open.
+- **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave many cells free (demonstrated at N=12).
+- **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
+- **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
+- **Necessity of self-modeling.** Empirical evidence (`counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 
 ---
 
@@ -204,7 +221,7 @@ uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
 │   ├── OntologicalSchema.lean        # Abstract four-lift schema theorem
 │   ├── Psi16.lean                    # Ψ₁₆ with selection axiom (42 theorems)
 │   └── Psi16Full.lean               # Ψ₁₆ᶠ full operations (83 theorems)
-├── emulator/                         # Cycle-accurate Kamea machine emulator
+├── emulator/                         # Legacy: Δ₁-based Kamea machine emulator
 │   ├── chips.py                      # Hardware primitives (EEPROM, IC74181, SRAM)
 │   ├── cayley.py                     # Cayley ROM builder
 │   ├── machine.py                    # Eval/apply state machine
@@ -244,33 +261,6 @@ uv run python -m emulator.test_machine
 ```
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
-
----
-
-## What Is Not Proved
-
-- **Cell-by-cell freedom at N=16.** The push/pop analysis has been done at N=12 (117/144 free cells, 18.8% determination) and N=8 (46/64 free, 28.1%). The N=16 analysis remains open.
-- **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is ONE model from the solution space. The axioms constrain roles and relationships but leave many cells free (demonstrated at N=12).
-- **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
-- **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
-- **Necessity of self-modeling.** Empirical evidence (`counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
-
----
-
-## Why It Matters
-
-The Ψ framework shows that a remarkably small structure — 16 elements, one binary operation — can simultaneously contain:
-
-1. **Self-description**: quote/eval inverse pair on core
-2. **Branching**: tester-mediated conditional dispatch
-3. **Composition**: function composition through branch
-4. **Recursion**: Y-combinator with non-trivial fixed point
-5. **Arithmetic**: bidirectional 8-state counter with zero-test
-6. **IO**: PUT/GET roundtrip on core
-7. **Data structures**: curried 2×2 product with projections
-8. **Termination**: selection axiom (η·ρ = τ)
-
-The axioms determine the skeleton — roles, absorbers, functional relationships on core — but leave the flesh open. The determination question (how much of the table does self-description actually force?) reveals a fundamental tension: self-description is a *relational* property, constraining how cells relate to each other, not what individual cells contain.
 
 ---
 
