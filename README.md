@@ -107,9 +107,9 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
 - **Decidability boundary.** `[Open]` With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion and appears to cross the boundary where termination is no longer guaranteed. A formal Turing-completeness or undecidability proof is still open.
 
-### Interpretive Note (Optional)
+### Phenomenological Interpretation
 
-> These structural constraints admit natural readings in phenomenological terms, though the correspondence is interpretive rather than deductive and is not part of the formal results. The Kleene barrier mirrors the distinction between receptivity and spontaneity; actuality irreducibility corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible; chirality captures the asymmetry of observation — structure flows from object to representation, not the reverse.
+The structural constraints have precise phenomenological counterparts. Judgment cannot commute with synthesis (Kleene barrier) — that is a theorem, not an analogy. Tester values are axiomatically unconstrained (actuality irreducibility) — also a theorem. Eval preserves boundaries but cannot determine what the tester accepts (chirality) — again, proved. Whether these correspondences with receptivity/spontaneity, the irreducibility of givenness, and the asymmetry of observation reflect something deeper about self-description is an open question — but the structural facts themselves are theorems, not interpretations.
 
 ---
 
