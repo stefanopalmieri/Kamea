@@ -98,7 +98,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 
 ### Phenomenological Interpretation
 
-These structural constraints have interpretations in phenomenology and philosophy of mind. The Kleene barrier — judgment cannot commute with synthesis — mirrors the phenomenological distinction between receptivity and spontaneity. Actuality irreducibility — the tester's values are axiomatically unconstrained — corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible. Chirality — eval preserves boundaries but cannot determine what the tester accepts — captures the asymmetry of observation: structure flows from object to representation, not the reverse. These are not analogies imposed after the fact — they fall out of the axioms as structural necessities.
+These structural constraints admit natural readings in phenomenological terms, though the correspondence is interpretive rather than deductive. The Kleene barrier — judgment cannot commute with synthesis — mirrors the phenomenological distinction between receptivity and spontaneity. Actuality irreducibility — the tester's values are axiomatically unconstrained — corresponds to the irreducibility of *that* something is given, as distinct from *what* is structurally possible. Chirality — eval preserves boundaries but cannot determine what the tester accepts — captures the asymmetry of observation: structure flows from object to representation, not the reverse.
 
 ---
 
