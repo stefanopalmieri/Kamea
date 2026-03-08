@@ -8,6 +8,8 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
+A finite magma can be forced by axioms to contain an internal representation layer: quoting, evaluation, branching, recursion, and small-state computation all arise from a single binary operation. A canonical 16-element model satisfies these constraints, with 83 Lean-checked theorems and efficient black-box reconstruction.
+
 ---
 
 ## Why It Matters
@@ -18,9 +20,16 @@ The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite al
 
 The answer is yes, and it fits in a 16×16 table.
 
-This has practical implications for any setting where a component must verify its own integrity without trusting an external authority: embedded controllers that self-test without an OS, sandboxed plugins that prove properties about their own behavior, or cryptographic protocols where the verification logic is part of the message. The Ψ axioms specify exactly what self-description requires and what it leaves free — a formal boundary between structure and choice.
+This has practical implications for any setting where a component must verify its own integrity without trusting an external authority: embedded controllers that self-test without an OS, sandboxed plugins that prove properties about their own behavior, or cryptographic protocols where the verification logic is part of the message. The Ψ axioms isolate a precise boundary between what self-description requires and what remains free.
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
+
+### How to Read This Repo
+
+1. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+2. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 machine-checked theorems
+3. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
+4. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -152,6 +161,29 @@ DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for
 | (s1,s0) | p10 | 9 (=η) | s1 | s0 |
 | (s1,s1) | p11 | 11 (=PAIR) | s1 | s1 |
 
+### Worked Example
+
+All operations below are lookups in the same 16×16 Cayley table.
+
+```
+# Quote/Eval round-trip: Q encodes τ, E decodes it back
+Q · τ  = 9  (η)          -- quote the tester: get a code for it
+E · 9  = 3  (τ)          -- eval the code: recover the original
+
+# Branch dispatch: ρ routes through f when τ accepts
+τ · f  = 0  (⊤)          -- tester accepts f
+ρ · f  = 13 (INC)        -- branch element computes f·f = 13  (took the f-path)
+
+τ · g  = 0  (⊤)          -- tester also accepts g
+ρ · g  = 11 (PAIR)       -- branch computes f·g = 11
+
+# Counter step: INC advances the 8-state counter
+INC · s0 = 14 (s1)       -- increment from zero
+INC · s1 = 6  (Q = s2)   -- increment again: counter state 2 is Q
+τ · s0   = 0  (⊤)        -- zero test: tester accepts s0
+τ · s1   = 1  (⊥)        -- non-zero: tester rejects s1
+```
+
 ---
 
 ## 3. Black-Box Recovery
@@ -190,6 +222,25 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
+
+### Claim Matrix
+
+| Claim | Scope | Status | Evidence |
+|-------|-------|--------|----------|
+| Ψ₁₆ᶠ satisfies all listed operations | specific model | `[Lean]` | `Psi16Full.lean` (83 theorems) |
+| Ψ₁₆ᶠ is WL-1 rigid and fully producible | specific model | `[Lean]` | `Psi16Full.lean` |
+| Base axioms imply only card ≥ 2 (tight) | universal | `[Lean]` | `BaseAxiomDerivation.lean` |
+| QE exists at N ≥ 8 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
+| Branch/Compose/Y require N ≥ 12 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
+| Tester cells completely free | universal / all sizes tested | `[SAT]` | `n16_freedom.py` (N=8, 12, 16) |
+| No right identity at N ≥ 6 | universal / size bound | `[SAT]` | `stacking_analysis.py` |
+| N=16 determination: 64/256 fixed (25.0%) | size-specific | `[SAT]` | `n16_freedom.py` |
+| Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
+| Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
+| Y-combinator → Turing-completeness | universal | `[Open]` | structural argument |
+| Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
+
+Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ---
 
