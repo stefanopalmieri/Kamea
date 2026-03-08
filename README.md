@@ -77,7 +77,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 
 - **Exactly 2 absorbers.** L5 forces no additional absorbers beyond ⊤ and ⊥.
 - **Separation of judgment and operation.** Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
-- **Actuality irreducibility.** The tester row is **completely free**. At N=16, all 14 core tester cells can independently flip between ⊤ and ⊥ (SAT-verified with push/pop). At N=12, all 12 core tester cells are free. No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
+- **Actuality irreducibility.** The tester row is **completely free**. At N=16, all 40 tester free cells (τ: 8, SEQ: 16, s0: 16) can independently flip between ⊤ and ⊥ (SAT-verified with push/pop). At N=12, all 12 core tester cells are free. No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
 - **Rigidity.** Ψ₁₆ᶠ is WL-1 discrete: all 16 elements distinguishable after 1 Weisfeiler-Leman refinement. No non-trivial automorphism exists.
 - **Chirality.** E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
 - **Encoder-tester non-commutativity.** Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
@@ -92,7 +92,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 
 The canonical representative: a single 16×16 Cayley table with **83 machine-checked Lean theorems** (`Psi16Full.lean`), covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
-This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
+This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (192/256 at N=16, 117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
 
 ### Element Assignments
 
@@ -203,8 +203,7 @@ uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
 
 ## 5. What Is Not Proved
 
-- **Cell-by-cell freedom at N=16.** The push/pop analysis has been done at N=12 (117/144 free cells, 18.8% determination) and N=8 (46/64 free, 28.1%). The N=16 analysis remains open.
-- **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave many cells free (demonstrated at N=12).
+- **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
@@ -237,7 +236,8 @@ uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
-│   └── substrate_analysis.py         # Substrate/stacking analysis
+│   ├── substrate_analysis.py         # Substrate/stacking analysis
+│   └── n16_freedom.py                # N=16 cell-by-cell SAT freedom analysis
 ├── docs/
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   └── minimal_model.md              # Minimal model notes
