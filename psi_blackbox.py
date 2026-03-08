@@ -461,6 +461,124 @@ def recover_generation(domain, dot):
 
 
 # ============================================================================
+# Adaptive recovery (~62 dot calls)
+# ============================================================================
+#
+# Key insight: you never need to read a full row. The absorber-probe signature
+# (x·abs_a, x·abs_b) partitions all 14 non-absorbers into 5 disjoint classes:
+#
+#   full-preserver  x·⊤=⊤, x·⊥=⊥     {τ, SEQ, E, s0}  → E is here
+#   semi(⊤)         x·⊤=⊤, x·⊥=other  {g}               → unique = g, orients ⊤
+#   semi(⊥)         x·⊤=other, x·⊥=⊥  {f, ρ, Y, PAIR}
+#   swap(⊥→⊤)       x·⊥=⊤, x·⊤=other  {Q, INC, s1}      → Q is here
+#   swap(⊤→⊥)       x·⊤=⊥, x·⊥=other  {η, DEC}
+#
+# Then: E is the only full-preserver that's an encoder (one probe separates
+# it from the 3 testers via Kleene). Q is the only swap(⊥→⊤) element with
+# E·(Q·E) = Q (QE round-trip on E itself).
+
+def recover_adaptive(domain, dot):
+    """Minimal adaptive recovery: find ⊤,⊥,Q,E via ~50 targeted probes, then generate."""
+    N = len(domain)
+    abs_set = set()
+
+    # Phase 1: Idempotent scan (16 calls)
+    # In Ψ₁₆ᶠ only {⊤,⊥} are idempotent.
+    absorbers = []
+    for x in domain:
+        if dot(x, x) == x:
+            absorbers.append(x)
+    assert len(absorbers) == 2, f"Expected 2 idempotents, found {len(absorbers)}"
+    abs_a, abs_b = absorbers
+    abs_set = {abs_a, abs_b}
+
+    # Phase 2: Absorber-probe signatures (28 calls)
+    # For each non-absorber, compute (x·abs_a, x·abs_b) and classify.
+    full_preservers = []  # x·abs_a = abs_a AND x·abs_b = abs_b
+    semi_a = []           # x·abs_a = abs_a AND x·abs_b ∉ absorbers
+    semi_b = []           # x·abs_b = abs_b AND x·abs_a ∉ absorbers
+    swap_to_a = []        # x·abs_b = abs_a AND x·abs_a ∉ absorbers
+    swap_to_b = []        # x·abs_a = abs_b AND x·abs_b ∉ absorbers
+
+    for x in domain:
+        if x in abs_set:
+            continue
+        va = dot(x, abs_a)
+        vb = dot(x, abs_b)
+        va_abs = va in abs_set
+        vb_abs = vb in abs_set
+
+        if va == abs_a and vb == abs_b:
+            full_preservers.append(x)
+        elif va == abs_a and not vb_abs:
+            semi_a.append(x)
+        elif vb == abs_b and not va_abs:
+            semi_b.append(x)
+        elif vb == abs_a and not va_abs:
+            swap_to_a.append(x)
+        elif va == abs_b and not vb_abs:
+            swap_to_b.append(x)
+
+    # Phase 3: Orient absorbers (0 calls)
+    # g is the UNIQUE semi-preserver. The absorber it preserves is ⊤.
+    if len(semi_a) == 1:
+        top, bot = abs_a, abs_b
+        q_candidates = swap_to_a
+    else:
+        assert len(semi_b) == 1
+        top, bot = abs_b, abs_a
+        q_candidates = swap_to_b
+
+    # Phase 4: Find E among full preservers (1-4 calls)
+    # Kleene axiom: only testers produce boolean output on non-absorbers.
+    # E is the unique encoder among {τ, SEQ, E, s0} — one non-boolean probe finds it.
+    test_pool = [x for x in domain if x not in abs_set and x not in full_preservers]
+    z = test_pool[0]
+    E = None
+    for x in full_preservers:
+        if dot(x, z) not in abs_set:
+            E = x
+            break
+    assert E is not None, "Failed to find E"
+
+    # Phase 5: Find Q among swap candidates (2-6 calls)
+    # Q is the unique element where E·(Q·E) = Q (QE round-trip on E itself).
+    Q = None
+    for x in q_candidates:
+        if dot(E, dot(x, E)) == x:
+            Q = x
+            break
+    assert Q is not None, "Failed to find Q"
+
+    # Phase 6: Generate all 16 elements (12 calls)
+    rec = {"⊤": top, "⊥": bot, "Q": Q, "E": E}
+
+    # Depth 1
+    f    = dot(E, E)
+    PAIR = dot(E, Q)
+    s1   = dot(Q, Q)
+    DEC  = dot(Q, top)
+
+    # Depth 2
+    tau  = dot(f, s1)
+    g    = dot(PAIR, DEC)
+    SEQ  = dot(f, top)
+    rho  = dot(f, E)
+    eta  = dot(f, PAIR)
+    Y    = dot(PAIR, s1)
+    s0   = dot(Q, s1)
+    INC  = dot(f, f)
+
+    rec.update({
+        "f": f, "τ": tau, "g": g, "SEQ": SEQ,
+        "ρ": rho, "η": eta, "Y": Y, "PAIR": PAIR,
+        "s0": s0, "INC": INC, "s1": s1, "DEC": DEC,
+    })
+    assert len(set(rec.values())) == 16, f"Collision in generated elements"
+    return rec
+
+
+# ============================================================================
 # Instrumented blackbox for dot-call counting
 # ============================================================================
 
@@ -602,59 +720,57 @@ def main():
     parser = argparse.ArgumentParser(description="Ψ₁₆ᶠ black-box recovery demo")
     parser.add_argument("--seed", type=int, default=11, help="RNG seed for single demo")
     parser.add_argument("--seeds", type=int, default=0, help="Batch test N seeds (1..N)")
-    parser.add_argument("--method", choices=["behavioral", "generation"], default="behavioral",
-                        help="Recovery method (default: behavioral)")
+    parser.add_argument("--method", choices=["behavioral", "generation", "adaptive"],
+                        default="behavioral", help="Recovery method (default: behavioral)")
     parser.add_argument("--compare", action="store_true",
                         help="Compare dot-call costs of both methods (use with --seeds)")
     args = parser.parse_args()
 
-    recover_fn = recover_generation if args.method == "generation" else recover_all
+    METHODS = {"behavioral": recover_all, "generation": recover_generation, "adaptive": recover_adaptive}
+    recover_fn = METHODS[args.method]
 
     if args.compare and args.seeds > 0:
         # Side-by-side dot-call comparison
         print(f"Comparing dot-call costs over {args.seeds} seeds...")
-        beh_calls, gen_calls = [], []
-        beh_fail, gen_fail = 0, 0
+        all_methods = [
+            ("behavioral", recover_all),
+            ("generation", recover_generation),
+            ("adaptive", recover_adaptive),
+        ]
+        results_map = {name: ([], 0) for name, _ in all_methods}
+
         for seed in range(1, args.seeds + 1):
-            for method, calls_list, fail_count_ref in [
-                (recover_all, beh_calls, "beh"),
-                (recover_generation, gen_calls, "gen"),
-            ]:
+            for name, method in all_methods:
                 domain, dot_c, gt, calls = make_blackbox_counted(seed)
+                cl, fl = results_map[name]
                 try:
                     rec = method(domain, dot_c)
-                    # Verify correctness
                     inv_gt = {v: k for k, v in gt.items()}
-                    ok = all(inv_gt[rec[n]] == n for n in rec)
-                    if ok:
-                        calls_list.append(calls[0])
+                    if all(inv_gt[rec[n]] == n for n in rec):
+                        cl.append(calls[0])
                     else:
-                        if fail_count_ref == "beh":
-                            beh_fail += 1
-                        else:
-                            gen_fail += 1
+                        results_map[name] = (cl, fl + 1)
                 except Exception:
-                    if fail_count_ref == "beh":
-                        beh_fail += 1
-                    else:
-                        gen_fail += 1
+                    results_map[name] = (cl, fl + 1)
 
         print(f"\n{'Method':<14s} {'Pass':>6s} {'Mean':>8s} {'Min':>6s} {'Max':>6s}")
         print("-" * 42)
-        for label, cl, fl in [("behavioral", beh_calls, beh_fail),
-                               ("generation", gen_calls, gen_fail)]:
+        for name, _ in all_methods:
+            cl, fl = results_map[name]
             n = len(cl)
             if n:
-                print(f"{label:<14s} {n:>5d}  {sum(cl)/n:>7.1f} {min(cl):>6d} {max(cl):>6d}")
+                print(f"{name:<14s} {n:>5d}  {sum(cl)/n:>7.1f} {min(cl):>6d} {max(cl):>6d}")
             else:
-                print(f"{label:<14s}     0       -      -      -")
+                print(f"{name:<14s}     0       -      -      -")
             if fl:
                 print(f"  ({fl} failures)")
 
-        if beh_calls and gen_calls:
-            saving = sum(beh_calls)/len(beh_calls) - sum(gen_calls)/len(gen_calls)
-            pct = 100 * saving / (sum(beh_calls)/len(beh_calls))
-            print(f"\nGeneration saves {saving:.1f} calls on average ({pct:.1f}%)")
+        beh_cl = results_map["behavioral"][0]
+        ada_cl = results_map["adaptive"][0]
+        if beh_cl and ada_cl:
+            beh_mean = sum(beh_cl) / len(beh_cl)
+            ada_mean = sum(ada_cl) / len(ada_cl)
+            print(f"\nAdaptive saves {beh_mean - ada_mean:.1f} calls vs behavioral ({100*(beh_mean-ada_mean)/beh_mean:.1f}%)")
         return
 
     if args.seeds > 0:
@@ -689,7 +805,8 @@ def main():
         return
 
     # Single-seed demo
-    method_label = "Generation" if args.method == "generation" else "12-Step Behavioral"
+    method_labels = {"behavioral": "12-Step Behavioral", "generation": "Generation", "adaptive": "Adaptive"}
+    method_label = method_labels[args.method]
     print(f"Ψ₁₆ᶠ Black-Box Recovery — {method_label} (seed={args.seed})")
     print("=" * 60)
 
