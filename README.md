@@ -73,19 +73,19 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 ### Universal Theorems
 
-These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra. This is the strongest part of the theoretical contribution: the axioms constrain *every* model, not one table.
+These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra. This is the strongest part of the theoretical contribution: the axioms constrain *every* model, not one table. Each claim is tagged with its evidence tier (see [`CLAIMS.md`](CLAIMS.md)):
 
-- **Exactly 2 absorbers.** L5 forces no additional absorbers beyond ⊤ and ⊥.
-- **Separation of judgment and operation.** Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
-- **Actuality irreducibility.** The tester row is **completely free**. At N=16, all 40 tester free cells (τ: 8, SEQ: 16, s0: 16) can independently flip between ⊤ and ⊥ (SAT-verified with push/pop). At N=12, all 12 core tester cells are free. No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
-- **Rigidity.** Ψ₁₆ᶠ is WL-1 discrete: all 16 elements distinguishable after 1 Weisfeiler-Leman refinement. No non-trivial automorphism exists.
-- **Chirality.** E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
-- **Encoder-tester non-commutativity.** Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
-- **No right identity.** UNSAT at N≥6.
-- **No full associativity.** UNSAT. No associative sub-magma of size ≥ 4.
-- **Encoder dominance.** As N grows, encoder count grows; tester and inert counts stay bounded.
-- **Constructibility.** {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16 (Lean-verified).
-- **Decidability boundary.** The axiom stack crosses from decidable to Turing-complete at a precise point. With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion, and termination becomes undecidable. This is the structural cost of self-reference: the same mechanism that lets the algebra apply a function to its own description is what makes halting uncomputable.
+- **Exactly 2 absorbers.** `[Lean]` L5 forces no additional absorbers beyond ⊤ and ⊥.
+- **Separation of judgment and operation.** `[Lean]` Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
+- **Actuality irreducibility.** `[SAT]` The tester row is **completely free**. At N=16, all 40 tester free cells (τ: 8, SEQ: 16, s0: 16) can independently flip between ⊤ and ⊥ (push/pop verified at N=8, 12, 16). No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
+- **Rigidity.** `[Lean]` Ψ₁₆ᶠ is WL-1 discrete: all 16 elements distinguishable after 1 Weisfeiler-Leman refinement. No non-trivial automorphism exists.
+- **Chirality.** `[SAT]` E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
+- **Encoder-tester non-commutativity.** `[SAT]` Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
+- **No right identity.** `[SAT]` UNSAT at N≥6.
+- **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
+- **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
+- **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
+- **Decidability boundary.** `[Open]` The axiom stack crosses from decidable to Turing-complete at a precise point. With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion, and termination becomes undecidable. This is the structural cost of self-reference: the same mechanism that lets the algebra apply a function to its own description is what makes halting uncomputable. (The structural argument is clear; the formal proof that Y makes the system Turing-complete is not yet in Lean.)
 
 ### Phenomenological Interpretation
 
@@ -95,7 +95,7 @@ These structural constraints have interpretations in phenomenology and philosoph
 
 ## 2. Ψ₁₆ᶠ: The Specific Algebra
 
-The canonical representative: a single 16×16 Cayley table with **83 machine-checked Lean theorems** (`Psi16Full.lean`), covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+The canonical representative: a single 16×16 Cayley table with **83 machine-checked Lean theorems** `[Lean]` (`Psi16Full.lean`), covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (192/256 at N=16, 117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
 
@@ -156,7 +156,7 @@ DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for
 
 ## 3. Black-Box Recovery
 
-All 16 elements can be identified from a shuffled, opaque dot oracle — no ground truth, no labels. Three methods (`psi_blackbox.py`), all 100% on 1000 seeds:
+All 16 elements can be identified from a shuffled, opaque dot oracle — no ground truth, no labels. Three methods (`psi_blackbox.py`), all 100% on 1000 seeds `[Empirical]`:
 
 | Method | Mean dot calls | Strategy |
 |--------|---------------|----------|
