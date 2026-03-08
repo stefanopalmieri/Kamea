@@ -105,7 +105,17 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
-- **Decidability boundary.** `[Open]` With QE and Branch alone (N≥12), the algebra can encode flat conditional dispatch — every computation terminates. Adding the Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces fixed-point recursion and appears to cross the boundary where termination is no longer guaranteed. A formal Turing-completeness or undecidability proof is still open.
+- **Decidability boundary.** `[Open]` See below.
+
+### The Decidability Boundary
+
+The axiom stack crosses a sharp boundary between decidable and undecidable self-description, and the crossing is exactly one axiom.
+
+Without Y, the algebra has QE (quote/eval) and Branch (tester-mediated conditional dispatch). This is analogous to flat eval — like Datalog, or a first-order term rewriter with no recursion. Every branch eventually bottoms out at an absorber. You can enumerate all reachable states; the system always terminates.
+
+Adding the single Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces a fixed point: the branch element can now apply itself to its own output indefinitely. This is the same structural move that separates Datalog from Prolog, or primitive recursion from general recursion. The algebra goes from a system where every computation halts to one where termination is no longer guaranteed.
+
+The structural argument is clear — one axiom, one operation, one boundary. A formal proof that this makes the system Turing-complete (rather than merely non-terminating) is still open.
 
 ### Phenomenological Interpretation
 
