@@ -8,7 +8,7 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Kamea studies finite magmas whose axioms force an internal representation layer. Using SAT-based search, we identify finite models in which a single binary operation supports quote/eval behavior, tester-mediated branching, fixed-point recursion, finite-state counter dynamics, and small structured-data operations. We then verify both universal consequences of the axiom class and concrete properties of a canonical 16-element model in Lean 4. The main contribution is methodological: a pipeline for discovering and machine-verifying self-describing finite algebras.
+Kamea is a framework for searching and verifying finite magmas whose single binary operation supports internal representation-like behavior. Starting from an axiom stack and using SAT-based model search, it identifies finite Cayley tables in which distinguished elements realize quote/eval on a core, tester-mediated branching, fixed-point behavior, and small-state computation. The repository's main concrete artifact is a 16-element model, Ψ₁₆ᶠ, together with Lean 4 proofs for its certified properties and SAT analyses of the surrounding axiom class.
 
 ---
 
@@ -80,9 +80,20 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 | + Branch/Compose/Y | 12 |
 | + IO + 8-state counter + Selection | 16 |
 
+### Result Categories
+
+Results in this repository fall into four tiers:
+
+- **Universal results** — properties proved for *every* model satisfying the axiom class, not just one table. Tagged `[Lean]` or `[SAT]`.
+- **Model-specific results** — properties proved for the particular table Ψ₁₆ᶠ. Tagged `[Lean]`.
+- **Empirical search results** — SAT satisfiability, minimality bounds, freedom analysis, recovery observations. Tagged `[SAT]` or `[Empirical]`.
+- **Open claims** — not yet formalized. Tagged `[Open]`.
+
+Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
+
 ### Universal Theorems
 
-These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra. This is the strongest part of the theoretical contribution: the axioms constrain *every* model, not one table. Each claim is tagged with its evidence tier (see [`CLAIMS.md`](CLAIMS.md)):
+These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra:
 
 - **Exactly 2 absorbers.** `[Lean]` L5 forces no additional absorbers beyond ⊤ and ⊥.
 - **Separation of judgment and operation.** `[Lean]` Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
