@@ -4,11 +4,11 @@
 
 # Kamea
 
-**Axiom-driven search for self-describing finite algebras, with machine-checked proofs in Lean 4.**
+**Axiom-driven search for finite magmas with intrinsic representation, evaluation, and control, with machine-checked proofs in Lean 4.**
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 83 Lean theorems with zero `sorry`. The repository also contains SAT analyses of the surrounding axiom class, universal theorems that hold for every satisfying model, and black-box recovery algorithms that identify all 16 elements from a shuffled oracle.
+We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 83 Lean theorems with zero `sorry`. Beyond existence, the canonical witness is operationally identifiable: all 16 elements can be recovered from a shuffled black-box oracle without labels. The repository also contains SAT analyses of the surrounding axiom class and universal theorems that hold for every satisfying model.
 
 ---
 
@@ -16,11 +16,22 @@ We prove that a single 16×16 multiplication table can simultaneously encode quo
 
 Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete.
 
-The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all arising from the same operation that defines the structure? And can you *prove* it does, not by running tests, but by machine-checking the axioms?
+The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can you *prove* it does, not by running tests, but by machine-checking the axioms?
 
 The answer is yes, and it fits in a 16×16 table.
 
 The primary contribution is methodological: a demonstration that axiom-driven SAT search combined with Lean verification can systematically explore the space of self-describing finite structures, producing both universal theorems about the axiom class and specific verified models. The specific algebra Ψ₁₆ᶠ is one output of this methodology. The universal theorems — forced rigidity, actuality irreducibility, separation of judgment and synthesis — are the more durable results. Whether these properties translate to practical self-verifying systems is an open question.
+
+**Formally established:**
+- A 16-element model exists satisfying all axioms simultaneously `[Lean]`
+- The axiom class forces exactly 2 absorbers, Kleene separation, WL-1 rigidity, and 4-element constructibility `[Lean]`
+- Tester cells are completely free across all tested sizes (actuality irreducibility) `[SAT]`
+- All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
+
+**Not formally established:**
+- Turing-completeness of the Y-extended system `[Open]`
+- Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
+- Symmetric impossibility as a general theorem `[Open]`
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
@@ -37,7 +48,7 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 
 What is the simplest finite structure that can identify its own components through its own operation?
 
-The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing: it contains distinguished elements behaving as an internal representation and evaluation interface for elements of the same algebra.
+The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing: it contains enough internal structure to encode, decode, and operationally recover its components. (Here "self-describing" means the algebra contains distinguished elements behaving as an internal representation and evaluation interface for elements of the same algebra.)
 
 ### The Axiom System
 
@@ -105,7 +116,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
-- **Decidability boundary.** `[Open]` See below.
+- **Decidability boundary.** `[Open]` Adding the Y-style fixed-point axiom introduces unrestricted self-reference. This is the point at which termination is no longer expected to admit a trivial structural argument; a formal Turing-completeness result remains open. See below.
 
 ### The Decidability Boundary
 
@@ -118,6 +129,8 @@ Adding the single Y-combinator axiom (`Y·ρ = ρ·(Y·ρ)`) introduces a fixed 
 The structural argument is clear — one axiom, one operation, one boundary. A formal proof that this makes the system Turing-complete (rather than merely non-terminating) is still open.
 
 ### Phenomenological Interpretation
+
+*The following correspondences are interpretive, not part of the formal theorem set.*
 
 The structural constraints have precise phenomenological counterparts. Judgment cannot commute with synthesis (Kleene barrier) — that is a theorem, not an analogy. Tester values are axiomatically unconstrained (actuality irreducibility) — also a theorem. Eval preserves boundaries but cannot determine what the tester accepts (chirality) — again, proved. Whether these correspondences with receptivity/spontaneity, the irreducibility of givenness, and the asymmetry of observation reflect something deeper about self-description is an open question — but the structural facts themselves are theorems, not interpretations.
 
