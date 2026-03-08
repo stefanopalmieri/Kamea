@@ -8,7 +8,7 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Kamea is a framework for searching and verifying finite magmas whose single binary operation supports internal representation-like behavior. Starting from an axiom stack and using SAT-based model search, it identifies finite Cayley tables in which distinguished elements realize quote/eval on a core, tester-mediated branching, fixed-point behavior, and small-state computation. The repository's main concrete artifact is a 16-element model, Ψ₁₆ᶠ, together with Lean 4 proofs for its certified properties and SAT analyses of the surrounding axiom class.
+We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 83 Lean theorems with zero `sorry`. The repository also contains SAT analyses of the surrounding axiom class, universal theorems that hold for every satisfying model, and black-box recovery algorithms that identify all 16 elements from a shuffled oracle.
 
 ---
 
@@ -147,8 +147,8 @@ This table is one model from the solution space — the axioms constrain roles a
 | 11 | PAIR | encoder | — | s3 | — | PAIR/p11 |
 | 12 | s0 | tester | — | s0 (zero) | — | p00 |
 | 13 | INC | encoder | increment | — | — | — |
-| 14 | — | encoder | — | s1 | GET/FST | SWAP |
-| 15 | — | encoder | decrement | s5 | PUT/DEC | — |
+| 14 | GET | encoder | — | s1 | GET/FST | SWAP |
+| 15 | DEC | encoder | decrement | s5 | PUT/DEC | — |
 
 ### Multi-Duty Architecture
 
@@ -156,10 +156,10 @@ Elements serve up to 4 roles each. The Cayley table encodes all pairwise interac
 
 | Element | Roles |
 |---------|-------|
-| 14 | GET / FST / SWAP / s1 (4 roles) |
+| 14 (GET) | GET / FST / SWAP / s1 (4 roles) |
 | 6 (Q) | Q / SND / s2 / p01 (4 roles) |
 | 7 (E) | E / INC2 / s7 (3 roles) |
-| 15 | DEC / PUT / s5 (3 roles) |
+| 15 (DEC) | DEC / PUT / s5 (3 roles) |
 | 11 | PAIR / s3 / p11 (3 roles) |
 
 ### Operations
