@@ -222,13 +222,13 @@ INC · s1 = 6  (Q = s2)   -- increment again: counter state 2 is Q
 
 ## 3. Black-Box Recovery
 
-All 16 elements can be identified from a shuffled, opaque dot oracle — no ground truth, no labels. Three methods (`psi_blackbox.py`), all 100% on 1000 seeds `[Empirical]`:
+All 16 elements can be identified from a shuffled, opaque dot oracle — no ground truth, no labels. Three methods (`psi_blackbox.py`), all 100% on 1,000,000 seeds `[Empirical]`:
 
-| Method | Mean dot calls | Strategy |
-|--------|---------------|----------|
-| **Behavioral** | 755 | 12-step axiom-driven probing (full row reads) |
-| **Generation** | 658 | Steps 1–7, then depth-2 generation from {⊤,⊥,Q,E} |
-| **Adaptive** | **62** | Absorber-probe signatures + Kleene/QE targeting + generation |
+| Method | Mean dot calls | Min | Max | Strategy |
+|--------|---------------|-----|-----|----------|
+| **Behavioral** | 756.9 | 653 | 861 | 12-step axiom-driven probing (full row reads) |
+| **Generation** | 659.4 | 543 | 776 | Steps 1–7, then depth-2 generation from {⊤,⊥,Q,E} |
+| **Adaptive** | **62.5** | 59 | 66 | Absorber-probe signatures + Kleene/QE targeting + generation |
 
 The adaptive method never reads a full row. The 2-probe absorber signature `(x·⊤, x·⊥)` partitions all 14 non-absorbers into 5 disjoint classes:
 
