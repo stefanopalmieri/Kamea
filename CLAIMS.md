@@ -24,6 +24,9 @@ This file is the canonical status registry for claims made in this repository.
 | Psi16-full satisfies all axioms plus DEC, PAIR/FST/SND, INC2, SWAP (full operational saturation) | Lean-proved | `DistinctionStructures/Psi16Full.lean` (83 theorems) | `lake build` |
 | Psi16 is WL-1 discrete (rigid) and fully producible; {top,bot,Q,E} generates all 16 in <=4 steps | Lean-proved | `DistinctionStructures/Psi16.lean` | `lake build` |
 | Psi16-full is WL-1 discrete (rigid) and fully producible; {top,bot,Q,E} generates all 16 in <=4 steps | Lean-proved | `DistinctionStructures/Psi16Full.lean` | `lake build` |
+| Psi16 automorphism rigidity: every injective endomorphism is the identity (Aut = {id}) | Lean-proved | `DistinctionStructures/Psi16Rigidity.lean` | `lake build` |
+| Psi16 discoverability: all 16 elements behaviorally identifiable; 4 probes suffice (injective fingerprint) | Lean-proved | `DistinctionStructures/Psi16Discoverable.lean` | `lake build` |
+| Psi16 actuality irreducibility: twin 17-element models agree on all structure but disagree on tester assignment | Lean-proved | `DistinctionStructures/Psi16ActualityIrreducibility.lean` | `lake build` |
 | Full axiom set is SAT at N=16 (all phases including IO + 8-state counter + selection + DEC/PAIR/INC2/SWAP) | Empirical | `ds_search/stacking_analysis.py` (`extract_psi16_full()`) | `uv run python -c "from ds_search.stacking_analysis import extract_psi16_full; extract_psi16_full()"` |
 | Full axiom set is SAT at N=12 with 117/144 free cells (18.8% determination) | Empirical | `ds_search/stacking_analysis.py` (`etrans_residual_freedom()`) | `uv run python -c "from ds_search.stacking_analysis import etrans_residual_freedom; etrans_residual_freedom()"` |
 | QE requires N>=8; Branch/Compose/Y require N>=12 | Empirical | `ds_search/stacking_analysis.py` | SAT/UNSAT checks at various N |

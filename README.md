@@ -8,7 +8,7 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 83 Lean theorems with zero `sorry`. Beyond existence, the canonical witness is operationally identifiable: all 16 elements can be recovered from a shuffled black-box oracle without labels. The repository also contains SAT analyses of the surrounding axiom class and universal theorems that hold for every satisfying model.
+We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 125+ Lean theorems with zero `sorry`. Beyond existence, the canonical witness is operationally identifiable: all 16 elements can be recovered from a shuffled black-box oracle without labels. The repository also contains SAT analyses of the surrounding axiom class and universal theorems that hold for every satisfying model.
 
 ---
 
@@ -25,7 +25,10 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 **Formally established:**
 - A 16-element model exists satisfying all axioms simultaneously `[Lean]`
 - The axiom class forces exactly 2 absorbers, Kleene separation, WL-1 rigidity, and 4-element constructibility `[Lean]`
-- Tester cells are completely free across all tested sizes (actuality irreducibility) `[SAT]`
+- Automorphism rigidity: every injective endomorphism is the identity `[Lean]`
+- All 16 elements behaviorally identifiable from 4 probes (discoverability) `[Lean]`
+- Actuality irreducibility: twin models agree on structure, disagree on tester assignment `[Lean]`
+- Tester cells are completely free across all tested sizes `[SAT]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 
 **Not formally established:**
@@ -38,7 +41,7 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 ### How to Read This Repo
 
 1. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-2. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 machine-checked theorems
+2. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 3. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
 4. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
@@ -108,8 +111,9 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 
 - **Exactly 2 absorbers.** `[Lean]` L5 forces no additional absorbers beyond ⊤ and ⊥.
 - **Separation of judgment and operation.** `[Lean]` Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
-- **Actuality irreducibility.** `[SAT]` The tester row is **completely free**. At N=16, all 40 tester free cells (τ: 8, SEQ: 16, s0: 16) can independently flip between ⊤ and ⊥ (push/pop verified at N=8, 12, 16). No combination of structural axioms pins any tester cell. The distinction the tester draws is a genuine choice — the "actuality" degree of freedom.
-- **Rigidity.** `[Lean]` Ψ₁₆ᶠ is WL-1 discrete: all 16 elements distinguishable after 1 Weisfeiler-Leman refinement. No non-trivial automorphism exists.
+- **Actuality irreducibility.** `[Lean]` The tester row is structurally underdetermined. A twin-model construction on Fin 17 proves that two valid extensions of Ψ₁₆ᶠ can agree on all structural axioms yet disagree on tau's assignment to the surplus element. SAT analysis confirms all 40 tester free cells at N=16 can independently flip (push/pop verified at N=8, 12, 16).
+- **Rigidity.** `[Lean]` Every injective endomorphism of Ψ₁₆ᶠ is the identity (Aut = {id}). Proved via a 16-step fixing chain: idempotent constraints pin ⊤ and ⊥, then products of fixed elements propagate through the generation tree.
+- **Discoverability.** `[Lean]` All 16 elements are behaviorally identifiable. Four probes suffice: the map a ↦ (psi a ⊤, psi a ⊥, psi a τ, psi a Q) is injective on Fin 16. Testers, encoders, and the inert element are each uniquely characterized by structural properties.
 - **Chirality.** `[SAT]` E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
 - **Encoder-tester non-commutativity.** `[SAT]` Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
 - **No right identity.** `[SAT]` UNSAT at N≥6.
@@ -138,7 +142,7 @@ The structural constraints have precise phenomenological counterparts. Judgment 
 
 ## 2. Ψ₁₆ᶠ: The Specific Algebra
 
-The canonical representative: a single 16×16 Cayley table with **83 machine-checked Lean theorems** `[Lean]` (`Psi16Full.lean`), covering every operational constraint simultaneously. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+The canonical representative: a single 16×16 Cayley table with **125+ machine-checked Lean theorems** `[Lean]` across `Psi16Full.lean`, `Psi16Discoverable.lean`, `Psi16Rigidity.lean`, and `Psi16ActualityIrreducibility.lean`, covering every operational constraint, discoverability, automorphism rigidity, and actuality irreducibility. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (192/256 at N=16, 117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
 
@@ -263,6 +267,9 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 |-------|-------|--------|----------|
 | Ψ₁₆ᶠ satisfies all listed operations | specific model | `[Lean]` | `Psi16Full.lean` (83 theorems) |
 | Ψ₁₆ᶠ is WL-1 rigid and fully producible | specific model | `[Lean]` | `Psi16Full.lean` |
+| Ψ₁₆ᶠ automorphism rigidity (Aut = {id}) | specific model | `[Lean]` | `Psi16Rigidity.lean` |
+| Ψ₁₆ᶠ discoverability (4-probe injectivity) | specific model | `[Lean]` | `Psi16Discoverable.lean` |
+| Actuality irreducibility (twin-model proof) | structural | `[Lean]` | `Psi16ActualityIrreducibility.lean` |
 | Base axioms imply only card ≥ 2 (tight) | universal | `[Lean]` | `BaseAxiomDerivation.lean` |
 | QE exists at N ≥ 8 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
 | Branch/Compose/Y require N ≥ 12 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
@@ -287,7 +294,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── BasePlusA7Derivation.lean     # Adding generic A7′ still doesn't force card ≥ 17
 │   ├── OntologicalSchema.lean        # Abstract four-lift schema theorem
 │   ├── Psi16.lean                    # Ψ₁₆ with selection axiom (42 theorems)
-│   └── Psi16Full.lean               # Ψ₁₆ᶠ full operations (83 theorems)
+│   ├── Psi16Full.lean               # Ψ₁₆ᶠ full operations (83 theorems)
+│   ├── Psi16Discoverable.lean       # Behavioral discoverability (4-probe injectivity)
+│   ├── Psi16Rigidity.lean           # Automorphism rigidity (Aut = {id})
+│   └── Psi16ActualityIrreducibility.lean  # Twin-model actuality irreducibility
 ├── emulator/                         # Legacy: Δ₁-based Kamea machine emulator
 │   ├── chips.py                      # Hardware primitives (EEPROM, IC74181, SRAM)
 │   ├── cayley.py                     # Cayley ROM builder
