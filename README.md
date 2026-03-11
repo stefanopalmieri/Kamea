@@ -8,7 +8,7 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 125+ Lean theorems with zero `sorry`. Beyond existence, the canonical witness is operationally identifiable: all 16 elements can be recovered from a shuffled black-box oracle without labels. The repository also contains SAT analyses of the surrounding axiom class and universal theorems that hold for every satisfying model.
+We prove that a single 16×16 multiplication table can simultaneously encode quoting, evaluation, branching, recursion, arithmetic, and IO — all verified by 130+ Lean theorems with zero `sorry`. Beyond existence, the canonical witness is operationally identifiable: all 16 elements can be recovered from a shuffled black-box oracle without labels. The repository also contains SAT analyses of the surrounding axiom class and universal theorems that hold for every satisfying model.
 
 ---
 
@@ -28,6 +28,8 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Automorphism rigidity: every injective endomorphism is the identity `[Lean]`
 - All 16 elements behaviorally identifiable from 4 probes (discoverability) `[Lean]`
 - Actuality irreducibility: twin models agree on structure, disagree on tester assignment `[Lean]`
+- No right identity in any model satisfying role axioms L0–L3 `[Lean]`
+- Card ≥ 4 from role axioms (tight: 4-element countermodel exists) `[Lean]`
 - Tester cells are completely free across all tested sizes `[SAT]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 
@@ -116,7 +118,8 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **Discoverability.** `[Lean]` All 16 elements are behaviorally identifiable. Four probes suffice: the map a ↦ (psi a ⊤, psi a ⊥, psi a τ, psi a Q) is injective on Fin 16. Testers, encoders, and the inert element are each uniquely characterized by structural properties.
 - **Chirality.** `[SAT]` E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
 - **Encoder-tester non-commutativity.** `[SAT]` Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
-- **No right identity.** `[SAT]` UNSAT at N≥6.
+- **No right identity.** `[Lean]` Universal algebraic proof: tester boolean constraint contradicts identity on tau. Proved in `PsiUniversalBounds.lean`.
+- **Card ≥ 4 from role axioms.** `[Lean]` The four distinguished roles (⊤, ⊥, τ, encoder) must be pairwise distinct. Tight: 4-element countermodel in `PsiCountermodels.lean`.
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
@@ -142,7 +145,7 @@ The structural constraints have precise phenomenological counterparts. Judgment 
 
 ## 2. Ψ₁₆ᶠ: The Specific Algebra
 
-The canonical representative: a single 16×16 Cayley table with **125+ machine-checked Lean theorems** `[Lean]` across `Psi16Full.lean`, `Psi16Discoverable.lean`, `Psi16Rigidity.lean`, and `Psi16ActualityIrreducibility.lean`, covering every operational constraint, discoverability, automorphism rigidity, and actuality irreducibility. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
+The canonical representative: a single 16×16 Cayley table with **130+ machine-checked Lean theorems** `[Lean]` across `Psi16Full.lean`, `Psi16Discoverable.lean`, `Psi16Rigidity.lean`, and `Psi16ActualityIrreducibility.lean`, covering every operational constraint, discoverability, automorphism rigidity, and actuality irreducibility. All proofs compile with **zero `sorry`** on Lean 4.28.0 / Mathlib v4.28.0.
 
 This table is one model from the solution space — the axioms constrain roles and relationships but leave many cells free (192/256 at N=16, 117/144 at N=12). The universal theorems above hold for all models; the properties below are verified for this specific table.
 
@@ -274,7 +277,8 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | QE exists at N ≥ 8 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
 | Branch/Compose/Y require N ≥ 12 | universal / min-size | `[SAT]` | `stacking_analysis.py` |
 | Tester cells completely free | universal / all sizes tested | `[SAT]` | `n16_freedom.py` (N=8, 12, 16) |
-| No right identity at N ≥ 6 | universal / size bound | `[SAT]` | `stacking_analysis.py` |
+| No right identity (any PsiStructure) | universal | `[Lean]` | `PsiUniversalBounds.lean` |
+| Card ≥ 4 from L0–L3 (tight) | universal | `[Lean]` | `PsiUniversalBounds.lean`, `PsiCountermodels.lean` |
 | N=16 determination: 64/256 fixed (25.0%) | size-specific | `[SAT]` | `n16_freedom.py` |
 | Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
@@ -297,7 +301,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── Psi16Full.lean               # Ψ₁₆ᶠ full operations (83 theorems)
 │   ├── Psi16Discoverable.lean       # Behavioral discoverability (4-probe injectivity)
 │   ├── Psi16Rigidity.lean           # Automorphism rigidity (Aut = {id})
-│   └── Psi16ActualityIrreducibility.lean  # Twin-model actuality irreducibility
+│   ├── Psi16ActualityIrreducibility.lean  # Twin-model actuality irreducibility
+│   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
+│   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
+│   └── PsiCountermodels.lean            # Tight 4-element countermodel
 ├── emulator/                         # Legacy: Δ₁-based Kamea machine emulator
 │   ├── chips.py                      # Hardware primitives (EEPROM, IC74181, SRAM)
 │   ├── cayley.py                     # Cayley ROM builder

@@ -34,7 +34,8 @@ This file is the canonical status registry for claims made in this repository.
 | Actuality irreducibility: tester row is completely free (all core tester cells can independently flip) | Empirical | `ds_search/stacking_analysis.py`, `ds_search/n16_freedom.py` | SAT-verified with push/pop at N=8, 12, 16 |
 | Full axiom set at N=16: 64/256 cells fixed (25.0% determination), 192 free | Empirical | `ds_search/n16_freedom.py` | `uv run python ds_search/n16_freedom.py` |
 | Chirality: E-transparency does not cascade to tester cells | Empirical | `ds_search/stacking_analysis.py` | SAT push/pop: all tester-cell values remain SAT |
-| No right identity under full axiom set | Empirical | `ds_search/stacking_analysis.py` | UNSAT at N≥6 |
+| No right identity in any PsiStructure (L0–L3 role axioms) | Lean-proved | `DistinctionStructures/PsiUniversalBounds.lean` | `lake build` |
+| Card ≥ 4 from role axioms (L0–L3), tight (4-element countermodel) | Lean-proved | `DistinctionStructures/PsiUniversalBounds.lean`, `DistinctionStructures/PsiCountermodels.lean` | `lake build` |
 | No full associativity under full axiom set | Empirical | `ds_search/stacking_analysis.py` | UNSAT; no associative sub-magma of size ≥ 4 |
 | Encoder-tester non-commutativity | Empirical | `ds_search/stacking_analysis.py` | SAT-verified |
 | Black-box recovery: all 16 elements recoverable from shuffled oracle (3 methods, 100% on 1000 seeds) | Empirical | `psi_blackbox.py` | `uv run python psi_blackbox.py --seeds 1000 --compare` |

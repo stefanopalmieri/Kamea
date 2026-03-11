@@ -7,3 +7,6 @@ import DistinctionStructures.Psi16Full
 import DistinctionStructures.Psi16Discoverable
 import DistinctionStructures.Psi16Rigidity
 import DistinctionStructures.Psi16ActualityIrreducibility
+import DistinctionStructures.PsiStructure
+import DistinctionStructures.PsiUniversalBounds
+import DistinctionStructures.PsiCountermodels
