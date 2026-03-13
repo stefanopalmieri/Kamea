@@ -4,13 +4,15 @@
 
 # Kamea
 
-**A 7-element algebraic core generating a computationally universal term algebra, with machine-checked structural proofs in Lean 4.**
+**Seven axiom-forced elements. One Turing-complete term algebra. 130+ Lean theorems. Zero `sorry`.**
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
 Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
 
-The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16. Not 17 with QUALE. Not 66 with opaque extensions. Seven.
+The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16.
+
+**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
 
 These seven roles — ground element, constructor/destructor pair, pair-builder with two projections, and conditional — correspond closely to the minimal symbolic manipulation primitives identified by McCarthy (1960):
 
@@ -49,6 +51,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Tester cells are completely free across all tested sizes `[SAT]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
+- TC minimality (canonical construction): all 7 TC roles pairwise forced distinct (21/21 merge attempts UNSAT); alternative constructions with fewer elements remain open `[SAT]`
 
 **Not formally established:**
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
@@ -171,7 +174,21 @@ The simulation (`psi_star.py`) matches a reference 2CM interpreter trace-for-tra
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
-**Mini-Lisp.** A concrete demonstration: `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains, pairs are g-applications, car/cdr use f/η via `psi_eval`. It runs recursive fibonacci, higher-order functions (map, filter, fold), closures, and arithmetic. The encoding: NIL = ⊥ (false/empty list), T = ⊤ (true), integers = Q-chains rooted at ⊤. See `examples/psi_fibonacci.lisp`.
+**Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Seven test programs:
+
+| Program | Key results |
+|---------|-------------|
+| `psi_fibonacci.lisp` | `(fib 8)` → 21, `(fib-iter 30)` → 832040, `(fib-list 10)` → (0 1 1 2 3 5 8 13 21 34) |
+| `psi_higher.lisp` | `(mapcar add1 '(1 2 3))` → (2 3 4), filter, reduce, reverse |
+| `psi_recursion.lisp` | `(fact 10)` → 3628800, `(power 2 10)` → 1024, `(gcd 100 75)` → 25 |
+| `psi_functions.lisp` | `(square 12)` → 144, closures, composition |
+| `psi_types.lisp` | `(null NIL)` → T, `(null 0)` → NIL, `(zerop 0)` → T, `(zerop NIL)` → NIL |
+
+```bash
+python3 psi_lisp.py examples/psi_fibonacci.lisp     # run a file
+python3 psi_lisp.py --show-term examples/psi_basic.lisp  # show Ψ∗ terms
+python3 psi_lisp.py                                  # REPL
+```
 
 ### Phenomenological Interpretation
 
@@ -340,6 +357,7 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
 | Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
+| TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
 | Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
 
@@ -387,6 +405,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 ├── kamea.py                          # Core 66-atom algebra (Python)
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+├── tc_merge_test.py                  # TC minimality: 21 pairwise merge checks (all UNSAT)
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── ds_repl.py                        # Interactive REPL
 ├── rigid_census.py                   # Small rigid magma census

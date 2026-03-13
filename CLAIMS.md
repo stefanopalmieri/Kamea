@@ -41,6 +41,7 @@ This file is the canonical status registry for claims made in this repository.
 | Black-box recovery: all 16 elements recoverable from shuffled oracle (3 methods, 100% on 1000 seeds) | Empirical | `psi_blackbox.py` | `uv run python psi_blackbox.py --seeds 1000 --compare` |
 | Ψ∗ Turing-completeness: 7 axiom-forced elements (⊤, Q, E, f, g, η, ρ) simulate 2-counter machines; universal across all models | Empirical | `psi_star.py` — stepped 2CM matches reference interpreter on 4 test programs | `uv run python psi_star.py` |
 | 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `n16_freedom.py` build_solver + XOR/AND/OR constraints |
+| TC minimality (canonical construction): 7 TC roles pairwise forced distinct; canonical 2CM construction cannot use fewer than 7 elements; alternative constructions open | Empirical | `tc_merge_test.py` — 21/21 pairwise merge attempts UNSAT | `uv run python tc_merge_test.py` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 
