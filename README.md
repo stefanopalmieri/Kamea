@@ -58,11 +58,12 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 
 ### How to Read This Repo
 
-1. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-2. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-3. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-4. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
-5. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+1. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp running on the 7-element core: `python3 psi_lisp.py examples/psi_fibonacci.lisp`
+2. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+3. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+4. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+5. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
+6. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -169,6 +170,8 @@ The simulation (`psi_star.py`) matches a reference 2CM interpreter trace-for-tra
 3. **The structural branch is a semantic design choice.** ρ dispatching on atom-vs-compound at the Ψ∗ level is the natural lifting of τ's boolean dispatch at the algebra level, but it is a choice in the evaluation semantics, not a direct axiom consequence.
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
+
+**Mini-Lisp.** A concrete demonstration: `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains, pairs are g-applications, car/cdr use f/η via `psi_eval`. It runs recursive fibonacci, higher-order functions (map, filter, fold), closures, and arithmetic. The encoding: NIL = ⊥ (false/empty list), T = ⊤ (true), integers = Q-chains rooted at ⊤. See `examples/psi_fibonacci.lisp`.
 
 ### Phenomenological Interpretation
 
@@ -372,7 +375,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── llm_dot.py                    # LLM dot backend (Ollama)
 │   ├── debugger.py                   # Textual TUI debugger
 │   └── test_*.py                     # Test suites
-├── examples/                         # Emulator demos (.ds programs, Python scripts)
+├── examples/                         # Emulator demos + Mini-Lisp test programs (.lisp, .ds)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
@@ -383,6 +386,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   └── minimal_model.md              # Minimal model notes
 ├── kamea.py                          # Core 66-atom algebra (Python)
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
+├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── ds_repl.py                        # Interactive REPL
 ├── rigid_census.py                   # Small rigid magma census
