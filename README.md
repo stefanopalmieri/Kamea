@@ -4,15 +4,15 @@
 
 # Kamea
 
-**A 7-element computationally universal algebraic core, with machine-checked structural proofs in Lean 4.**
+**A 7-element algebraic core generating a computationally universal term algebra, with machine-checked structural proofs in Lean 4.**
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — suffice for Turing completeness. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
+Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
 
 The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16. Not 17 with QUALE. Not 66 with opaque extensions. Seven.
 
-These seven elements correspond exactly to McCarthy's 1960 Lisp primitives:
+These seven roles — ground element, constructor/destructor pair, pair-builder with two projections, and conditional — correspond closely to the minimal symbolic manipulation primitives identified by McCarthy (1960):
 
 | Ψ | Lisp | Role |
 |---|------|------|
@@ -24,7 +24,7 @@ These seven elements correspond exactly to McCarthy's 1960 Lisp primitives:
 | η | CDR | Second projection |
 | ρ | COND | Conditional branch |
 
-This convergence is independent — the Ψ elements were derived from self-description axioms on finite magmas, not from programming language design. McCarthy arrived at the same seven from the requirements of symbolic computation. That two unrelated starting points produce the same inventory suggests that the minimal requirements for self-representation and the minimal requirements for universal computation are the same.
+The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
 
 ---
 
@@ -48,7 +48,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Card ≥ 4 from role axioms (tight: 4-element countermodel exists) `[Lean]`
 - Tester cells are completely free across all tested sizes `[SAT]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
-- Turing-completeness via 7 axiom-forced elements: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
+- Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
 
 **Not formally established:**
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
