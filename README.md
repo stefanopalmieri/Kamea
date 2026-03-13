@@ -66,7 +66,8 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 3. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
 4. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 5. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
-6. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+6. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
+7. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -393,7 +394,11 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── llm_dot.py                    # LLM dot backend (Ollama)
 │   ├── debugger.py                   # Textual TUI debugger
 │   └── test_*.py                     # Test suites
-├── examples/                         # Emulator demos + Mini-Lisp test programs (.lisp, .ds)
+├── examples/
+│   ├── psi16_corrupted_host_demo.py  # Animated TUI: dual-wizard corrupted-host bootstrap
+│   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
+│   ├── wiz2.json                     # Hand-designed bijective sprite mapping
+│   └── ...                           # Emulator demos + Mini-Lisp test programs (.lisp, .ds)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
