@@ -578,6 +578,139 @@ def recover_adaptive(domain, dot):
     return rec
 
 
+def recover_adaptive_cb(domain, dot, on_identify=None):
+    """Like recover_adaptive but fires on_identify(batch) after each identification phase.
+
+    Callback receives batch: dict[str, int] — element name → canonical index.
+    """
+    N = len(domain)
+    abs_set = set()
+
+    # Phase 1: Idempotent scan (16 calls)
+    absorbers = []
+    for x in domain:
+        if dot(x, x) == x:
+            absorbers.append(x)
+    assert len(absorbers) == 2, f"Expected 2 idempotents, found {len(absorbers)}"
+    abs_a, abs_b = absorbers
+    abs_set = {abs_a, abs_b}
+
+    # Phase 2: Absorber-probe signatures (28 calls)
+    full_preservers = []
+    semi_a = []
+    semi_b = []
+    swap_to_a = []
+    swap_to_b = []
+
+    for x in domain:
+        if x in abs_set:
+            continue
+        va = dot(x, abs_a)
+        vb = dot(x, abs_b)
+        va_abs = va in abs_set
+        vb_abs = vb in abs_set
+
+        if va == abs_a and vb == abs_b:
+            full_preservers.append(x)
+        elif va == abs_a and not vb_abs:
+            semi_a.append(x)
+        elif vb == abs_b and not va_abs:
+            semi_b.append(x)
+        elif vb == abs_a and not va_abs:
+            swap_to_a.append(x)
+        elif va == abs_b and not vb_abs:
+            swap_to_b.append(x)
+
+    # Phase 3: Orient absorbers (0 calls)
+    if len(semi_a) == 1:
+        top, bot = abs_a, abs_b
+        q_candidates = swap_to_a
+    else:
+        assert len(semi_b) == 1
+        top, bot = abs_b, abs_a
+        q_candidates = swap_to_b
+
+    # Callback: ⊤, ⊥, g identified
+    if on_identify:
+        on_identify({"⊤": 0, "⊥": 1, "g": 4})
+
+    # Phase 4: Find E among full preservers
+    test_pool = [x for x in domain if x not in abs_set and x not in full_preservers]
+    z = test_pool[0]
+    E = None
+    for x in full_preservers:
+        if dot(x, z) not in abs_set:
+            E = x
+            break
+    assert E is not None, "Failed to find E"
+
+    # Callback: E identified
+    if on_identify:
+        on_identify({"E": 7})
+
+    # Phase 5: Find Q among swap candidates
+    Q = None
+    for x in q_candidates:
+        if dot(E, dot(x, E)) == x:
+            Q = x
+            break
+    assert Q is not None, "Failed to find Q"
+
+    # Callback: Q identified
+    if on_identify:
+        on_identify({"Q": 6})
+
+    # Phase 6: Generate all 16 elements (12 calls)
+    rec = {"⊤": top, "⊥": bot, "Q": Q, "E": E}
+
+    # Depth 1 — one callback per atom
+    f    = dot(E, E)
+    if on_identify:
+        on_identify({"f": 2})
+    PAIR = dot(E, Q)
+    if on_identify:
+        on_identify({"PAIR": 11})
+    s1   = dot(Q, Q)
+    if on_identify:
+        on_identify({"s1": 14})
+    DEC  = dot(Q, top)
+    if on_identify:
+        on_identify({"DEC": 15})
+
+    # Depth 2 — one callback per atom
+    tau  = dot(f, s1)
+    if on_identify:
+        on_identify({"τ": 3})
+    g    = dot(PAIR, DEC)
+    SEQ  = dot(f, top)
+    if on_identify:
+        on_identify({"SEQ": 5})
+    rho  = dot(f, E)
+    if on_identify:
+        on_identify({"ρ": 8})
+    eta  = dot(f, PAIR)
+    if on_identify:
+        on_identify({"η": 9})
+    Y    = dot(PAIR, s1)
+    if on_identify:
+        on_identify({"Y": 10})
+    s0   = dot(Q, s1)
+    if on_identify:
+        on_identify({"s0": 12})
+    INC  = dot(f, f)
+    if on_identify:
+        on_identify({"INC": 13})
+
+    rec.update({
+        "f": f, "τ": tau, "g": g, "SEQ": SEQ,
+        "ρ": rho, "η": eta, "Y": Y, "PAIR": PAIR,
+        "s0": s0, "INC": INC, "s1": s1, "DEC": DEC,
+    })
+    assert len(set(rec.values())) == 16, f"Collision in generated elements"
+
+    return rec
+
+
 # ============================================================================
 # Instrumented blackbox for dot-call counting
 # ============================================================================
