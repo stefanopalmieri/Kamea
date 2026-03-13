@@ -12,6 +12,20 @@ Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — suffice for Turing c
 
 The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16. Not 17 with QUALE. Not 66 with opaque extensions. Seven.
 
+These seven elements correspond exactly to McCarthy's 1960 Lisp primitives:
+
+| Ψ | Lisp | Role |
+|---|------|------|
+| ⊤ | NIL | Empty / base case |
+| Q | QUOTE | Freeze a term (constructor) |
+| E | EVAL | Unwrap / interpret (destructor) |
+| g | CONS | Build a pair |
+| f | CAR | First projection |
+| η | CDR | Second projection |
+| ρ | COND | Conditional branch |
+
+This convergence is independent — the Ψ elements were derived from self-description axioms on finite magmas, not from programming language design. McCarthy arrived at the same seven from the requirements of symbolic computation. That two unrelated starting points produce the same inventory suggests that the minimal requirements for self-representation and the minimal requirements for universal computation are the same.
+
 ---
 
 ## Why It Matters
