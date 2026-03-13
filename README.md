@@ -237,6 +237,25 @@ DEC reverses this cycle exactly. Zero test: `τ·s0 = ⊤`, `τ·sₖ = ⊥` for
 | (s1,s0) | p10 | 9 (=η) | s1 | s0 |
 | (s1,s1) | p11 | 11 (=PAIR) | s1 | s1 |
 
+**1-Bit Logic (AND, OR, XOR):** `[SAT]` The axiom class admits models where all three Boolean gates embed via curried dispatch on {s0, s1}. Each gate is a single element whose action on a first bit selects a function, which is then applied to the second bit — two table lookups per gate, no new elements. SAT-verified with all existing constraints; model stays WL-1 rigid.
+
+| Gate | Dispatch | dot(gate, s0) → | dot(gate, s1) → | Behavior |
+|------|----------|-----------------|-----------------|----------|
+| AND | Y(10) | f(2) = zero | s1(14) = id | 0∧x = 0, 1∧x = x |
+| OR | INC(13) | s1(14) = id | Q(6) = one | 0∨x = x, 1∨x = 1 |
+| XOR | η(9) | s1(14) = id | ρ(8) = not | 0⊕x = x, 1⊕x = ¬x |
+
+Four functional elements, each an existing element in a new role:
+
+| Function | Element | dot(elem, s0) | dot(elem, s1) |
+|----------|---------|---------------|---------------|
+| id (identity) | s1(14) | s0 | s1 |
+| not (negation) | ρ(8) | s1 | s0 |
+| zero (const 0) | f(2) | s0 | s0 |
+| one (const 1) | Q(6) | s1 | s1 |
+
+The specific element assignments are model-dependent — the axiom class leaves 192/256 cells free at N=16, and different models assign different elements to each role. In one SAT-feasible model, Q(6) acts as NOT (bit negation) — its fifth role alongside quote, SND, s2, and p01. The gate and function assignments shown above are from a different SAT-feasible model; both satisfy all axioms simultaneously. This is the same multi-duty architecture: different columns of the same row, different operational slices of the same element.
+
 ### Worked Example
 
 All operations below are lookups in the same 16×16 Cayley table.
@@ -318,6 +337,7 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
 | Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
+| 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
 | Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
 
 Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
