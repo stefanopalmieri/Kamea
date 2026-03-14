@@ -1,5 +1,5 @@
 use psi_core::eval::{self, EvalConfig, EvalError};
-use psi_core::table::{BOT, TOP, F_ENC, ETA};
+use psi_core::table::{BOT, TOP, F_ENC, ETA, TABLE, NAMES};
 use psi_core::term::{Arena, Term};
 use crate::io::IoChannel;
 use crate::lisp::{SExpr, Function, parse_all};
@@ -52,6 +52,7 @@ impl<I: IoChannel> Machine<I> {
             "cons", "car", "cdr", "null", "zerop", "atom", "numberp",
             "display", "print", "terpri", "list", "mod", "1+", "1-",
             "write-char", "write-string",
+            "dot", "atom-name",
         ];
         for name in builtins {
             self.env.insert(name.to_string(), Value::Builtin(name.to_string()));
@@ -327,6 +328,37 @@ impl<I: IoChannel> Machine<I> {
                     return Ok(Value::Term(self.arena.atom(BOT)));
                 }
 
+                "env-size" => {
+                    return Ok(Value::Term(self.encode_int(self.env.len() as i64)));
+                }
+
+                "env-keys" => {
+                    let bot = self.arena.atom(BOT);
+                    let mut keys: Vec<String> = self.env.keys().cloned().collect();
+                    keys.sort();
+                    let mut result = bot;
+                    for name in keys.iter().rev() {
+                        let mut name_term = bot;
+                        for c in name.chars().rev() {
+                            let ch = self.encode_int(c as i64);
+                            name_term = self.cons(ch, name_term);
+                        }
+                        result = self.cons(name_term, result);
+                    }
+                    return Ok(Value::Term(result));
+                }
+
+                "bound?" => {
+                    if items.len() != 2 {
+                        return Err("bound? takes 1 argument".to_string());
+                    }
+                    if let SExpr::Symbol(vname) = &items[1] {
+                        let exists = self.env.contains_key(vname);
+                        return Ok(Value::Term(self.arena.atom(if exists { TOP } else { BOT })));
+                    }
+                    return Ok(Value::Term(self.arena.atom(BOT)));
+                }
+
                 _ => {} // Fall through to function application
             }
         }
@@ -490,19 +522,27 @@ impl<I: IoChannel> Machine<I> {
                 let is_num = self.decode_int(args[0]).is_some();
                 Ok(self.arena.atom(if is_num { TOP } else { BOT }))
             }
-            "display" | "print" => {
+            "display" => {
+                let s = self.display(args[0]);
+                for b in s.bytes() {
+                    self.io.put(b);
+                }
+                self.io.flush();
+                Ok(VOID_TERM)
+            }
+            "print" => {
                 let s = self.display(args[0]);
                 for b in s.bytes() {
                     self.io.put(b);
                 }
                 self.io.put(b'\n');
                 self.io.flush();
-                Ok(args[0])
+                Ok(VOID_TERM)
             }
             "terpri" => {
                 self.io.put(b'\n');
                 self.io.flush();
-                Ok(self.arena.atom(TOP))
+                Ok(VOID_TERM)
             }
             "list" => {
                 let bot = self.arena.atom(BOT);
@@ -528,16 +568,32 @@ impl<I: IoChannel> Machine<I> {
             }
             "write-char" => {
                 let n = self.decode_int(args[0]).ok_or("write-char requires integer")?;
-                self.io.put(n as u8);
+                if let Some(c) = char::from_u32(n as u32) {
+                    let mut buf = [0u8; 4];
+                    let s = c.encode_utf8(&mut buf);
+                    for b in s.bytes() {
+                        self.io.put(b);
+                    }
+                } else {
+                    self.io.put(n as u8);
+                }
                 self.io.flush();
-                Ok(self.arena.atom(TOP))
+                Ok(VOID_TERM)
             }
             "write-string" => {
                 let mut term = args[0];
                 loop {
                     if let Some((car, cdr)) = self.arena.as_pair(term) {
                         if let Some(n) = self.decode_int(car) {
-                            self.io.put(n as u8);
+                            if let Some(c) = char::from_u32(n as u32) {
+                                let mut buf = [0u8; 4];
+                                let s = c.encode_utf8(&mut buf);
+                                for b in s.bytes() {
+                                    self.io.put(b);
+                                }
+                            } else {
+                                self.io.put(n as u8);
+                            }
                         }
                         term = cdr;
                     } else {
@@ -545,7 +601,29 @@ impl<I: IoChannel> Machine<I> {
                     }
                 }
                 self.io.flush();
-                Ok(self.arena.atom(TOP))
+                Ok(VOID_TERM)
+            }
+            "dot" => {
+                let a = self.decode_int(args[0]).ok_or("dot requires integers (atom indices 0-15)")?;
+                let b = self.decode_int(args[1]).ok_or("dot requires integers (atom indices 0-15)")?;
+                if !(0..=15).contains(&a) || !(0..=15).contains(&b) {
+                    return Err(format!("dot: indices must be 0-15, got {} and {}", a, b));
+                }
+                Ok(self.encode_int(TABLE[a as usize][b as usize] as i64))
+            }
+            "atom-name" => {
+                let a = self.decode_int(args[0]).ok_or("atom-name requires index 0-15")?;
+                if !(0..=15).contains(&a) {
+                    return Err(format!("atom-name requires index 0-15, got {}", a));
+                }
+                let name = NAMES[a as usize];
+                let bot = self.arena.atom(BOT);
+                let mut result = bot;
+                for c in name.chars().rev() {
+                    let ch = self.encode_int(c as i64);
+                    result = self.cons(ch, result);
+                }
+                Ok(result)
             }
             _ => Err(format!("unknown builtin: {}", name)),
         }

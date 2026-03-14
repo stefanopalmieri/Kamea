@@ -3,8 +3,8 @@
 let psi = null;
 
 async function initWasm() {
-    const wasm = await import('./pkg/psi_web.js');
-    await wasm.default();
+    const wasm = await import('./pkg/psi_web.js?v=2');
+    await wasm.default(new URL('./pkg/psi_web_bg.wasm?v=2', self.location.href));
     psi = new wasm.PsiDebugger();
     postMessage({ type: 'ready' });
 }
