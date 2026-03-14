@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "crates/psi-core",
+    "crates/psi-runtime",
+    "crates/psi-cli",
+    "crates/psi-web",
+]
+resolver = "2"

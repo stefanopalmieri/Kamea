@@ -63,12 +63,13 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 
 1. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp running on the 7-element core: `python3 psi_lisp.py examples/psi_fibonacci.lisp`
 2. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL: `python3 psi_repl.py`
-3. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-4. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-5. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-6. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
-7. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
-8. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+3. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
+4. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+5. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+6. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+7. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
+8. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
+9. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -190,6 +191,13 @@ Because only axiom-forced elements are used, TC is a property of every Ψ algebr
 python3 psi_lisp.py examples/psi_fibonacci.lisp     # run a file
 python3 psi_lisp.py --show-term examples/psi_basic.lisp  # show Ψ∗ terms
 python3 psi_repl.py                                  # interactive REPL
+
+# Rust (native, ~25x faster than Python)
+cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
+
+# Browser debugger (WASM)
+cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
+# → open http://localhost:8080
 ```
 
 ### Phenomenological Interpretation
@@ -383,6 +391,29 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   └── PsiCountermodels.lean            # Tight 4-element countermodel
+├── kamea-rs/                             # Rust emulator + WASM browser debugger
+│   ├── crates/
+│   │   ├── psi-core/                     # The algebra — #![no_std], zero deps
+│   │   │   └── src/
+│   │   │       ├── table.rs              # 16×16 Cayley table as const array
+│   │   │       ├── term.rs               # Term enum + arena allocator
+│   │   │       └── eval.rs               # Explicit-stack Ψ∗ evaluator
+│   │   ├── psi-runtime/                  # The machine — heap, IO, Mini-Lisp
+│   │   │   └── src/
+│   │   │       ├── machine.rs            # Lisp evaluator, builtins, environment
+│   │   │       ├── lisp.rs               # S-expression parser
+│   │   │       └── io.rs                 # IO channel abstraction
+│   │   ├── psi-cli/                      # Native CLI — runner, REPL, benchmark
+│   │   │   └── src/main.rs
+│   │   └── psi-web/                      # WASM target + browser debugger
+│   │       ├── src/lib.rs                # wasm-bindgen exports
+│   │       └── www/
+│   │           ├── index.html            # Debugger UI
+│   │           ├── debugger.js           # UI logic (computation in Web Worker)
+│   │           ├── worker.js             # WASM Web Worker
+│   │           └── style.css
+│   └── examples/
+│       └── psi_*.lisp                    # Lisp test programs (copied from examples/)
 ├── legacy/
 │   └── kamea.py                      # 66-atom Δ₁ algebra (superseded by Ψ₁₆ᶠ)
 ├── examples/
@@ -422,9 +453,24 @@ uv run python psi_repl.py                                     # interactive REPL
 uv run python psi_lisp.py examples/psi_fibonacci.lisp         # run a Lisp program
 uv run python examples/psi16_corrupted_host_demo.py           # TUI demo
 uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
+
+# Rust (requires rustup — https://rustup.rs)
+cd kamea-rs
+cargo test                                                     # run all tests (40 total)
+cargo run --release -- run examples/psi_fibonacci.lisp         # run a Lisp program (~25x faster)
+cargo run --release -- repl                                    # interactive REPL
+cargo run --release -- bench examples/psi_fibonacci.lisp       # benchmark with timing
+
+# WASM browser debugger (requires wasm-pack — https://rustwasm.github.io/wasm-pack/)
+cd kamea-rs/crates/psi-web
+wasm-pack build --target web                                   # build WASM (124KB)
+python3 -m http.server 8080 --directory www                    # serve debugger UI
+# → open http://localhost:8080
 ```
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
+
+All 8 Mini-Lisp test programs produce identical output in Python, Rust, and WASM.
 
 ---
 

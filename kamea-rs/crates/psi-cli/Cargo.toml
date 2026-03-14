@@ -1,0 +1,12 @@
+[package]
+name = "psi-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "kamea"
+path = "src/main.rs"
+
+[dependencies]
+psi-core = { path = "../psi-core" }
+psi-runtime = { path = "../psi-runtime" }

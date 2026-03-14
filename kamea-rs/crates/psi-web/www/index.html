@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ψ∗ Debugger</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Ψ∗ Debugger</h1>
+        <div class="controls">
+            <button id="btn-run" title="Run to completion">▶ Run</button>
+            <button id="btn-reset" title="Reset machine">↺ Reset</button>
+            <select id="examples">
+                <option value="">Load example...</option>
+                <option value="basic">Basic</option>
+                <option value="arithmetic">Arithmetic</option>
+                <option value="functions">Functions</option>
+                <option value="recursion">Recursion</option>
+                <option value="fibonacci">Fibonacci</option>
+                <option value="higher">Higher-order</option>
+                <option value="types">Types</option>
+                <option value="hello">Hello World</option>
+            </select>
+        </div>
+    </header>
+
+    <main>
+        <div class="panel-row top-row">
+            <section class="panel cayley-panel">
+                <h2>Cayley Table (Ψ₁₆ᶠ)</h2>
+                <div id="cayley-container"></div>
+            </section>
+            <section class="panel term-panel">
+                <h2>Output</h2>
+                <pre id="output"></pre>
+            </section>
+        </div>
+
+        <div class="panel-row bottom-row">
+            <section class="panel source-panel">
+                <h2>Source (Mini-Lisp)</h2>
+                <textarea id="source" spellcheck="false" placeholder="; Type Ψ∗ Mini-Lisp here...
+(defun fib (n)
+  (if (< n 2) n
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+(fib 10)"></textarea>
+            </section>
+        </div>
+    </main>
+
+    <footer id="stats">
+        Ready
+    </footer>
+
+    <script src="debugger.js"></script>
+</body>
+</html>
