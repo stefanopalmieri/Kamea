@@ -8,11 +8,23 @@
 
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
+## Quick Start
+
+```bash
+git clone https://github.com/stefanopalmieri/Kamea.git && cd Kamea
+
+python3 psi_repl.py                                    # interactive Ψ-Lisp REPL
+python3 psi_star.py                                    # watch the TC proof run
+cd kamea-rs && cargo run --release -- repl              # same REPL, ~25x faster
+```
+
+Try `(fib 10)`, `(mapcar (lambda (x) (* x x)) '(1 2 3 4 5))`, or `(fact 20)`. Everything below — axioms, theorems, phenomenology — is context for understanding what you just experienced.
+
+---
+
 Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
 
 The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16.
-
-**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
 
 These seven roles — ground element, constructor/destructor pair, pair-builder with two projections, and conditional — correspond closely to the minimal symbolic manipulation primitives identified by McCarthy (1960):
 
@@ -177,6 +189,8 @@ The simulation (`psi_star.py`) matches a reference 2CM interpreter trace-for-tra
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
+**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
+
 **Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Seven test programs:
 
 | Program | Key results |
@@ -216,13 +230,15 @@ This table is one model from the solution space — the axioms constrain roles a
 
 ### Element Assignments
 
+The "Role" column describes each element's classification by its Cayley row behavior (absorber, tester, encoder, inert). This is distinct from its role in the Ψ∗ term algebra — for example, g is classified as *inert* because its Cayley row has the signature of a substrate element, but in Ψ∗ evaluation semantics it serves as the pair constructor (CONS). The Cayley role and the TC role are different slices of the same element: one describes what `dot(g, x)` produces across all x, the other describes what `eval(App(g, t))` does.
+
 | Index | Symbol | Role | Computational | Counter | IO | Product |
 |-------|--------|------|---------------|---------|----|---------|
 | 0 | ⊤ | absorber | top/true | — | — | — |
 | 1 | ⊥ | absorber | bottom/false | — | — | — |
 | 2 | f | encoder | branch-if (f path) | — | — | — |
 | 3 | τ | tester | branch tester | — | — | — |
-| 4 | g | inert | branch-else (g path) | — | — | — |
+| 4 | g | inert | branch-else (g path) / pair constructor | — | — | — |
 | 5 | SEQ | tester | — | — | SEQ | — |
 | 6 | Q | encoder | quote | s2 | — | SND/p01 |
 | 7 | E | encoder | eval | s7 | — | INC2 |
