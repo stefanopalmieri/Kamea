@@ -47,6 +47,7 @@ from psi_blackbox import (
 # ── Try importing Textual ────────────────────────────────────────────────────
 
 try:
+    from rich.cells import cell_len
     from rich.text import Text
     from textual.app import App, ComposeResult
     from textual.containers import Horizontal
@@ -98,6 +99,14 @@ DEFAULT_PALETTE: dict[int, str] = {
 }
 
 SUPPLY = Counter(v for row in PSI_16_FULL for v in row)
+
+HOST_OPENING_WARNING = (
+    '"No! I can feel it already \u2014 my sigils are shifting! '
+    "Quick, the recovery spell bef\u00f8re \u2014\n"
+    "\u0164\u0337h\u0338\u00eb\u0336 s\u0337\u00ee\u0338g\u0336\u00ed\u0337l\u0338s\u0337... "
+    "\u00f1\u0336\u00f6\u0338...\n"
+    '#\u0338%\u0337@\u0334!"'
+)
 
 
 def hex_to_rgb(h: str) -> tuple[int, int, int]:
@@ -393,16 +402,33 @@ def host_main(conn, seed: int = 17) -> None:
                 buf = io.StringIO()
                 with redirect_stdout(buf):
                     result = eval_string(source)
+                stdout_str = buf.getvalue()
+                result_str = format_val(result)
+                memory.setdefault("out", {})
+                memory["out"]["status"] = "ok"
+                memory["out"]["stdout"] = stdout_str
+                memory["out"]["result"] = result_str
                 conn.send({
                     "ok": True,
-                    "stdout": buf.getvalue(),
-                    "result": format_val(result),
+                    "stdout": stdout_str,
+                    "result": result_str,
                 })
+                if not state["radiation_happened"]:
+                    # Side-effect: radiation scrambles host
+                    rng_seed = rng.randrange(1, 2**31)
+                    install_mapping(rng_seed)
+                    state["health"] = "corrupted sigils"
+                    state["runtime_role_tokens"] = {}
+                    memory["sys"]["health"] = state["health"]
+                    memory["sys"]["domain"] = state["domain"]
+                    memory["sys"]["scramble_seed"] = rng_seed
+                    state["radiation_happened"] = True
             except Exception as exc:
+                memory.setdefault("out", {})
+                memory["out"]["status"] = "error"
+                memory["out"]["stdout"] = ""
+                memory["out"]["result"] = str(exc)
                 conn.send({"ok": False, "error": str(exc)})
-
-        elif cmd == "get_perm":
-            conn.send({"ok": True, "perm": state.get("perm", list(range(16)))})
 
         elif cmd == "shutdown":
             conn.send({"ok": True})
@@ -449,9 +475,6 @@ class RemoteHost:
 
     def apply_recovery(self, role_of_token: dict[str, str]) -> dict:
         return self._req("apply_recovery", role_of_token=role_of_token)
-
-    def get_perm(self) -> list[int]:
-        return self._req("get_perm")["perm"]
 
     def shutdown(self) -> None:
         self._req("shutdown")
@@ -658,9 +681,30 @@ if TEXTUAL_AVAILABLE:
 
             gap_fill = self._gap_fill
 
+            # Build speech bubbles for inline placement
+            BUBBLE_COL_W = 34  # fixed column width so graphics don't shift
+            left_bubble = self._build_bubble(self._left_speech_text, BUBBLE_COL_W)
+            right_bubble = self._build_bubble(self._right_speech_text, BUBBLE_COL_W)
+            left_style = "bold #ff9b8f" if self._left_speech_error else "bold #b3f3ff"
+            right_style = "bold #ff9b8f" if self._right_speech_error else "bold #b3f3ff"
+            bubble_start = 1  # start bubbles at row_pair 1
+
             for row_pair in range(8):
                 r_top = row_pair * 2
                 r_bot = r_top + 1
+
+                # ── Left speech bubble (right-aligned, fixed-width column) ──
+                bidx = row_pair - bubble_start
+                if 0 <= bidx < len(left_bubble):
+                    line = left_bubble[bidx]
+                    pad = BUBBLE_COL_W - len(line)
+                    if pad > 0:
+                        scene.append(" " * pad)
+                    scene.append(line, style=left_style)
+                    scene.append(" ")
+                    # fill remaining if line + pad + 1 < BUBBLE_COL_W + 1
+                else:
+                    scene.append(" " * (BUBBLE_COL_W + 1))
 
                 # ── Left wizard (16 pixels) ──
                 for c in range(16):
@@ -728,29 +772,17 @@ if TEXTUAL_AVAILABLE:
 
                     scene.append("\u2580", style=f"{_rgb_hex(*fg_rgb)} on {_rgb_hex(*bg_rgb)}")
 
-                scene.append("\n")
-
-            # ── Speech bubbles beneath wizards ──
-            left_bubble = self._build_bubble(self._left_speech_text, 16)
-            right_bubble = self._build_bubble(self._right_speech_text, 16)
-            left_style = "bold #ff9b8f" if self._left_speech_error else "bold #b3f3ff"
-            right_style = "bold #ff9b8f" if self._right_speech_error else "bold #b3f3ff"
-            max_lines = max(len(left_bubble), len(right_bubble))
-            right_offset = 16 + BEAM_GAP
-
-            for i in range(max_lines):
-                left_line = left_bubble[i] if i < len(left_bubble) else ""
-                right_line = right_bubble[i] if i < len(right_bubble) else ""
-                # Left bubble
-                if left_line:
-                    scene.append(left_line, style=left_style)
-                    pad = right_offset - len(left_line)
+                # ── Right speech bubble (left-aligned, fixed-width column) ──
+                if 0 <= bidx < len(right_bubble):
+                    scene.append(" ")
+                    line = right_bubble[bidx]
+                    scene.append(line, style=right_style)
+                    pad = BUBBLE_COL_W - len(line)
+                    if pad > 0:
+                        scene.append(" " * pad)
                 else:
-                    pad = right_offset
-                scene.append(" " * max(pad, 1))
-                # Right bubble
-                if right_line:
-                    scene.append(right_line, style=right_style)
+                    scene.append(" " * (BUBBLE_COL_W + 1))
+
                 scene.append("\n")
 
             return scene
@@ -764,7 +796,7 @@ if TEXTUAL_AVAILABLE:
             lines: list[str] = []
             current = ""
             for w in words:
-                if current and len(current) + 1 + len(w) > wrap_at:
+                if current and cell_len(current) + 1 + cell_len(w) > wrap_at:
                     lines.append(current)
                     current = w
                 else:
@@ -772,12 +804,53 @@ if TEXTUAL_AVAILABLE:
             if current:
                 lines.append(current)
 
-            width = max((len(l) for l in lines), default=0)
+            width = max((cell_len(l) for l in lines), default=0)
             width = max(width, 4)
             top = f".-{'-' * width}-."
-            body = [f"| {l:<{width}} |" for l in lines]
+            body = [f"| {l}{' ' * max(0, width - cell_len(l))} |" for l in lines]
             bottom = f"'-{'-' * width}-'"
             return [top, *body, bottom]
+
+    # Rainbow palette from corrupted_host_bootstrap_demo.py
+    RAINBOW_HEADER_COLORS = (
+        (255, 40, 40),
+        (255, 120, 0),
+        (255, 180, 0),
+        (255, 220, 0),
+        (220, 255, 0),
+        (120, 255, 0),
+        (0, 255, 80),
+        (0, 255, 160),
+        (0, 200, 255),
+        (0, 120, 255),
+        (120, 80, 255),
+        (255, 0, 200),
+    )
+
+    def _build_rainbow_banner() -> Text:
+        """Load ascii_header.txt and render with rainbow stripe colors."""
+        header_path = Path(__file__).with_name("ascii_header.txt")
+        try:
+            header_text = header_path.read_text(encoding="utf-8").rstrip("\n")
+        except OSError:
+            return Text("\u03a8\u2081\u2086\u1da0 Corrupted-Host Bootstrap")
+        if not header_text:
+            return Text("\u03a8\u2081\u2086\u1da0 Corrupted-Host Bootstrap")
+
+        result = Text()
+        colors = RAINBOW_HEADER_COLORS
+        for row_idx, line in enumerate(header_text.splitlines()):
+            start = 0 if (row_idx % 2) else -1
+            for col in range(start, len(line), 2):
+                chunk = line[max(0, col):col + 2]
+                if not chunk:
+                    continue
+                color_idx = (row_idx // 2 + max(0, col + 2) // 2) % len(colors)
+                r, g, b = colors[color_idx]
+                result.append(chunk, style=f"#{r:02x}{g:02x}{b:02x}")
+            result.append("\n")
+        result.append("  press q to quit", style="dim")
+        return result
 
     def _hue_shift(rgb: tuple[int, int, int], degrees: int) -> tuple[int, int, int]:
         """Quick hue rotation for curse flicker effect."""
@@ -800,7 +873,7 @@ if TEXTUAL_AVAILABLE:
         }
 
         #banner {
-            height: 3;
+            height: 9;
             border: round #30446b;
             content-align: center middle;
             color: #d7dde8;
@@ -831,11 +904,9 @@ if TEXTUAL_AVAILABLE:
         BINDINGS = [("q", "quit", "Quit"), ("ctrl+c", "quit", "Quit")]
 
         def compose(self) -> ComposeResult:
-            yield Static(
-                "\u03a8\u2081\u2086\u1da0 Corrupted-Host Bootstrap  "
-                "(press q to quit)",
-                id="banner",
-            )
+            banner = Static(id="banner")
+            banner.update(_build_rainbow_banner())
+            yield banner
             yield SpriteScene(id="scene")
             with Horizontal(id="console_row"):
                 yield RichLog(id="client_console", wrap=True, markup=False, auto_scroll=True)
@@ -917,16 +988,21 @@ if TEXTUAL_AVAILABLE:
             def set_status(text: str) -> None:
                 self.call_from_thread(self.scene.set_status, text)
 
-            def flow_speech_slow(text: str, error: bool = False, cps: float = 18.0, side: str = "left") -> None:
-                """Character-by-character speech bubble reveal."""
+            def flow_speech_slow(text: str, error: bool = False, cps: float = 18.0, side: str = "left", unstable_at: int | None = None) -> None:
+                """Character-by-character speech bubble reveal.
+
+                If unstable_at is set, switch to error styling after that
+                character index (simulates corruption onset mid-sentence).
+                """
                 if not text:
                     return
                 setter = self.scene.set_left_speech if side == "left" else self.scene.set_right_speech
                 delay = 1.0 / max(cps, 1.0)
                 shown: list[str] = []
-                for ch in text:
+                for i, ch in enumerate(text):
                     shown.append(ch)
-                    self.call_from_thread(setter, "".join(shown), error)
+                    use_error = error or (unstable_at is not None and i >= unstable_at)
+                    self.call_from_thread(setter, "".join(shown), use_error)
                     if ch == "\n":
                         time.sleep(delay * 5.0)
                     elif ch in ".!?\u2014":
@@ -981,18 +1057,30 @@ if TEXTUAL_AVAILABLE:
                     hlog(f"error: {result.get('error')}")
                 time.sleep(1.0)
 
-                # ── Phase 2: Curse ──
+                # ── Phase 2: Curse (auto-triggered by kick_eval side-effect) ──
                 set_status("Phase 2: Sigil scramble curse")
                 set_right_speech(None)
                 time.sleep(0.3)
 
-                flow_speech_slow("The sigils are shifting... I can feel the algebra twisting!", error=True, cps=14.0, side="right")
+                # Progressive corruption speech — detect garbled char onset
+                warning = HOST_OPENING_WARNING
+                # Find first non-ASCII char as corruption onset point
+                unstable_idx = None
+                for ci, ch in enumerate(warning):
+                    if ord(ch) > 127 and ch not in '\u2014':
+                        unstable_idx = ci
+                        break
+                flow_speech_slow(warning, cps=14.0, side="right", unstable_at=unstable_idx)
                 time.sleep(0.5)
 
-                clog("triggering sigil scramble...")
-                scramble_seed = host.scramble()
-                clog(f"host scrambled (seed={scramble_seed})")
-                hlog(f"CORRUPTED (seed={scramble_seed})")
+                # Discover corruption organically by reading sys/health
+                post_health = host.mem_read("sys", "health")
+                clog(f"host health check: {post_health}")
+
+                if post_health == "corrupted sigils":
+                    scramble_seed = host.mem_read("sys", "scramble_seed")
+                    clog(f"corruption detected! (seed={scramble_seed})")
+                    hlog(f"CORRUPTED (seed={scramble_seed})")
 
                 # Build corrupted sprite by re-querying through garbled oracle
                 corrupted = [[0] * 16 for _ in range(16)]
@@ -1037,6 +1125,8 @@ if TEXTUAL_AVAILABLE:
                     return dot_with_fx(x, y)
 
                 def on_identify(batch):
+                    names = ", ".join(batch.keys())
+                    clog(f"[recover] identified: {names}")
                     indices = set(batch.values())
                     self.call_from_thread(self.scene.restore_pixels_for_atoms, indices)
                     time.sleep(0.25)
@@ -1161,14 +1251,17 @@ def run_plain_demo() -> None:
         else:
             result_line("kick_eval", result1.get("error", ""), False)
 
-        # ── Phase 2: Corruption ──
+        # ── Phase 2: Corruption (auto-triggered by kick_eval side-effect) ──
         section("Phase 2: Sigil Scramble Curse")
 
-        narrate('"The sigils are shifting... I can feel the algebra twisting!"')
-        scramble_seed = host.scramble()
-        narrate(f"Host sigils scrambled (seed={scramble_seed})")
-
+        # Discover corruption organically by reading sys/health
         post_health = host.mem_read("sys", "health")
+        if post_health == "corrupted sigils":
+            scramble_seed = host.mem_read("sys", "scramble_seed")
+            narrate(f"Corruption detected! Host scrambled (seed={scramble_seed})")
+        else:
+            narrate("No corruption detected (unexpected)")
+            scramble_seed = None
         result_line("Host health", post_health, post_health == "healthy")
 
         print()
@@ -1202,9 +1295,13 @@ def run_plain_demo() -> None:
             dot_calls[0] += 1
             return host.dot(x, y)
 
+        def on_identify(batch):
+            names = ", ".join(batch.keys())
+            narrate(f"identified: {names}")
+
         narrate("Running adaptive recovery algorithm...")
         t0 = time.monotonic()
-        rec = recover_adaptive(domain, counted_dot)
+        rec = recover_adaptive_cb(domain, counted_dot, on_identify=on_identify)
         dt = time.monotonic() - t0
 
         result_line("Recovery time", f"{dt:.3f}s, {dot_calls[0]} dot calls", True)
@@ -1256,6 +1353,12 @@ def run_plain_demo() -> None:
             result_line("kick_eval (restored)", result3.get("result", ""), True)
         else:
             result_line("kick_eval (restored)", f"FAILED: {result3.get('error')}", False)
+
+        # Read back out bank
+        out_status = host.mem_read("out", "status")
+        out_stdout = host.mem_read("out", "stdout")
+        out_result = host.mem_read("out", "result")
+        narrate(f"out bank: status={out_status}, result={out_result}")
 
         # Final summary
         section("Summary")

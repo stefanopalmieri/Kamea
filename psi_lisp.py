@@ -43,6 +43,9 @@ from psi_star import (
 LISP_NIL = BOT   # ⊥ — empty list, false, the only falsy value
 LISP_T   = TOP   # ⊤ — true, ground
 
+# Sentinel for REPL output suppression (not a Ψ∗ term — never escapes into user code)
+_VOID = object()
+
 # ═══════════════════════════════════════════════════════════════════════
 # Integer encoding: Q-chains rooted at ⊤
 # ═══════════════════════════════════════════════════════════════════════
@@ -297,6 +300,15 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
         return encode_int(sexpr)
 
     if isinstance(sexpr, str):
+        # String literals → list of ASCII codes (Q-chain integers)
+        if sexpr.startswith('"') and sexpr.endswith('"'):
+            chars = sexpr[1:-1]
+            # Handle escape sequences
+            chars = chars.replace("\\n", "\n").replace("\\t", "\t").replace("\\\\", "\\")
+            result: Term = BOT  # NIL
+            for c in reversed(chars):
+                result = lisp_cons(encode_int(ord(c)), result)
+            return result
         # Check env first — user bindings shadow keywords
         if sexpr in env:
             val = env[sexpr]
@@ -355,7 +367,7 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
         fn = Function(params=params, body=body, env=dict(env), name=name)
         env[name] = fn
         fn.env[name] = fn
-        return None
+        return _VOID
 
     # (setq name expr)
     if head == "setq":
@@ -364,7 +376,7 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
         name = sexpr[1]
         val = evaluate(sexpr[2], env)
         env[name] = val
-        return None
+        return _VOID
 
     # Keep (define ...) as alternative syntax
     if head == "define":
@@ -375,12 +387,12 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
             fn = Function(params=params, body=body, env=dict(env), name=name)
             env[name] = fn
             fn.env[name] = fn
-            return None
+            return _VOID
         else:
             name = sexpr[1]
             val = evaluate(sexpr[2], env)
             env[name] = val
-            return None
+            return _VOID
 
     # (let ((x v) ...) body)
     if head == "let":
@@ -588,6 +600,28 @@ def _builtin_1minus(a):
     return encode_int(max(0, na - 1))
 
 
+def _builtin_write_char(a):
+    """Write a single character by ASCII code. Machine-level IO."""
+    na = decode_int(a)
+    if na is None:
+        raise TypeError("write-char requires an integer (ASCII code)")
+    sys.stdout.write(chr(na))
+    sys.stdout.flush()
+    return TOP
+
+
+def _builtin_write_string(a):
+    """Write a list of ASCII codes as characters. Machine-level IO."""
+    while is_pair_term(a):
+        ch = fst(a)
+        n = decode_int(ch)
+        if n is not None:
+            sys.stdout.write(chr(n))
+        a = snd(a)
+    sys.stdout.flush()
+    return TOP
+
+
 def builtin_env() -> dict:
     """Create the initial environment with built-in operations."""
     return {
@@ -615,6 +649,8 @@ def builtin_env() -> dict:
         "mod": _builtin_mod,
         "1+": _builtin_1plus,
         "1-": _builtin_1minus,
+        "write-char": _builtin_write_char,
+        "write-string": _builtin_write_string,
     }
 
 
@@ -672,7 +708,7 @@ def repl():
         try:
             results = run(line, env)
             for r in results:
-                if r is not None:
+                if r is not _VOID:
                     print(display(r))
         except Exception as e:
             print(f"error: {e}")
@@ -709,7 +745,7 @@ def main():
         try:
             results = run_file(path, env)
             for r in results:
-                if r is not None:
+                if r is not _VOID:
                     print(display(r))
         except Exception as e:
             print(f"error: {e}")
