@@ -6,6 +6,8 @@
 
 **Seven axiom-forced elements. One Turing-complete term algebra. 130+ Lean theorems. Zero `sorry`.**
 
+*Seven algebraic elements, forced by axioms alone, are sufficient for Turing-complete self-describing computation — and the boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
+
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
 ## Quick Start
