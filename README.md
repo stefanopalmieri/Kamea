@@ -62,12 +62,13 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 ### How to Read This Repo
 
 1. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp running on the 7-element core: `python3 psi_lisp.py examples/psi_fibonacci.lisp`
-2. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-3. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-4. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-5. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
-6. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
-7. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+2. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL: `python3 psi_repl.py`
+3. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+4. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+5. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+6. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
+7. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
+8. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -188,7 +189,7 @@ Because only axiom-forced elements are used, TC is a property of every Ψ algebr
 ```bash
 python3 psi_lisp.py examples/psi_fibonacci.lisp     # run a file
 python3 psi_lisp.py --show-term examples/psi_basic.lisp  # show Ψ∗ terms
-python3 psi_lisp.py                                  # REPL
+python3 psi_repl.py                                  # interactive REPL
 ```
 
 ### Phenomenological Interpretation
@@ -382,23 +383,27 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   └── PsiCountermodels.lean            # Tight 4-element countermodel
-├── emulator/                         # Legacy: Δ₁-based Kamea machine emulator
-│   ├── chips.py                      # Hardware primitives (EEPROM, IC74181, SRAM)
-│   ├── cayley.py                     # Cayley ROM builder
-│   ├── machine.py                    # Eval/apply state machine
-│   ├── host.py                       # High-level interface (ROM, neural, LLM)
-│   ├── fingerprint.py                # WL-derived structural fingerprints
-│   ├── wl_fingerprint.py             # WL-1 color refinement
-│   ├── coordinate_free.py            # Coordinate-free program construction
-│   ├── neural_dot.py                 # Neural Cayley table (MLP)
-│   ├── llm_dot.py                    # LLM dot backend (Ollama)
-│   ├── debugger.py                   # Textual TUI debugger
-│   └── test_*.py                     # Test suites
+├── legacy/
+│   ├── kamea.py                      # 66-atom Δ₁ algebra (superseded by Ψ₁₆ᶠ)
+│   └── emulator/                     # Δ₁-based Kamea machine emulator
+│       ├── chips.py                  # Hardware primitives (EEPROM, IC74181, SRAM)
+│       ├── cayley.py                 # Cayley ROM builder
+│       ├── machine.py                # Eval/apply state machine
+│       ├── host.py                   # High-level interface (ROM, neural, LLM)
+│       ├── fingerprint.py            # WL-derived structural fingerprints
+│       ├── wl_fingerprint.py         # WL-1 color refinement
+│       ├── coordinate_free.py        # Coordinate-free program construction
+│       ├── neural_dot.py             # Neural Cayley table (MLP)
+│       ├── llm_dot.py                # LLM dot backend (Ollama)
+│       ├── debugger.py               # Textual TUI debugger
+│       └── test_*.py                 # Test suites
 ├── examples/
 │   ├── psi16_corrupted_host_demo.py  # Animated TUI: dual-wizard corrupted-host bootstrap
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
+│   ├── psi16_wizard_sprites.py       # Sprite rendering utilities
 │   ├── wiz2.json                     # Hand-designed bijective sprite mapping
-│   └── ...                           # Emulator demos + Mini-Lisp test programs (.lisp, .ds)
+│   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
+│   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
@@ -407,12 +412,11 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 ├── docs/
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   └── minimal_model.md              # Minimal model notes
-├── kamea.py                          # Core 66-atom algebra (Python)
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 ├── tc_merge_test.py                  # TC minimality: 21 pairwise merge checks (all UNSAT)
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
-├── ds_repl.py                        # Interactive REPL
+├── psi_repl.py                       # Interactive Ψ-Lisp REPL
 ├── rigid_census.py                   # Small rigid magma census
 ├── counterexample_search.py          # WL-1 discrimination tests
 ├── CLAIMS.md                         # Claim status registry
@@ -426,7 +430,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 lake build
 
 # Python (requires uv)
-uv run python -m emulator.test_machine
+uv run python psi_repl.py                                     # interactive REPL
+uv run python psi_lisp.py examples/psi_fibonacci.lisp         # run a Lisp program
+uv run python examples/psi16_corrupted_host_demo.py           # TUI demo
+uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
 ```
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
@@ -437,13 +444,10 @@ All Lean theorems are checked by `decide` or `native_decide`, appropriate and co
 
 > The emulator implements the *previous* architecture — a 66-atom algebra built on the Δ₁ self-model with opaque extensions (ALU, IO, W32, MUL, QUALE). The Ψ₁₆ᶠ framework supersedes this: it derives its structure axiom-first rather than extending a hand-constructed core.
 
-A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine.
+A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine. All Δ₁-specific code (`kamea.py`, `emulator/`) has been moved to `legacy/`.
 
 ```bash
-uv run python -m emulator.debugger examples/hello_world.ds   # TUI debugger
-uv run python -m emulator.test_machine                        # test suite
-uv run python -m emulator.debugger --neural examples/hello_world.ds  # neural backend
-uv run ds_repl.py -e '(((ALU_ARITH :N9) :N7) :N5)'           # REPL
+uv run python -m legacy.emulator.test_machine   # test suite
 ```
 
 ---

@@ -11,7 +11,7 @@ scramble-resilience.
 
 Usage:
   uv run python counterexample_search.py census --max-n 5 --samples 1000
-  uv run python counterexample_search.py kamea
+  uv run python counterexample_search.py psi
   uv run python counterexample_search.py sat --n 8
 """
 
@@ -364,33 +364,26 @@ def print_cayley(table, n):
         print(f"    {i} | {row}")
 
 
-# ── Kamea Baseline ────────────────────────────────────────────
+# ── Ψ₁₆ᶠ Baseline ────────────────────────────────────────────
 
 
-def run_kamea_baseline():
-    """Run WL-1 on the Kamea's 66x66 Cayley table."""
+def run_psi_baseline():
+    """Run WL-1 on the Ψ₁₆ᶠ 16×16 Cayley table."""
     print("=" * 60)
-    print("  Kamea Baseline (n=66)")
+    print("  Ψ₁₆ᶠ Baseline (n=16)")
     print("=" * 60)
 
-    # Import kamea
     sys.path.insert(0, os.path.dirname(__file__) or ".")
     try:
-        from kamea import ALL_NAMES, ALL_ATOMS, atom_dot
+        from psi_blackbox import PSI_16_FULL, ELEM_NAMES
     except ImportError:
-        print("  ERROR: Could not import kamea.py")
+        print("  ERROR: Could not import psi_blackbox.py")
         return
 
-    n = len(ALL_ATOMS)
+    n = 16
     print(f"  Building {n}x{n} Cayley table...", flush=True)
 
-    # Build Cayley table: map atom names to indices
-    name_to_idx = {name: i for i, name in enumerate(ALL_NAMES)}
-    table = np.zeros((n, n), dtype=np.int64)
-    for i, x in enumerate(ALL_ATOMS):
-        for j, y in enumerate(ALL_ATOMS):
-            result = atom_dot(x, y)
-            table[i, j] = name_to_idx.get(result.name, -1)
+    table = np.array(PSI_16_FULL, dtype=np.int64)
 
     print(f"  Running WL-1 refinement...", flush=True)
     t0 = time.time()
@@ -402,16 +395,16 @@ def run_kamea_baseline():
     print(f"  Time: {elapsed:.2f}s")
 
     if num_colors == n:
-        print(f"  Conclusion: Kamea is WL-1 discriminable in {rounds} rounds")
+        print(f"  Conclusion: Ψ₁₆ᶠ is WL-1 discriminable in {rounds} rounds")
     else:
-        # Show which atoms share colors
+        # Show which elements share colors
         from collections import Counter
         color_counts = Counter(int(c) for c in colors)
         collisions = {c: cnt for c, cnt in color_counts.items() if cnt > 1}
         print(f"  WARNING: {len(collisions)} color classes have >1 element")
         for c, cnt in sorted(collisions.items(), key=lambda x: -x[1])[:10]:
-            members = [ALL_NAMES[i] for i in range(n) if colors[i] == c]
-            print(f"    Color {c}: {cnt} atoms — {', '.join(members[:8])}{'...' if cnt > 8 else ''}")
+            members = [ELEM_NAMES[i] for i in range(n) if colors[i] == c]
+            print(f"    Color {c}: {cnt} elements — {', '.join(members[:8])}{'...' if cnt > 8 else ''}")
 
 
 # ── SAT Mode ──────────────────────────────────────────────────
@@ -582,8 +575,8 @@ def main():
         "--samples", type=int, default=100_000, help="Samples per n (default: 100000)"
     )
 
-    # Kamea
-    subparsers.add_parser("kamea", help="WL baseline on Kamea (n=66)")
+    # Ψ₁₆ᶠ baseline
+    subparsers.add_parser("psi", help="WL baseline on Ψ₁₆ᶠ (n=16)")
 
     # SAT
     sat_p = subparsers.add_parser(
@@ -614,8 +607,8 @@ def main():
         print("  Done.")
         print("=" * 60)
 
-    elif args.mode == "kamea":
-        run_kamea_baseline()
+    elif args.mode == "psi":
+        run_psi_baseline()
 
     elif args.mode == "sat":
         run_sat_search(args.n, args.max_solutions)
