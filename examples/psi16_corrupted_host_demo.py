@@ -5,8 +5,8 @@
 Model:
 - Host control plane starts healthy, then enters "corrupted sigils" state.
 - Exposed primitives: ALU dot(x,y), memory banks read/write, kick_eval.
-- The client detects corruption, probes the opaque ALU, recovers all 16
-  element identities via psi_blackbox.recover_adaptive, and restores health.
+- The client detects corruption, runs a pure Ψ-Lisp recovery spell that
+  probes the opaque ALU via IO atoms (put/get), and restores health.
 
 Mascot rendering uses the wiz2 bijective 16×16 sprite: every cell in the
 Ψ₁₆ᶠ Cayley table maps to exactly one pixel, colored by output value.
@@ -40,8 +40,17 @@ from psi_blackbox import (
     PSI_16_FULL,
     make_blackbox,
     recover_adaptive,
-    recover_adaptive_cb,
     verify_axioms,
+)
+from psi_lisp import (
+    builtin_env as lisp_builtin_env,
+    run as lisp_run,
+    encode_int,
+    decode_int,
+    list_elements,
+    is_pair_term,
+    LISP_NIL,
+    display as lisp_display,
 )
 
 # ── Try importing Textual ────────────────────────────────────────────────────
@@ -99,6 +108,101 @@ DEFAULT_PALETTE: dict[int, str] = {
 }
 
 SUPPLY = Counter(v for row in PSI_16_FULL for v in row)
+
+# ── Lisp spell IO channel ──────────────────────────────────────────────────
+
+_SPELL_PATH = Path(__file__).with_name("psi_recovery_spell.lisp")
+
+
+_STATUS_SNIPPETS = {
+    0: "(find-idempotents domain)      ; x where x\u00b7x = x",
+    1: "(classify-loop non-abs abs-a abs-b \u2026)",
+    2: "(if (= (length semi-a) 1) abs-a abs-b)  ; orient \u22a4/\u22a5",
+    3: "(find-E full-pres z top bot)   ; Kleene test",
+    4: "(find-Q q-cands E)             ; E\u00b7(Q\u00b7E) = Q",
+    5: "(probe E E) (probe E Q) (probe Q Q) (probe Q \u22a4)",
+    6: "(probe f s1) (probe PAIR DEC) \u2026 ; depth-2 tree",
+}
+
+
+class OracleIOChannel:
+    """Routes put/get IO atoms from the Lisp spell to the oracle and report callback."""
+
+    def __init__(self, oracle_fn, report_fn=None, status_fn=None):
+        self.oracle_fn = oracle_fn
+        self.report_fn = report_fn
+        self.status_fn = status_fn
+        self._buffer: list[int] = []
+        self._result_queue: list[int] = []
+
+    def put(self, val):
+        self._buffer.append(decode_int(val))
+        self._dispatch()
+        return LISP_NIL
+
+    def get(self):
+        return encode_int(self._result_queue.pop(0))
+
+    def _dispatch(self):
+        if not self._buffer:
+            return
+        op = self._buffer[0]
+        if op == 0 and len(self._buffer) == 3:  # PROBE
+            _, a, b = self._buffer
+            self._buffer.clear()
+            self._result_queue.append(self.oracle_fn(a, b))
+        elif op == 1 and len(self._buffer) == 3:  # REPORT
+            _, idx, label = self._buffer
+            self._buffer.clear()
+            if self.report_fn:
+                self.report_fn(idx, label)
+        elif op == 2 and len(self._buffer) == 2:  # STATUS
+            _, phase = self._buffer
+            self._buffer.clear()
+            if self.status_fn:
+                snippet = _STATUS_SNIPPETS.get(phase, f"phase {phase}")
+                self.status_fn(phase, snippet)
+
+
+def _make_lisp_list(values):
+    """Build a Ψ∗ proper list from Python ints (via encode_int)."""
+    from psi_lisp import lisp_cons
+    result = LISP_NIL
+    for v in reversed(values):
+        result = lisp_cons(encode_int(v), result)
+    return result
+
+
+def _run_spell(domain, oracle_fn, report_fn=None, status_fn=None):
+    """Run the Lisp recovery spell and return rec dict {name: label}."""
+    channel = OracleIOChannel(oracle_fn, report_fn, status_fn)
+    env = lisp_builtin_env()
+    env["put"] = channel.put
+    env["get"] = channel.get
+    env["domain"] = _make_lisp_list(domain)
+
+    spell_src = _SPELL_PATH.read_text()
+    results = lisp_run(spell_src, env)
+
+    return _assoc_list_to_rec(results[-1])
+
+
+def _assoc_list_to_rec(term):
+    """Convert Lisp assoc list ((0 . top) (1 . bot) ...) to {name: label}."""
+    idx_to_name = {v: k for k, v in {
+        "⊤": 0, "⊥": 1, "f": 2, "τ": 3, "g": 4, "SEQ": 5,
+        "Q": 6, "E": 7, "ρ": 8, "η": 9, "Y": 10, "PAIR": 11,
+        "s0": 12, "INC": 13, "s1": 14, "DEC": 15,
+    }.items()}
+    rec = {}
+    from psi_lisp import fst, snd
+    for pair_term in list_elements(term):
+        idx = decode_int(fst(pair_term))
+        label = decode_int(snd(pair_term))
+        name = idx_to_name[idx]
+        rec[name] = label
+    return rec
+
 
 HOST_OPENING_WARNING = (
     '"No! I can feel it already \u2014 my sigils are shifting! '
@@ -1107,7 +1211,7 @@ if TEXTUAL_AVAILABLE:
                 set_right_speech(None)
                 time.sleep(0.3)
 
-                flow_speech_slow("Fear not! I will save you with the blackbox recovery spell!", cps=15.0, side="left")
+                flow_speech_slow("Fear not! I shall cast the recovery spell \u2014\nwritten in the algebra's own tongue,\nspeaking only through its own voice.", cps=15.0, side="left")
                 time.sleep(1.0)
                 set_left_speech(None)
 
@@ -1124,14 +1228,18 @@ if TEXTUAL_AVAILABLE:
                     dot_calls[0] += 1
                     return dot_with_fx(x, y)
 
-                def on_identify(batch):
-                    names = ", ".join(batch.keys())
-                    clog(f"[recover] identified: {names}")
-                    indices = set(batch.values())
-                    self.call_from_thread(self.scene.restore_pixels_for_atoms, indices)
+                def on_report(idx, label):
+                    name = ELEM_NAMES.get(idx, f"s{idx}")
+                    clog(f"[recover] identified: {name}")
+                    self.call_from_thread(self.scene.restore_pixels_for_atoms, {idx})
                     time.sleep(0.25)
 
-                rec = recover_adaptive_cb(domain, counted_dot_fx, on_identify=on_identify)
+                def on_status(phase, snippet):
+                    set_left_speech(snippet)
+                    time.sleep(0.4)
+
+                rec = _run_spell(domain, counted_dot_fx, report_fn=on_report, status_fn=on_status)
+                set_left_speech(None)
                 dt = time.monotonic() - t0
                 clog(f"recovery: {dt:.2f}s, {dot_calls[0]} dot calls")
 
@@ -1295,13 +1403,16 @@ def run_plain_demo() -> None:
             dot_calls[0] += 1
             return host.dot(x, y)
 
-        def on_identify(batch):
-            names = ", ".join(batch.keys())
-            narrate(f"identified: {names}")
+        def on_report(idx, label):
+            name = ELEM_NAMES.get(idx, f"s{idx}")
+            narrate(f"identified: {name}")
 
-        narrate("Running adaptive recovery algorithm...")
+        def on_status(phase, snippet):
+            print(f"    {DIM}{snippet}{RST}")
+
+        narrate("Running \u03a8-Lisp recovery spell...")
         t0 = time.monotonic()
-        rec = recover_adaptive_cb(domain, counted_dot, on_identify=on_identify)
+        rec = _run_spell(domain, counted_dot, report_fn=on_report, status_fn=on_status)
         dt = time.monotonic() - t0
 
         result_line("Recovery time", f"{dt:.3f}s, {dot_calls[0]} dot calls", True)
