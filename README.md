@@ -384,19 +384,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   └── PsiCountermodels.lean            # Tight 4-element countermodel
 ├── legacy/
-│   ├── kamea.py                      # 66-atom Δ₁ algebra (superseded by Ψ₁₆ᶠ)
-│   └── emulator/                     # Δ₁-based Kamea machine emulator
-│       ├── chips.py                  # Hardware primitives (EEPROM, IC74181, SRAM)
-│       ├── cayley.py                 # Cayley ROM builder
-│       ├── machine.py                # Eval/apply state machine
-│       ├── host.py                   # High-level interface (ROM, neural, LLM)
-│       ├── fingerprint.py            # WL-derived structural fingerprints
-│       ├── wl_fingerprint.py         # WL-1 color refinement
-│       ├── coordinate_free.py        # Coordinate-free program construction
-│       ├── neural_dot.py             # Neural Cayley table (MLP)
-│       ├── llm_dot.py                # LLM dot backend (Ollama)
-│       ├── debugger.py               # Textual TUI debugger
-│       └── test_*.py                 # Test suites
+│   └── kamea.py                      # 66-atom Δ₁ algebra (superseded by Ψ₁₆ᶠ)
 ├── examples/
 │   ├── psi16_corrupted_host_demo.py  # Animated TUI: dual-wizard corrupted-host bootstrap
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
@@ -440,17 +428,6 @@ All Lean theorems are checked by `decide` or `native_decide`, appropriate and co
 
 ---
 
-## Appendix: Legacy Kamea Emulator (66-atom, Δ₁-based)
-
-> The emulator implements the *previous* architecture — a 66-atom algebra built on the Δ₁ self-model with opaque extensions (ALU, IO, W32, MUL, QUALE). The Ψ₁₆ᶠ framework supersedes this: it derives its structure axiom-first rather than extending a hand-constructed core.
-
-A cycle-accurate emulator of the Δ₁-based hardware architecture: Cayley ROM, IC74181 ALU, SRAM heap, hardware stack, UART FIFOs, and a microcode-driven eval/apply state machine. All Δ₁-specific code (`kamea.py`, `emulator/`) has been moved to `legacy/`.
-
-```bash
-uv run python -m legacy.emulator.test_machine   # test suite
-```
-
----
 
 ## License
 
