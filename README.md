@@ -15,31 +15,35 @@
 ```bash
 git clone https://github.com/stefanopalmieri/Kamea.git && cd Kamea
 
-python3 psi_lisp.py examples/psi_reflective_tower.lisp   # see all three levels
+python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
 ```
-=== PSI REFLECTIVE TOWER ===
+=== PSI REFLECTIVE TOWER (Meta-Circular CPS) ===
+Layer 3: User programs (fib, fact)
+Layer 2: CPS meta-circular evaluator (psi_metacircular.lisp)
+Layer 1: Base evaluator (psi_lisp.py)
+Layer 0: Cayley table (256 bytes)
 
---- Level 0: Computation ---
-Computing fibonacci(8)... Result: 21
+--- Level 0: Computation (meta-evaluated) ---
+Defining fib and computing fib(8)... 21
+Defining fact and computing fact(10)... 3628800
 
---- Shift Up to Level 1: Ground Verification ---
-Absorber laws: ✓  Tester output: ✓  QE round-trip: ✓
+--- Level 1: Ground Verification (Cayley table probes) ---
+Absorber laws (TOP/BOT): ALL HOLD
+Tester boolean output: ALL HOLD
+QE round-trip: ALL HOLD
+Idempotents (only absorbers): ALL HOLD
 Table health: ALL INVARIANTS HOLD
 
---- Shift Up to Level 2: Evaluator Inspection ---
-Current environment: 55 bindings
-Consistency check: (fib 8) = fib-result? ok
+--- Level 2: Reification (CPS continuation capture) ---
+Reify + reflect (expect 99): 99
+Reify + reflect + compute (expect 92): 92
 
---- Shift Down: Resume with Verified Substrate ---
-Computing fibonacci(12) on verified ground... Result: 144
-
-=== TOWER COMPLETE ===
-Three levels. One algebra. One table.
+=== THREE LEVELS. ONE ALGEBRA. ONE TABLE. ===
 ```
 
-A program computes, then verifies the algebra it runs on, then inspects its own evaluator state, then resumes. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
+A CPS meta-circular evaluator — Ψ-Lisp interpreting itself — computes fibonacci through explicit continuations, verifies the Cayley table it runs on, then reifies its own continuation and reflects back with a modified value. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
 
 ```bash
 python3 psi_repl.py                                        # interactive REPL
@@ -73,9 +77,9 @@ The correspondence is structural (same role inventory) rather than semantic (the
 
 Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete.
 
-The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can you *prove* it does, not by running tests, but by machine-checking the axioms?
+The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can the language that emerges from this table interpret itself — can a program written in it verify the table, capture its own continuation, and modify its own future, all within the same algebra?
 
-The answer is yes, and it fits in a 16×16 table.
+The answer is yes, and it fits in a 16×16 table. A 300-line CPS meta-circular evaluator runs fibonacci through a Lisp written in itself, after verifying the 256-byte table it runs on.
 
 The primary contribution is methodological: a demonstration that axiom-driven SAT search combined with Lean verification can systematically explore the space of self-describing finite structures, producing both universal theorems about the axiom class and specific verified models. The specific algebra Ψ₁₆ᶠ is one output of this methodology. The universal theorems — forced rigidity, actuality irreducibility, separation of judgment and synthesis — are the more durable results. Whether these properties translate to practical self-verifying systems is an open question.
 
@@ -88,7 +92,9 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - No right identity in any model satisfying role axioms L0–L3 `[Lean]`
 - Card ≥ 4 from role axioms (tight: 4-element countermodel exists) `[Lean]`
 - Tester cells are completely free across all tested sizes `[SAT]`
-- 3-level reflective tower: compute → verify ground → inspect evaluator → resume `[Empirical]`
+- CPS meta-circular evaluator: Ψ-Lisp interpreting Ψ-Lisp with explicit continuations, handles arithmetic, conditionals, lambda, let, defun, cond, progn, recursive closures `[Empirical]`
+- Reify captures continuation + environment as first-class Ψ-Lisp value; reflect installs modified state `[Empirical]`
+- 3-level reflective tower: compute → verify ground → reify/reflect via CPS `[Empirical]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
@@ -103,16 +109,17 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 ### How to Read This Repo
 
 1. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
-2. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — The reflective tower: compute, verify ground, inspect evaluator
-3. [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Pure Ψ-Lisp recovery algorithm cast as a spell
-4. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another using the spell
-5. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-6. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
-7. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
-8. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-9. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-10. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
-11. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+2. [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — CPS meta-circular evaluator: Ψ-Lisp interpreting Ψ-Lisp with explicit continuations
+3. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower demo (compute → verify table → reify/reflect)
+4. [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp (the "spell" cast by the wizard)
+5. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another using the spell
+6. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+7. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+8. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
+9. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+10. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+11. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
+12. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -247,21 +254,37 @@ cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
 
 ### The Reflective Tower
 
-Brian Cantwell Smith's 3-Lisp (1984) introduced reflective towers — an infinite sequence of meta-interpreters where a program at level N can shift up to level N+1 to inspect the interpreter running it. Smith's tower was infinite: interpreters all the way up, with no verifiable ground.
+**The meta-circular evaluator.** [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) is a CPS Lisp interpreter written in Ψ-Lisp — approximately 300 lines. Every evaluation step takes an explicit continuation `k`: a lambda that receives the result. The evaluator is a state machine `(expr, env, k) → (expr', env', k')`. This follows Reynolds' definitional interpreters (1972) and connects to the Scheme-79 chip insight: a CPS interpreter is a state machine that can be implemented in hardware. It handles arithmetic, conditionals, lambda, let, defun, cond, progn, and recursive closures.
 
-Ψ-Lisp has a finite tower with a verified ground. The demo ([`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp)) runs three levels in a single program:
+**Reify and reflect.** These are cases in `meval`, not builtins. `(reify)` packages the current continuation `k` and environment as a Lisp data structure — the program receives its own future as data. `(reflect state value)` extracts a saved continuation from a reified state and jumps to it, abandoning the current future. The program can modify the environment between reify and reflect, altering its own evaluation from the meta-level. This is Brian Cantwell Smith's 3-Lisp (1984) architecture: `shift-up` and `shift-down` on a grounded algebraic substrate.
 
-- **Level 0: Computation.** The program computes fibonacci — the algebra as a programming language. It is unaware of the table underneath.
-- **Level 1: Ground verification.** The program shifts up and probes the Cayley table directly, checking algebraic invariants: absorber laws (`⊤·x = ⊤`), tester boolean output (`τ·x ∈ {⊤,⊥}`), QE round-trips (`E·(Q·x) = x`), idempotent classification. These are actual table lookups via the `dot` builtin, not assertions — if any cell were wrong, the check would fail.
-- **Level 2: Evaluator inspection.** The program shifts up again and examines its own evaluation state — how many bindings exist, whether key definitions are present, whether a stored result matches recomputation. This is Smith's 3-Lisp move: the program inspects the interpreter running it.
+**The grounded tower.** Unlike 3-Lisp's infinite tower of interpreters resting on nothing, this tower terminates at the Cayley table. The demo ([`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp)) runs three levels in a single program:
 
-The tower terminates at the Cayley table. Level 1 verifies it. There is nothing beneath the table to worry about — it IS the algebra, not an implementation of it. Standard Lisp has `eval` and `quote` for expression-level reflection. Ψ-Lisp has the same, plus table-level reflection through algebraic probing. Smith's tower had no ground. This one does.
+```
+Layer 3: User programs (fib, fact)
+Layer 2: CPS meta-circular evaluator (psi_metacircular.lisp)
+Layer 1: Base evaluator (psi_lisp.py / kamea-rs)
+Layer 0: Cayley table (256 bytes, verified by Level 1)
+```
+
+- **Level 0: Computation.** The meta-circular evaluator interprets fibonacci and factorial — Ψ-Lisp running inside Ψ-Lisp through explicit continuations. Each evaluation step is a continuation-passing call built from the seven axiom-forced atoms.
+- **Level 1: Ground verification.** The program shifts up and probes the Cayley table directly, checking algebraic invariants: absorber laws (`⊤·x = ⊤`), tester boolean output (`τ·x ∈ {⊤,⊥}`), QE round-trips (`E·(Q·x) = x`), idempotent classification. These are actual table lookups via the `dot` builtin — if any cell were wrong, the check would fail.
+- **Level 2: Reification.** The program shifts up again and reifies the evaluator's continuation via CPS. `(reify)` captures the current continuation and environment as a first-class value. `(reflect state value)` installs a saved continuation with a new value, abandoning the current future. The demo verifies: reify + reflect produces 99, reify + reflect + compute produces 92.
+
+Level 1 verifies the table before Level 2 trusts the evaluator. There is nothing beneath the table to worry about — it IS the algebra, not an implementation of it.
+
+**Scope and limitations.** The reification captures the continuation and environment, but the continuation is opaque at the Ψ-Lisp level — it is a host-level lambda, not a defunctionalized Ψ∗ data structure. The environment is fully inspectable (it's a cons-list alist), but the continuation cannot be pattern-matched or structurally decomposed. Full continuation inspection would require defunctionalization: representing each continuation variant as a Ψ∗ term. This is a concrete engineering step, not a theoretical barrier `[Open]`.
 
 ### The Recovery Spell
 
-The recovery algorithm is written as a pure Ψ-Lisp program ([`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp)) — approximately 120 lines that identify all 16 elements of a corrupted table using only ~62 dot-oracle probes. The program communicates exclusively through the algebra's IO atoms: `(put x)` to emit a value and `(get)` to read one. The IO protocol has two opcodes: PROBE (query the corrupted table) and REPORT (announce an identification). No Python builtins, no foreign function calls.
+The recovery algorithm is written as a pure Ψ-Lisp program ([`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp)) — approximately 120 lines that identify all 16 elements of a corrupted table using only ~62 dot-oracle probes. The program communicates exclusively through the algebra's IO atoms: `(put x)` to emit a value and `(get)` to read one. No Python builtins, no foreign function calls. The IO protocol:
 
-The corrupted host demo loads the spell into a healthy Kamea and casts it on a scrambled copy — the animated TUI visualizes the recovery in real time. This demonstrates that the algebra's computational capacity is sufficient to perform its own recovery: the program, the language, the IO channel, and the algebra being recovered are all the same system.
+```
+PROBE:  (put 0) (put a) (put b) (get) → dot(a,b)
+REPORT: (put 1) (put idx) (put label)
+```
+
+The corrupted host demo loads the spell into a healthy Kamea and casts it on a scrambled copy — the animated TUI visualizes the recovery in real time. The recovery algorithm, the language it's written in, and the IO channel it communicates through are all elements of the same 16×16 table.
 
 ```bash
 python3 examples/psi16_corrupted_host_demo.py           # animated TUI
@@ -439,6 +462,8 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
 | TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
+| CPS meta-circular evaluator correct on test suite | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
+| Reify/reflect via CPS continuation capture | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — reify + reflect produces expected values |
 | Reflective tower (3-level demonstration) | specific model | `[Empirical]` | `examples/psi_reflective_tower.lisp` |
 | Recovery spell (pure Ψ-Lisp, IO-only) | specific model | `[Empirical]` | `examples/psi_recovery_spell.lisp` |
 | Recovery spell: 62-probe adaptive, 100% on 1M seeds | specific model | `[Empirical]` | `psi_blackbox.py --seeds 1000000` |
@@ -492,8 +517,9 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
 │   ├── psi16_wizard_sprites.py       # Sprite rendering utilities
 │   ├── wiz2.json                     # Hand-designed bijective sprite mapping
-│   ├── psi_reflective_tower.lisp     # 3-level reflective tower: compute, verify ground, inspect evaluator
-│   ├── psi_recovery_spell.lisp       # Pure Ψ-Lisp black-box recovery (~62 probes, IO-only)
+│   ├── psi_metacircular.lisp         # CPS meta-circular evaluator (~300 lines)
+│   ├── psi_reflective_tower.lisp     # Three-level reflective tower demo
+│   ├── psi_recovery_spell.lisp       # Black-box recovery as pure Ψ-Lisp
 │   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
@@ -523,7 +549,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 lake build
 
 # Python (requires uv)
-uv run python psi_lisp.py examples/psi_reflective_tower.lisp  # reflective tower demo
+uv run python psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp  # reflective tower
 uv run python psi_repl.py                                     # interactive REPL
 uv run python examples/psi16_corrupted_host_demo.py           # TUI demo
 uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative

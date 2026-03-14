@@ -364,9 +364,8 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
         name = sexpr[1]
         params = sexpr[2]
         body = sexpr[3] if len(sexpr) == 4 else ["progn"] + sexpr[3:]
-        fn = Function(params=params, body=body, env=dict(env), name=name)
+        fn = Function(params=params, body=body, env=env, name=name)
         env[name] = fn
-        fn.env[name] = fn
         return _VOID
 
     # (setq name expr)
@@ -550,10 +549,20 @@ def _builtin_cons(a, b):
 
 
 def _builtin_car(a):
+    # Direct structural extraction for pairs (avoids psi_eval traversal,
+    # which allows non-Term values like Function objects in cons cells —
+    # needed for CPS meta-circular evaluator's reified continuations).
+    f = fst(a)
+    if f is not None:
+        return f
     return eval_term(App(F_ENC, a))
 
 
 def _builtin_cdr(a):
+    # Direct structural extraction (see _builtin_car comment).
+    s = snd(a)
+    if s is not None:
+        return s
     return eval_term(App(ETA, a))
 
 
@@ -769,6 +778,9 @@ def repl():
 def main():
     global SHOW_TERM, TRACE
 
+    # CPS meta-circular evaluator needs deep recursion
+    sys.setrecursionlimit(50000)
+
     args = sys.argv[1:]
     files = []
 
@@ -789,7 +801,8 @@ def main():
 
     env = builtin_env()
     for path in files:
-        print(f"── {path} ──")
+        if len(files) == 1:
+            print(f"── {path} ──")
         try:
             results = run_file(path, env)
             for r in results:
