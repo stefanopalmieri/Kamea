@@ -15,12 +15,37 @@
 ```bash
 git clone https://github.com/stefanopalmieri/Kamea.git && cd Kamea
 
-python3 psi_repl.py                                    # interactive Ψ-Lisp REPL
-python3 psi_star.py                                    # watch the TC proof run
-cd kamea-rs && cargo run --release -- repl              # same REPL, ~25x faster
+python3 psi_lisp.py examples/psi_reflective_tower.lisp   # see all three levels
 ```
 
-Try `(fib 10)`, `(mapcar (lambda (x) (* x x)) '(1 2 3 4 5))`, or `(fact 20)`. Everything below — axioms, theorems, phenomenology — is context for understanding what you just experienced.
+```
+=== PSI REFLECTIVE TOWER ===
+
+--- Level 0: Computation ---
+Computing fibonacci(8)... Result: 21
+
+--- Shift Up to Level 1: Ground Verification ---
+Absorber laws: ✓  Tester output: ✓  QE round-trip: ✓
+Table health: ALL INVARIANTS HOLD
+
+--- Shift Up to Level 2: Evaluator Inspection ---
+Current environment: 55 bindings
+Consistency check: (fib 8) = fib-result? ok
+
+--- Shift Down: Resume with Verified Substrate ---
+Computing fibonacci(12) on verified ground... Result: 144
+
+=== TOWER COMPLETE ===
+Three levels. One algebra. One table.
+```
+
+A program computes, then verifies the algebra it runs on, then inspects its own evaluator state, then resumes. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
+
+```bash
+python3 psi_repl.py                                        # interactive REPL
+python3 examples/psi16_corrupted_host_demo.py               # watch one wizard heal another
+cd kamea-rs && cargo run --release -- repl                   # Rust REPL (~25x faster)
+```
 
 ---
 
@@ -63,7 +88,9 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - No right identity in any model satisfying role axioms L0–L3 `[Lean]`
 - Card ≥ 4 from role axioms (tight: 4-element countermodel exists) `[Lean]`
 - Tester cells are completely free across all tested sizes `[SAT]`
+- 3-level reflective tower: compute → verify ground → inspect evaluator → resume `[Empirical]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
+- Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
 - TC minimality (canonical construction): all 7 TC roles pairwise forced distinct (21/21 merge attempts UNSAT); alternative constructions with fewer elements remain open `[SAT]`
 
@@ -75,15 +102,17 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 
 ### How to Read This Repo
 
-1. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp running on the 7-element core: `python3 psi_lisp.py examples/psi_fibonacci.lisp`
-2. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL: `python3 psi_repl.py`
-3. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
-4. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-5. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-6. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-7. [`psi_blackbox.py`](psi_blackbox.py) — black-box recovery demo (run it)
-8. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — animated TUI: dual-wizard corrupted-host bootstrap with real-time recovery visualization
-9. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+1. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
+2. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — The reflective tower: compute, verify ground, inspect evaluator
+3. [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Pure Ψ-Lisp recovery algorithm cast as a spell
+4. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another using the spell
+5. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+6. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+7. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
+8. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+9. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+10. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
+11. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 ---
 
@@ -193,7 +222,7 @@ Because only axiom-forced elements are used, TC is a property of every Ψ algebr
 
 **TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`ds_search/tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
 
-**Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Seven test programs:
+**Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Example programs:
 
 | Program | Key results |
 |---------|-------------|
@@ -214,6 +243,29 @@ cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
 # Browser debugger (WASM)
 cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
 # → open http://localhost:8080
+```
+
+### The Reflective Tower
+
+Brian Cantwell Smith's 3-Lisp (1984) introduced reflective towers — an infinite sequence of meta-interpreters where a program at level N can shift up to level N+1 to inspect the interpreter running it. Smith's tower was infinite: interpreters all the way up, with no verifiable ground.
+
+Ψ-Lisp has a finite tower with a verified ground. The demo ([`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp)) runs three levels in a single program:
+
+- **Level 0: Computation.** The program computes fibonacci — the algebra as a programming language. It is unaware of the table underneath.
+- **Level 1: Ground verification.** The program shifts up and probes the Cayley table directly, checking algebraic invariants: absorber laws (`⊤·x = ⊤`), tester boolean output (`τ·x ∈ {⊤,⊥}`), QE round-trips (`E·(Q·x) = x`), idempotent classification. These are actual table lookups via the `dot` builtin, not assertions — if any cell were wrong, the check would fail.
+- **Level 2: Evaluator inspection.** The program shifts up again and examines its own evaluation state — how many bindings exist, whether key definitions are present, whether a stored result matches recomputation. This is Smith's 3-Lisp move: the program inspects the interpreter running it.
+
+The tower terminates at the Cayley table. Level 1 verifies it. There is nothing beneath the table to worry about — it IS the algebra, not an implementation of it. Standard Lisp has `eval` and `quote` for expression-level reflection. Ψ-Lisp has the same, plus table-level reflection through algebraic probing. Smith's tower had no ground. This one does.
+
+### The Recovery Spell
+
+The recovery algorithm is written as a pure Ψ-Lisp program ([`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp)) — approximately 120 lines that identify all 16 elements of a corrupted table using only ~62 dot-oracle probes. The program communicates exclusively through the algebra's IO atoms: `(put x)` to emit a value and `(get)` to read one. The IO protocol has two opcodes: PROBE (query the corrupted table) and REPORT (announce an identification). No Python builtins, no foreign function calls.
+
+The corrupted host demo loads the spell into a healthy Kamea and casts it on a scrambled copy — the animated TUI visualizes the recovery in real time. This demonstrates that the algebra's computational capacity is sufficient to perform its own recovery: the program, the language, the IO channel, and the algebra being recovered are all the same system.
+
+```bash
+python3 examples/psi16_corrupted_host_demo.py           # animated TUI
+python3 examples/psi16_corrupted_host_demo.py --plain    # plain text
 ```
 
 ### Phenomenological Interpretation
@@ -387,6 +439,9 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
 | TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
+| Reflective tower (3-level demonstration) | specific model | `[Empirical]` | `examples/psi_reflective_tower.lisp` |
+| Recovery spell (pure Ψ-Lisp, IO-only) | specific model | `[Empirical]` | `examples/psi_recovery_spell.lisp` |
+| Recovery spell: 62-probe adaptive, 100% on 1M seeds | specific model | `[Empirical]` | `psi_blackbox.py --seeds 1000000` |
 | Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
 
 Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
@@ -437,6 +492,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
 │   ├── psi16_wizard_sprites.py       # Sprite rendering utilities
 │   ├── wiz2.json                     # Hand-designed bijective sprite mapping
+│   ├── psi_reflective_tower.lisp     # 3-level reflective tower: compute, verify ground, inspect evaluator
+│   ├── psi_recovery_spell.lisp       # Pure Ψ-Lisp black-box recovery (~62 probes, IO-only)
 │   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
@@ -466,8 +523,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 lake build
 
 # Python (requires uv)
+uv run python psi_lisp.py examples/psi_reflective_tower.lisp  # reflective tower demo
 uv run python psi_repl.py                                     # interactive REPL
-uv run python psi_lisp.py examples/psi_fibonacci.lisp         # run a Lisp program
 uv run python examples/psi16_corrupted_host_demo.py           # TUI demo
 uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
 
@@ -487,7 +544,7 @@ python3 -m http.server 8080 --directory www                    # serve debugger 
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
 
-All 8 Mini-Lisp test programs produce identical output in Python, Rust, and WASM.
+All Mini-Lisp test programs produce identical output in Python, Rust, and WASM.
 
 ---
 

@@ -33,7 +33,7 @@ from typing import Any
 from psi_star import (
     App, Term, psi_eval, EvalError,
     TOP, BOT, Q, E, F_ENC, G_ENC, ETA, RHO, Y_COMB, TAU,
-    pair, fst, snd, term_str, NAMES,
+    pair, fst, snd, term_str, NAMES, TABLE,
 )
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -440,6 +440,29 @@ def evaluate(sexpr: SExpr, env: dict) -> Term:
         val = evaluate(sexpr[1], env)
         return TOP if val == BOT else BOT
 
+    # (env-size) — return number of bindings in current environment
+    if head == "env-size":
+        return encode_int(len(env))
+
+    # (env-keys) — return list of binding names as char-code strings
+    if head == "env-keys":
+        result: Term = BOT
+        for name in reversed(sorted(env.keys())):
+            name_term: Term = BOT
+            for c in reversed(name):
+                name_term = lisp_cons(encode_int(ord(c)), name_term)
+            result = lisp_cons(name_term, result)
+        return result
+
+    # (bound? "name") — check if a name is bound
+    if head == "bound?":
+        if len(sexpr) != 2:
+            raise SyntaxError("bound? takes exactly 1 argument")
+        name = sexpr[1]
+        if isinstance(name, str) and not name.startswith('"'):
+            return TOP if name in env else BOT
+        return BOT
+
     # ── Application: (fn args...) ──
     fn = evaluate(head, env)
     args = [evaluate(a, env) for a in sexpr[1:]]
@@ -554,18 +577,19 @@ def _builtin_numberp(a):
 
 
 def _builtin_display(a):
-    print(display(a))
-    return a
+    sys.stdout.write(display(a))
+    sys.stdout.flush()
+    return _VOID
 
 
 def _builtin_print(a):
     print(display(a))
-    return a
+    return _VOID
 
 
 def _builtin_terpri():
     print()
-    return TOP
+    return _VOID
 
 
 def _builtin_list(*args):
@@ -607,7 +631,29 @@ def _builtin_write_char(a):
         raise TypeError("write-char requires an integer (ASCII code)")
     sys.stdout.write(chr(na))
     sys.stdout.flush()
-    return TOP
+    return _VOID
+
+
+def _builtin_dot(a, b):
+    """Raw Cayley table lookup: dot(a, b) = TABLE[a][b]."""
+    na, nb = decode_int(a), decode_int(b)
+    if na is None or nb is None:
+        raise TypeError("dot requires integers (atom indices 0-15)")
+    if not (0 <= na <= 15 and 0 <= nb <= 15):
+        raise TypeError(f"dot: indices must be 0-15, got {na} and {nb}")
+    return encode_int(TABLE[na][nb])
+
+
+def _builtin_atom_name(a):
+    """Return the symbolic name of atom a (by index) as a char-code list."""
+    na = decode_int(a)
+    if na is None or not (0 <= na <= 15):
+        raise TypeError(f"atom-name requires index 0-15, got {display(a)}")
+    name = NAMES.get(na, str(na))
+    result: Term = BOT
+    for c in reversed(name):
+        result = lisp_cons(encode_int(ord(c)), result)
+    return result
 
 
 def _builtin_write_string(a):
@@ -619,7 +665,7 @@ def _builtin_write_string(a):
             sys.stdout.write(chr(n))
         a = snd(a)
     sys.stdout.flush()
-    return TOP
+    return _VOID
 
 
 def builtin_env() -> dict:
@@ -651,6 +697,8 @@ def builtin_env() -> dict:
         "1-": _builtin_1minus,
         "write-char": _builtin_write_char,
         "write-string": _builtin_write_string,
+        "dot": _builtin_dot,
+        "atom-name": _builtin_atom_name,
     }
 
 
