@@ -191,7 +191,7 @@ The simulation (`psi_star.py`) matches a reference 2CM interpreter trace-for-tra
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
-**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
+**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`ds_search/tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
 
 **Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Seven test programs:
 
@@ -364,7 +364,7 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 - **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
-- **Necessity of self-modeling.** Empirical evidence (`counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
+- **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 
 ### Claim Matrix
 
@@ -443,17 +443,18 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
 │   ├── substrate_analysis.py         # Substrate/stacking analysis
-│   └── n16_freedom.py                # N=16 cell-by-cell SAT freedom analysis
+│   ├── n16_freedom.py                # N=16 cell-by-cell SAT freedom analysis
+│   ├── tc_merge_test.py              # TC minimality: 21 pairwise merge checks (all UNSAT)
+│   ├── counterexample_search.py      # WL-1 discrimination tests
+│   ├── rigid_census.py               # Small rigid magma census
+│   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   └── minimal_model.md              # Minimal model notes
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
-├── tc_merge_test.py                  # TC minimality: 21 pairwise merge checks (all UNSAT)
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── psi_repl.py                       # Interactive Ψ-Lisp REPL
-├── rigid_census.py                   # Small rigid magma census
-├── counterexample_search.py          # WL-1 discrimination tests
 ├── CLAIMS.md                         # Claim status registry
 └── README.md
 ```

@@ -30,7 +30,7 @@ This file is the canonical status registry for claims made in this repository.
 | Full axiom set is SAT at N=16 (all phases including IO + 8-state counter + selection + DEC/PAIR/INC2/SWAP) | Empirical | `ds_search/stacking_analysis.py` (`extract_psi16_full()`) | `uv run python -c "from ds_search.stacking_analysis import extract_psi16_full; extract_psi16_full()"` |
 | Full axiom set is SAT at N=12 with 117/144 free cells (18.8% determination) | Empirical | `ds_search/stacking_analysis.py` (`etrans_residual_freedom()`) | `uv run python -c "from ds_search.stacking_analysis import etrans_residual_freedom; etrans_residual_freedom()"` |
 | QE requires N>=8; Branch/Compose/Y require N>=12 | Empirical | `ds_search/stacking_analysis.py` | SAT/UNSAT checks at various N |
-| WL census: structureless rigid magmas often efficiently recoverable | Empirical | `rigid_census.py`, `counterexample_search.py` | `uv run python rigid_census.py` |
+| WL census: structureless rigid magmas often efficiently recoverable | Empirical | `ds_search/rigid_census.py`, `ds_search/counterexample_search.py` | `uv run python ds_search/rigid_census.py` |
 | Actuality irreducibility: tester row is completely free (all core tester cells can independently flip) | Empirical | `ds_search/stacking_analysis.py`, `ds_search/n16_freedom.py` | SAT-verified with push/pop at N=8, 12, 16 |
 | Full axiom set at N=16: 64/256 cells fixed (25.0% determination), 192 free | Empirical | `ds_search/n16_freedom.py` | `uv run python ds_search/n16_freedom.py` |
 | Chirality: E-transparency does not cascade to tester cells | Empirical | `ds_search/stacking_analysis.py` | SAT push/pop: all tester-cell values remain SAT |
@@ -40,8 +40,8 @@ This file is the canonical status registry for claims made in this repository.
 | Encoder-tester non-commutativity | Empirical | `ds_search/stacking_analysis.py` | SAT-verified |
 | Black-box recovery: all 16 elements recoverable from shuffled oracle (3 methods, 100% on 1000 seeds) | Empirical | `psi_blackbox.py` | `uv run python psi_blackbox.py --seeds 1000 --compare` |
 | Ψ∗ Turing-completeness: 7 axiom-forced elements (⊤, Q, E, f, g, η, ρ) simulate 2-counter machines; universal across all models | Empirical | `psi_star.py` — stepped 2CM matches reference interpreter on 4 test programs | `uv run python psi_star.py` |
-| 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `n16_freedom.py` build_solver + XOR/AND/OR constraints |
-| TC minimality (canonical construction): 7 TC roles pairwise forced distinct; canonical 2CM construction cannot use fewer than 7 elements; alternative constructions open | Empirical | `tc_merge_test.py` — 21/21 pairwise merge attempts UNSAT | `uv run python tc_merge_test.py` |
+| 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `ds_search/n16_freedom.py` build_solver + XOR/AND/OR constraints |
+| TC minimality (canonical construction): 7 TC roles pairwise forced distinct; canonical 2CM construction cannot use fewer than 7 elements; alternative constructions open | Empirical | `ds_search/tc_merge_test.py` — 21/21 pairwise merge attempts UNSAT | `uv run python ds_search/tc_merge_test.py` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 
