@@ -99,6 +99,55 @@ impl PsiDebugger {
         }
     }
 
+    /// Run source and return JSON with both display strings and term trees.
+    pub fn run_with_trees(&mut self, source: &str) -> String {
+        self.trace.clear();
+        self.evaluator = None;
+        self.eval_term = None;
+
+        #[derive(Serialize)]
+        struct RunResult {
+            error: Option<String>,
+            results: Vec<ResultEntry>,
+            io_output: String,
+        }
+        #[derive(Serialize)]
+        struct ResultEntry {
+            display: String,
+            tree: TermNode,
+        }
+
+        match self.machine.run(source) {
+            Ok(results) => {
+                let mut entries = Vec::new();
+                for r in &results {
+                    if let Value::Term(t) = r {
+                        if *t != VOID_TERM {
+                            entries.push(ResultEntry {
+                                display: self.machine.display(*t),
+                                tree: self.build_term_node(*t, 50),
+                            });
+                        }
+                    }
+                }
+                let io_out: Vec<u8> = self.machine.io.output.drain(..).collect();
+                let io_str = String::from_utf8_lossy(&io_out).to_string();
+                serde_json::to_string(&RunResult {
+                    error: None,
+                    results: entries,
+                    io_output: io_str,
+                }).unwrap_or_default()
+            }
+            Err(e) => {
+                serde_json::to_string(&RunResult {
+                    error: Some(e.to_string()),
+                    results: vec![],
+                    io_output: String::new(),
+                }).unwrap_or_default()
+            }
+        }
+    }
+
     /// Evaluate a raw Ψ∗ expression and step through it.
     /// Pass a simple term like "E(Q(3))" — builds the term in the arena
     /// and starts the evaluator for stepping.

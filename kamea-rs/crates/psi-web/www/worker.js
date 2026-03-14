@@ -3,7 +3,6 @@
 let psi = null;
 
 async function initWasm() {
-    // Dynamic import works in workers with module type
     const wasm = await import('./pkg/psi_web.js');
     await wasm.default();
     psi = new wasm.PsiDebugger();
@@ -30,7 +29,7 @@ self.onmessage = async function(e) {
     try {
         switch (type) {
             case 'run': {
-                const result = psi.run(payload.source);
+                const result = psi.run_with_trees(payload.source);
                 const stats = psi.stats();
                 postMessage({ type: 'run-result', id, result, stats });
                 break;

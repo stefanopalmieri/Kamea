@@ -10,8 +10,9 @@
     <header>
         <h1>Ψ∗ Debugger</h1>
         <div class="controls">
-            <button id="btn-run" title="Run to completion">▶ Run</button>
+            <button id="btn-run" title="Run to completion (Ctrl+Enter)">▶ Run</button>
             <button id="btn-reset" title="Reset machine">↺ Reset</button>
+            <button id="btn-table" title="Show Cayley table">Table</button>
             <select id="examples">
                 <option value="">Load example...</option>
                 <option value="basic">Basic</option>
@@ -27,33 +28,37 @@
     </header>
 
     <main>
-        <div class="panel-row top-row">
-            <section class="panel cayley-panel">
-                <h2>Cayley Table (Ψ₁₆ᶠ)</h2>
-                <div id="cayley-container"></div>
+        <div class="left-pane">
+            <section class="panel source-panel">
+                <h2>Source (Mini-Lisp)</h2>
+                <textarea id="source" spellcheck="false" placeholder="; Type Ψ∗ Mini-Lisp here...&#10;(defun fib (n)&#10;  (if (< n 2) n&#10;      (+ (fib (- n 1))&#10;         (fib (- n 2)))))&#10;(fib 10)"></textarea>
             </section>
-            <section class="panel term-panel">
+        </div>
+        <div class="right-pane">
+            <section class="panel output-panel">
                 <h2>Output</h2>
                 <pre id="output"></pre>
             </section>
-        </div>
-
-        <div class="panel-row bottom-row">
-            <section class="panel source-panel">
-                <h2>Source (Mini-Lisp)</h2>
-                <textarea id="source" spellcheck="false" placeholder="; Type Ψ∗ Mini-Lisp here...
-(defun fib (n)
-  (if (< n 2) n
-      (+ (fib (- n 1))
-         (fib (- n 2)))))
-(fib 10)"></textarea>
+            <section class="panel tree-panel">
+                <h2>Term Tree <span id="tree-label" class="tree-label"></span></h2>
+                <div id="term-tree" class="term-tree"></div>
             </section>
         </div>
     </main>
 
-    <footer id="stats">
-        Ready
-    </footer>
+    <footer id="stats">Ready</footer>
+
+    <!-- Cayley Table Modal -->
+    <div id="table-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cayley Table (Ψ₁₆ᶠ)</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="cayley-container"></div>
+        </div>
+    </div>
 
     <script src="debugger.js"></script>
 </body>

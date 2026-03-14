@@ -432,8 +432,6 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   │           └── style.css
 │   └── examples/
 │       └── psi_*.lisp                    # Lisp test programs (copied from examples/)
-├── legacy/
-│   └── kamea.py                      # 66-atom Δ₁ algebra (superseded by Ψ₁₆ᶠ)
 ├── examples/
 │   ├── psi16_corrupted_host_demo.py  # Animated TUI: dual-wizard corrupted-host bootstrap
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
