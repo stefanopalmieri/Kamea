@@ -541,15 +541,17 @@ Both cases verified: all 16 inputs produce identical results through the interpr
 
 ### Performance
 
-| Implementation | fib(8) + fact(10) + ... | vs Ψ-Lisp Python |
-|----------------|------------------------|-----------------|
-| **Ψ-Lisp (Python interpreter)** | ~2,000 ms | 1x |
-| **Ψ-Lisp (Rust interpreter)** | ~200 ms | 10x |
-| **Native Python** (same algorithms, no interpreter) | ~0.005 ms | 400,000x |
-| **Compiled Ψ-Lisp** (transpiled to C, gcc -O2) | ~0.01 µs/iter | 200,000,000x |
-| **Native Rust** (same algorithms, hand-written) | ~0.003 µs/iter | ~700,000,000x |
+Each row runs the same five computations: fib(8), fib-iter(30), fact(10), power(2,10), gcd(100,75). Single invocation = wall-clock time including process startup. Amortized = per-iteration in a tight loop (10M iterations for C/Rust, 100K for Python).
 
-The Ψ-Lisp interpreters are slow because of triple indirection: the host language runs an evaluator, which walks S-expressions, which encodes numbers as Q-chains (nested `App(Q, App(Q, ...))` trees). Every `(+ a b)` decodes two Q-chains, adds, and re-encodes. The transpiler eliminates all of that — `(+ a b)` becomes a single `add` instruction. The compiled output is within 4x of hand-written native Rust.
+| Implementation | Single invocation | Amortized/iter | vs Ψ-Lisp Python |
+|----------------|------------------|---------------|-----------------|
+| **Ψ-Lisp (Python interpreter)** | ~2,000 ms | — | 1x |
+| **Ψ-Lisp (Rust interpreter)** | ~200 ms | — | 10x |
+| **Native Python** | ~30 ms (startup), 5 µs compute | 5 µs | 400,000x |
+| **Compiled Ψ-Lisp** (gcc -O2) | ~2.4 ms (startup) | 0.01 µs | 200,000,000x |
+| **Native Rust** (LLVM -O) | ~1 ms (startup) | 0.003 µs | ~700,000,000x |
+
+The Ψ-Lisp interpreters are slow because of triple indirection: the host language runs an evaluator, which walks S-expressions, which encodes numbers as Q-chains (nested `App(Q, App(Q, ...))` trees). Every `(+ a b)` decodes two Q-chains, adds, and re-encodes. The transpiler eliminates all of that — `(+ a b)` becomes a single `add` instruction.
 
 The compiled output is within **4x of hand-written Rust compiled with LLVM** — and faster than native Python. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. A language designed for algebraic self-description, not performance, compiles to near-native speed through a pipeline small enough to audit in an afternoon.
 
