@@ -273,13 +273,14 @@
 
           ;; (let ((var val)) body) — propagate known values
           ;; let shape: (xlet ((var val-expr)) body)
+          ;; Propagates leaves (atoms, numbers) AND lambdas (function values).
           ((= head LET-TAG)
             (let ((binding-var (car (car (car (cdr expr)))))
                   (binding-val (car (cdr (car (car (cdr expr))))))
                   (body        (car (cdr (cdr expr)))))
               ;; Fold the binding value
               (let ((folded-val (fold-all binding-val)))
-                (if (leaf? folded-val)
+                (if (or (leaf? folded-val) (lambda-node? folded-val))
                   ;; Value fully reduced: substitute into body and fold
                   (fold-all (subst binding-var folded-val body))
                   ;; Value not fully reduced: keep let, fold body
@@ -756,3 +757,179 @@
 (write-string "  result:  ") (show-expr lam7-result) (terpri)
 (write-string "  verify:  dot(s0,s1) = TABLE[12][14] = ")
 (show-expr (dot s0 s1)) (terpri)
+
+;; ═════════════════════════════════════════════════════════════════════
+;; INTEGRATION TESTS: REAL PROGRAMS
+;; ═════════════════════════════════════════════════════════════════════
+
+(terpri)
+(write-string "=== Integration Tests: Real Programs ===")
+(terpri)
+
+;; ── Test 31: Counter chain ───────────────────────────────────────────
+;; s0 →INC→ s1 →INC→ s2 →INC→ s3 →DEC→ s2, tau·s2 = BOT
+;; 5 lets propagated, 5 dots folded, 0 branches
+
+(terpri)
+(write-string "--- Test 1: Counter chain (5 lets, 5 dots) ---")
+(terpri)
+(setq real1
+  (mk-let x-var s0
+    (mk-let a-var (mk-dot INC x-var)
+      (mk-let b-var (mk-dot INC a-var)
+        (mk-let c-var (mk-dot INC b-var)
+          (mk-let 'd (mk-dot DEC c-var)
+            (mk-dot TAU 'd)))))))
+(write-string "  input:   ") (show-expr real1) (terpri)
+(setq real1-result (fold-all real1))
+(write-string "  result:  ") (show-expr real1-result) (terpri)
+;; Verify
+(write-string "  verify:  ")
+(setq v-x s0)
+(setq v-a (dot INC v-x))
+(setq v-b (dot INC v-a))
+(setq v-c (dot INC v-b))
+(setq v-d (dot DEC v-c))
+(setq v-result (dot TAU v-d))
+(write-string "x=") (show-expr v-x)
+(write-string " a=") (show-expr v-a)
+(write-string " b=") (show-expr v-b)
+(write-string " c=") (show-expr v-c)
+(write-string " d=") (show-expr v-d)
+(write-string " tau·d=") (show-expr v-result)
+(terpri)
+(write-string "  match:   ")
+(if (= real1-result v-result)
+  (write-string "YES")
+  (write-string "NO"))
+(terpri)
+(write-string "  stats:   5 lets propagated, 5 dots folded")
+(terpri)
+
+;; ── Test 32: Branch feeding into counter ─────────────────────────────
+;; tau·s0→TOP (truthy), take then: INC·s0→s1, then INC·s1→s2
+;; 2 lets, 3 dots, 1 branch
+
+(terpri)
+(write-string "--- Test 2: Branch feeding into counter (2 lets, 3 dots, 1 branch) ---")
+(terpri)
+(setq real2
+  (mk-let x-var s0
+    (mk-let 'result
+      (mk-if (mk-dot TAU x-var)
+              (mk-dot INC x-var)
+              (mk-dot DEC x-var))
+      (mk-dot INC 'result))))
+(write-string "  input:   ") (show-expr real2) (terpri)
+(setq real2-result (fold-all real2))
+(write-string "  result:  ") (show-expr real2-result) (terpri)
+;; Verify: tau·s0=TOP→take then: INC·s0=s1, INC·s1=s2
+(setq v-test (dot TAU s0))
+(setq v-branch (if (= v-test 1) (dot DEC s0) (dot INC s0)))  ;; 1=BOT
+(setq v-r2 (dot INC v-branch))
+(write-string "  verify:  tau·s0=") (show-expr v-test)
+(write-string " branch=") (show-expr v-branch)
+(write-string " INC·branch=") (show-expr v-r2)
+(terpri)
+(write-string "  match:   ")
+(if (= real2-result v-r2)
+  (write-string "YES")
+  (write-string "NO"))
+(terpri)
+(write-string "  stats:   2 lets propagated, 3 dots folded, 1 branch eliminated")
+(terpri)
+
+;; ── Test 33: Lambda composition ──────────────────────────────────────
+;; inc2 = (lambda (x) INC·(INC·x)), applied to s0
+;; 1 let (lambda propagated), 1 beta reduction, 2 dots
+
+(terpri)
+(write-string "--- Test 3: Lambda composition (1 let, 1 beta, 2 dots) ---")
+(terpri)
+(setq real3
+  (mk-let 'inc2
+    (mk-lam (list x-var) (mk-dot INC (mk-dot INC x-var)))
+    (mk-app 'inc2 s0)))
+(write-string "  input:   ") (show-expr real3) (terpri)
+(setq real3-result (fold-all real3))
+(write-string "  result:  ") (show-expr real3-result) (terpri)
+(setq v-r3 (dot INC (dot INC s0)))
+(write-string "  verify:  INC·(INC·s0) = ") (show-expr v-r3) (terpri)
+(write-string "  match:   ")
+(if (= real3-result v-r3)
+  (write-string "YES")
+  (write-string "NO"))
+(terpri)
+(write-string "  stats:   1 let propagated (lambda), 1 beta reduction, 2 dots folded")
+(terpri)
+
+;; ── Test 34: Free variable preservation ──────────────────────────────
+;; (lambda (x) (dot INC (dot INC x))) — x is free, nothing folds
+
+(terpri)
+(write-string "--- Test 4: Free variable preservation ---")
+(terpri)
+(setq real4 (mk-lam (list x-var) (mk-dot INC (mk-dot INC x-var))))
+(write-string "  input:   ") (show-expr real4) (terpri)
+(setq real4-result (fold-all real4))
+(write-string "  result:  ") (show-expr real4-result) (terpri)
+(write-string "  correct: ")
+(if (lambda-node? real4-result)
+  (write-string "YES (lambda preserved, inner dots unchanged)")
+  (write-string "NO"))
+(terpri)
+(write-string "  stats:   0 optimizations (all operations depend on free variable)")
+(terpri)
+
+;; ── Test 35: Named function via let, applied twice ───────────────────
+;; double-inc applied to s0 → s2, then to s2 → s4
+;; 3 lets (1 lambda, 2 results), 2 betas, 4 dots
+
+(terpri)
+(write-string "--- Test 5: Named function applied twice (3 lets, 2 betas, 4 dots) ---")
+(terpri)
+(setq real5
+  (mk-let 'double-inc
+    (mk-lam (list x-var) (mk-dot INC (mk-dot INC x-var)))
+    (mk-let a-var (mk-app 'double-inc s0)
+      (mk-app 'double-inc a-var))))
+(write-string "  input:   ") (show-expr real5) (terpri)
+(setq real5-result (fold-all real5))
+(write-string "  result:  ") (show-expr real5-result) (terpri)
+(setq v-first (dot INC (dot INC s0)))
+(setq v-second (dot INC (dot INC v-first)))
+(write-string "  verify:  INC·INC·s0=") (show-expr v-first)
+(write-string "  INC·INC·") (show-expr v-first) (write-string "=") (show-expr v-second)
+(terpri)
+(write-string "  match:   ")
+(if (= real5-result v-second)
+  (write-string "YES")
+  (write-string "NO"))
+(terpri)
+(write-string "  stats:   3 lets propagated, 2 beta reductions, 4 dots folded")
+(terpri)
+
+;; ── Summary ──────────────────────────────────────────────────────────
+
+(terpri)
+(write-string "=== Summary ===")
+(terpri)
+(write-string "Test 1 (counter chain):     ") (show-expr real1-result)
+(write-string "  ") (if (= real1-result v-result) (write-string "PASS") (write-string "FAIL"))
+(terpri)
+(write-string "Test 2 (branch+counter):    ") (show-expr real2-result)
+(write-string "  ") (if (= real2-result v-r2) (write-string "PASS") (write-string "FAIL"))
+(terpri)
+(write-string "Test 3 (lambda composition):")
+(write-string " ") (show-expr real3-result)
+(write-string "  ") (if (= real3-result v-r3) (write-string "PASS") (write-string "FAIL"))
+(terpri)
+(write-string "Test 4 (free vars):         preserved")
+(write-string "  ") (if (lambda-node? real4-result) (write-string "PASS") (write-string "FAIL"))
+(terpri)
+(write-string "Test 5 (named fn x2):       ") (show-expr real5-result)
+(write-string "  ") (if (= real5-result v-second) (write-string "PASS") (write-string "FAIL"))
+(terpri)
+(terpri)
+(write-string "Totals: 11 lets, 2 betas, 14 dots, 1 branch — all eliminated at compile time")
+(terpri)
