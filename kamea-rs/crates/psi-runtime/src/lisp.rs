@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::machine::Value;
 
 /// S-expression types.
@@ -10,12 +12,92 @@ pub enum SExpr {
     List(Vec<SExpr>),
 }
 
+/// A scope frame in the linked environment chain.
+pub struct EnvFrame {
+    bindings: HashMap<String, Value>,
+    parent: Option<Env>,
+}
+
+/// Rc-shared linked environment. Captures are O(1) pointer copies.
+#[derive(Clone)]
+pub struct Env(Rc<RefCell<EnvFrame>>);
+
+impl Env {
+    pub fn new() -> Self {
+        Env(Rc::new(RefCell::new(EnvFrame {
+            bindings: HashMap::new(),
+            parent: None,
+        })))
+    }
+
+    /// Create a child scope whose parent is `parent`.
+    pub fn child(parent: &Env) -> Self {
+        Env(Rc::new(RefCell::new(EnvFrame {
+            bindings: HashMap::new(),
+            parent: Some(parent.clone()),
+        })))
+    }
+
+    /// Look up a name, walking the parent chain.
+    pub fn get(&self, name: &str) -> Option<Value> {
+        let frame = self.0.borrow();
+        if let Some(val) = frame.bindings.get(name) {
+            Some(val.clone())
+        } else if let Some(ref parent) = frame.parent {
+            parent.get(name)
+        } else {
+            None
+        }
+    }
+
+    /// Insert a binding into the current (innermost) frame.
+    pub fn insert(&self, name: String, val: Value) {
+        self.0.borrow_mut().bindings.insert(name, val);
+    }
+
+    pub fn contains_key(&self, name: &str) -> bool {
+        let frame = self.0.borrow();
+        frame.bindings.contains_key(name)
+            || frame.parent.as_ref().map_or(false, |p| p.contains_key(name))
+    }
+
+    pub fn len(&self) -> usize {
+        let frame = self.0.borrow();
+        let local = frame.bindings.len();
+        local + frame.parent.as_ref().map_or(0, |p| p.len())
+    }
+
+    pub fn keys(&self) -> Vec<String> {
+        let frame = self.0.borrow();
+        let mut keys: Vec<String> = frame.bindings.keys().cloned().collect();
+        if let Some(ref parent) = frame.parent {
+            for k in parent.keys() {
+                if !frame.bindings.contains_key(&k) {
+                    keys.push(k);
+                }
+            }
+        }
+        keys
+    }
+}
+
+impl std::fmt::Debug for Env {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let frame = self.0.borrow();
+        write!(f, "Env({} bindings", frame.bindings.len())?;
+        if frame.parent.is_some() {
+            write!(f, " + parent")?;
+        }
+        write!(f, ")")
+    }
+}
+
 /// User-defined function.
 #[derive(Clone, Debug)]
 pub struct Function {
     pub params: Vec<String>,
     pub body: SExpr,
-    pub closure: HashMap<String, Value>,
+    pub closure: Env,
     pub name: Option<String>,
 }
 

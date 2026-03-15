@@ -2,7 +2,7 @@ use psi_core::eval::{self, EvalConfig, EvalError};
 use psi_core::table::{BOT, TOP, F_ENC, ETA, TABLE, NAMES};
 use psi_core::term::{Arena, Term};
 use crate::io::IoChannel;
-use crate::lisp::{SExpr, Function, parse_all};
+use crate::lisp::{SExpr, Function, Env, parse_all};
 use std::collections::HashMap;
 
 /// Machine stats.
@@ -27,7 +27,7 @@ pub struct Machine<I: IoChannel> {
     pub arena: Arena,
     pub io: I,
     pub eval_config: EvalConfig,
-    pub env: HashMap<String, Value>,
+    pub env: Env,
     symbol_table: HashMap<String, i64>,
     next_symbol_id: i64,
 }
@@ -38,7 +38,7 @@ impl<I: IoChannel> Machine<I> {
             arena: Arena::new(1_000_000),
             io,
             eval_config: EvalConfig { max_steps: 1_000_000 },
-            env: HashMap::new(),
+            env: Env::new(),
             symbol_table: HashMap::new(),
             next_symbol_id: 100,
         };
@@ -131,7 +131,7 @@ impl<I: IoChannel> Machine<I> {
             }
 
             SExpr::Symbol(name) => {
-                if let Some(val) = self.env.get(name).cloned() {
+                if let Some(val) = self.env.get(name) {
                     return Ok(val);
                 }
                 let up = name.to_uppercase();
@@ -208,16 +208,16 @@ impl<I: IoChannel> Machine<I> {
                     } else {
                         wrap_progn(&items[3..])
                     };
+                    // Closure captures current env by Rc (O(1)).
+                    // Self-reference works automatically: the closure
+                    // points to the same frame we insert into below.
                     let func = Function {
                         params,
                         body,
                         closure: self.env.clone(),
                         name: Some(fname.clone()),
                     };
-                    // Self-reference for recursion
-                    let mut f2 = func.clone();
-                    f2.closure.insert(fname.clone(), Value::Function(f2.clone()));
-                    self.env.insert(fname, Value::Function(f2));
+                    self.env.insert(fname, Value::Function(func));
                     return Ok(Value::Term(VOID_TERM));
                 }
 
@@ -249,7 +249,8 @@ impl<I: IoChannel> Machine<I> {
                     } else {
                         wrap_progn(&items[2..])
                     };
-                    let saved_env = self.env.clone();
+                    let parent = self.env.clone(); // O(1) Rc clone
+                    let saved_env = std::mem::replace(&mut self.env, Env::child(&parent));
                     for binding in bindings {
                         if let SExpr::List(parts) = binding {
                             if parts.len() >= 2 {
@@ -285,7 +286,7 @@ impl<I: IoChannel> Machine<I> {
                     return Ok(Value::Function(Function {
                         params,
                         body,
-                        closure: self.env.clone(),
+                        closure: self.env.clone(), // O(1) Rc clone
                         name: None,
                     }));
                 }
@@ -334,7 +335,7 @@ impl<I: IoChannel> Machine<I> {
 
                 "env-keys" => {
                     let bot = self.arena.atom(BOT);
-                    let mut keys: Vec<String> = self.env.keys().cloned().collect();
+                    let mut keys = self.env.keys();
                     keys.sort();
                     let mut result = bot;
                     for name in keys.iter().rev() {
@@ -392,9 +393,7 @@ impl<I: IoChannel> Machine<I> {
                 closure: self.env.clone(),
                 name: Some(fname.clone()),
             };
-            let mut f2 = func.clone();
-            f2.closure.insert(fname.clone(), Value::Function(f2.clone()));
-            self.env.insert(fname, Value::Function(f2));
+            self.env.insert(fname, Value::Function(func));
             return Ok(Value::Term(VOID_TERM));
         }
         if let SExpr::Symbol(vname) = &items[1] {
@@ -438,15 +437,18 @@ impl<I: IoChannel> Machine<I> {
                         f.params.len(), args.len()
                     ));
                 }
-                let saved_env = self.env.clone();
-                self.env = f.closure.clone();
-                // Self-reference for recursion
+                // Create child scope of closure env for this call's bindings.
+                // The closure env is shared (Rc), the child is new and local.
+                let call_env = Env::child(&f.closure);
+                // Self-reference for recursion (visible via parent chain
+                // for defun, but needed explicitly for anonymous recursion)
                 if let Some(ref fname) = f.name {
-                    self.env.insert(fname.clone(), Value::Function(f.clone()));
+                    call_env.insert(fname.clone(), Value::Function(f.clone()));
                 }
                 for (param, arg) in f.params.iter().zip(args) {
-                    self.env.insert(param.clone(), arg.clone());
+                    call_env.insert(param.clone(), arg.clone());
                 }
+                let saved_env = std::mem::replace(&mut self.env, call_env);
                 let result = self.evaluate(&f.body)?;
                 self.env = saved_env;
                 Ok(result)

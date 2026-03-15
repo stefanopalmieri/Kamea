@@ -56,6 +56,8 @@ The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpretin
 python3 psi_repl.py                                        # interactive REPL
 python3 examples/psi16_corrupted_host_demo.py               # watch one wizard heal another
 cd kamea-rs && cargo run --release -- repl                   # Rust REPL (~25x faster)
+cd kamea-rs && cargo run --release -- run \                  # Rust reflective tower
+  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
 ---
@@ -258,6 +260,9 @@ python3 psi_repl.py                                  # interactive REPL
 
 # Rust (native, ~25x faster than Python)
 cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
+
+# Rust reflective tower (multiple files share one machine)
+cd kamea-rs && cargo run --release -- run examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 
 # Browser debugger (WASM)
 cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
