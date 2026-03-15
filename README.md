@@ -209,6 +209,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
 - **Turing-completeness of Ψ∗.** `[Empirical]` The term algebra Ψ∗ over any Ψ model simulates 2-counter machines (Minsky 1961) using 7 axiom-forced elements: ⊤ (zero), Q (successor), E (predecessor), g (pair), f (fst), η (snd), ρ (branch). A stepped simulation matches a reference interpreter trace-for-trace on all test programs. This is universal — it holds for every model of the axiom class, not just Ψ₁₆ᶠ. The free cells provide efficiency, not capability. Formal Lean verification remains open. See below.
+- **Equational minimality.** `[Empirical]` Among the 4,694 equational laws cataloged by the [Equational Theories Project](https://github.com/teorth/equational_theories) (Tao et al., 2024), Ψ₁₆ᶠ satisfies exactly one non-trivial law: power-associativity (ETP Equation 4380). All other equational regularities — associativity, commutativity, idempotency, and 4,690 others — are violated. The structure that makes the algebra interesting (absorbers, role separation, Kleene barrier, actuality irreducibility, QE inverse pair) lives entirely in a richer logical fragment that the equational framework cannot express.
 
 ### The Decidability Boundary and Turing Completeness
 
