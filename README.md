@@ -179,6 +179,8 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 | + Branch/Compose/Y | 12 |
 | + IO + 8-state counter + Selection | 16 |
 
+The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure.
+
 ### Result Categories
 
 Results in this repository fall into four tiers:
