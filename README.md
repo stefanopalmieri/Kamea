@@ -551,7 +551,7 @@ Both cases verified: all 16 inputs produce identical results through the interpr
 
 The Ψ-Lisp interpreters are slow because of triple indirection: the host language runs an evaluator, which walks S-expressions, which encodes numbers as Q-chains (nested `App(Q, App(Q, ...))` trees). Every `(+ a b)` decodes two Q-chains, adds, and re-encodes. The transpiler eliminates all of that — `(+ a b)` becomes a single `add` instruction. The compiled output is within 4x of hand-written native Rust.
 
-The compiled Ψ-Lisp is also ~500x faster than native Python doing the same math (5 µs vs 0.01 µs per iteration) — that's just C being faster than Python, nothing specific to the algebra. The large headline number (200M×) is the interpreter overhead: Q-chain encoding, S-expression walking, dynamic dispatch. The transpiler eliminates all of that, producing code that runs at the speed the specification deserves.
+The compiled output is within **4x of hand-written Rust compiled with LLVM** — and faster than native Python. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. A language designed for algebraic self-description, not performance, compiles to near-native speed through a pipeline small enough to audit in an afternoon.
 
 ### Claim Matrix
 
