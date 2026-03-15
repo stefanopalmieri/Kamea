@@ -70,6 +70,15 @@
               (write-string " ")
               (show-expr (car (cdr (cdr (cdr expr)))))
               (write-string ")")))
+          ((= head LET-TAG)
+            (progn
+              (write-string "(let ((")
+              (display (car (car (car (cdr expr)))))
+              (write-string " ")
+              (show-expr (car (cdr (car (car (cdr expr))))))
+              (write-string ")) ")
+              (show-expr (car (cdr (cdr expr))))
+              (write-string ")")))
           (T (progn
               (write-string "(? ")
               (display expr)
@@ -119,6 +128,7 @@
 ;;                   (BOT = falsy → Y, any other atom = truthy → X)
 
 (setq IF-TAG 'if)
+(setq LET-TAG 'xlet)  ;; 'let collides with base interpreter; use 'xlet as tag
 (setq Q-IDX 6)   ;; Q = element 6
 (setq E-IDX 7)   ;; E = element 7
 
@@ -130,6 +140,39 @@
 
 (defun dot-arg1 (expr) (car (cdr expr)))
 (defun dot-arg2 (expr) (car (cdr (cdr expr))))
+
+;; ── Substitution ──────────────────────────────────────────────────────
+;; (subst var val expr) replaces every free occurrence of var in expr
+;; with val. Respects shadowing: if an inner let rebinds the same
+;; variable, substitution stops at that scope boundary.
+
+(defun subst (var val expr)
+  (cond
+    ;; Leaf: if it equals var, replace
+    ((= expr var) val)
+    ;; Other leaf (number, nil): unchanged
+    ((leaf? expr) expr)
+    ((null expr) expr)
+    ;; Compound: check for let that shadows
+    (T (let ((head (car expr)))
+         (cond
+           ;; (let ((v e)) body) — if v = var, only subst into e, not body
+           ((= head LET-TAG)
+             (let ((binding-var (car (car (car (cdr expr)))))
+                   (binding-val (car (cdr (car (car (cdr expr))))))
+                   (body        (car (cdr (cdr expr)))))
+               (if (= binding-var var)
+                 ;; Shadowed: subst into binding value but NOT body
+                 (list LET-TAG
+                       (list (list binding-var (subst var val binding-val)))
+                       body)
+                 ;; Not shadowed: subst into both
+                 (list LET-TAG
+                       (list (list binding-var (subst var val binding-val)))
+                       (subst var val body)))))
+           ;; Other compound: recurse into all elements
+           (T (cons (subst var val (car expr))
+                    (subst var val (cdr expr)))))))))
 
 (defun fold-all (expr)
   (if (leaf? expr) expr
@@ -178,6 +221,22 @@
                 (list IF-TAG test
                       (fold-all then-b)
                       (fold-all else-b)))))
+
+          ;; (let ((var val)) body) — propagate known values
+          ;; let shape: (xlet ((var val-expr)) body)
+          ((= head LET-TAG)
+            (let ((binding-var (car (car (car (cdr expr)))))
+                  (binding-val (car (cdr (car (car (cdr expr))))))
+                  (body        (car (cdr (cdr expr)))))
+              ;; Fold the binding value
+              (let ((folded-val (fold-all binding-val)))
+                (if (leaf? folded-val)
+                  ;; Value fully reduced: substitute into body and fold
+                  (fold-all (subst binding-var folded-val body))
+                  ;; Value not fully reduced: keep let, fold body
+                  (list LET-TAG
+                        (list (list binding-var folded-val))
+                        (fold-all body))))))
 
           ;; anything else: return as-is
           (T expr))))))
@@ -415,3 +474,97 @@
 (setq qe5 (mk-dot EE (mk-dot QQ (mk-dot INC s0))))
 (write-string "  input:   ") (show-expr qe5) (terpri)
 (write-string "  result:  ") (show-expr (fold-all qe5)) (terpri)
+
+;; ═════════════════════════════════════════════════════════════════════
+;; LET-BINDING PROPAGATION
+;; ═════════════════════════════════════════════════════════════════════
+
+;; Constructor: (xlet ((var val)) body)
+;; Uses 'xlet to avoid collision with base interpreter's 'let.
+(defun mk-let (var val body) (list LET-TAG (list (list var val)) body))
+
+(terpri)
+(write-string "=== Let-Binding Propagation ===")
+(terpri)
+
+;; ── Test 18: Basic propagation ───────────────────────────────────────
+;; (let ((x s0)) (dot INC x)) → subst x=s0 → (dot INC s0) → s1
+
+(terpri)
+(write-string "--- (let ((x s0)) (dot INC x)) → s1 ---")
+(terpri)
+(setq x-var 'x)
+(setq let1 (mk-let x-var s0 (mk-dot INC x-var)))
+(write-string "  input:   ") (show-expr let1) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let1)) (terpri)
+
+;; ── Test 19: Chained lets ────────────────────────────────────────────
+;; (let ((x s0)) (let ((y (dot INC x))) (dot INC y)))
+;; → x=s0, (dot INC s0)→s1, y=s1, (dot INC s1)→s2
+
+(terpri)
+(write-string "--- chained lets: x=s0, y=INC(x), INC(y) → s2 ---")
+(terpri)
+(setq y-var 'y)
+(setq let2 (mk-let x-var s0
+             (mk-let y-var (mk-dot INC x-var)
+               (mk-dot INC y-var))))
+(write-string "  input:   ") (show-expr let2) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let2)) (terpri)
+
+;; ── Test 20: Let with QE cancellation ────────────────────────────────
+;; (let ((x (dot Q s0))) (dot E x))
+;; Q·s0 via table = TABLE[6][12] = 12 = s0 (atom), so x=s0
+;; then E·s0 = TABLE[7][12] = 14 = s1
+
+(terpri)
+(write-string "--- (let ((x (dot Q s0))) (dot E x)) ---")
+(terpri)
+(setq let3 (mk-let x-var (mk-dot QQ s0) (mk-dot EE x-var)))
+(write-string "  input:   ") (show-expr let3) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let3)) (terpri)
+(write-string "  (Q·s0 = s0 via table, then E·s0 = s1 via table)")
+(terpri)
+
+;; ── Test 21: Let where value doesn't reduce ─────────────────────────
+;; (let ((x (dot f unknown))) (dot INC x))
+;; unknown isn't bound → can't fold → let stays
+
+(terpri)
+(write-string "--- unreducible: (let ((x (dot f unknown))) (dot INC x)) ---")
+(terpri)
+(setq unknown-var 'unknown)
+(setq let4 (mk-let x-var (mk-dot 2 unknown-var) (mk-dot INC x-var)))
+(write-string "  input:   ") (show-expr let4) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let4)) (terpri)
+
+;; ── Test 22: Let feeding into if ─────────────────────────────────────
+;; (let ((x s0)) (if (dot tau x) 42 99))
+;; → x=s0, (dot tau s0)→TOP, (if TOP 42 99)→42
+
+(terpri)
+(write-string "--- (let ((x s0)) (if (dot tau x) 42 99)) → 42 ---")
+(terpri)
+(setq let5 (mk-let x-var s0 (mk-if (mk-dot TAU x-var) 42 99)))
+(write-string "  input:   ") (show-expr let5) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let5)) (terpri)
+
+;; ── Test 23: Nested let with counter arithmetic ─────────────────────
+;; (let ((a s0))
+;;   (let ((b (dot INC a)))
+;;     (let ((c (dot INC b)))
+;;       (dot INC c))))
+;; → a=s0, b=s1, c=s2, INC·s2=s3
+
+(terpri)
+(write-string "--- nested let: a=s0, b=INC(a), c=INC(b), INC(c) → s3 ---")
+(terpri)
+(setq a-var 'a)
+(setq b-var 'b)
+(setq c-var 'c)
+(setq let6 (mk-let a-var s0
+             (mk-let b-var (mk-dot INC a-var)
+               (mk-let c-var (mk-dot INC b-var)
+                 (mk-dot INC c-var)))))
+(write-string "  input:   ") (show-expr let6) (terpri)
+(write-string "  result:  ") (show-expr (fold-all let6)) (terpri)
