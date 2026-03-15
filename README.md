@@ -60,6 +60,15 @@ cd kamea-rs && cargo run --release -- run \                  # Rust reflective t
   examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
+### Compile to Native
+
+```bash
+python3 psi_supercompile.py examples/psi_counter_known.psi > /tmp/opt.psi
+python3 psi_transpile.py /tmp/opt.psi > /tmp/counter.c
+gcc -O2 -I. -o /tmp/counter /tmp/counter.c
+/tmp/counter                                               # native speed, zero table lookups
+```
+
 ---
 
 Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
@@ -131,6 +140,9 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 10. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 11. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
 12. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+13. [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
+14. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
+15. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
 
 ---
 
@@ -467,6 +479,64 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 
+## 5. Supercompiler and Compilation Pipeline
+
+The Cayley table is a specification. You don't have to interpret it at runtime — you can compile against it.
+
+`psi_supercompile.py` is a partial evaluator written in Ψ-Lisp itself. It walks a Ψ-Lisp expression and applies five optimization passes, each justified by algebraic properties of the table:
+
+| Pass | Rule | Justification |
+|------|------|---------------|
+| Constant folding | `(dot A B)` → table lookup when both atoms known | Cayley table is total |
+| QE cancellation | `E·(Q·x)` → `x`, `Q·(E·x)` → `x` | QE inverse axiom `[Lean]` |
+| Dead branch elimination | `(if ⊤ then else)` → `then` | Tester output determines branch |
+| Let propagation | `(let ((x KNOWN)) body)` → substitute and fold | Standard substitution |
+| Lambda inlining | `((λ (x) body) KNOWN)` → beta reduce and fold | Standard beta reduction |
+
+All five passes cascade: a let binding feeds a dot fold, which feeds a branch elimination, which eliminates dead code. For fully known inputs, the supercompiler resolves every operation at compile time — zero table lookups remain at runtime.
+
+`psi_transpile.py` takes supercompiled output and emits C. The translation is mechanical:
+
+| Ψ∗ pattern | C output |
+|------------|----------|
+| Known atom | `(uint8_t)N` — constant |
+| `(dot A x)`, A known | `psi_dot(A, x)` — one array lookup |
+| `(dot x y)`, both unknown | `psi_dot(x, y)` — one array lookup |
+| `(if test then else)` | ternary with `psi_dot(TAU, test)` |
+| `(let ((x val)) body)` | `{ uint8_t x = val; ... }` |
+| `(lambda (x) body)` | C function |
+
+The C runtime is the Cayley table as a 256-byte constant array and a one-line inline function. The entire Ψ runtime fits in `psi_runtime.h`.
+
+**End-to-end pipeline:**
+
+```bash
+python3 psi_supercompile.py program.psi > optimized.psi    # supercompile
+python3 psi_transpile.py optimized.psi > program.c          # emit C
+gcc -O2 -o program program.c                                # compile
+./program                                                    # native speed
+```
+
+Example: three counter increments from a known base.
+
+```
+Ψ-Lisp:         (let ((x s0)) (dot INC (dot INC (dot INC x))))
+Supercompiled:   11                          — 3 lets, 3 dots eliminated
+C output:        uint8_t result = 11;        — zero runtime lookups
+```
+
+With unknown inputs, the supercompiler leaves residual operations:
+
+```
+Ψ-Lisp:         (defun double-inc (x) (dot INC (dot INC x)))
+Supercompiled:   (lambda (x) (dot INC (dot INC x)))    — can't fold
+C output:        uint8_t double_inc(uint8_t x) {
+                     return psi_dot(13, psi_dot(13, x));
+                 }                           — two array lookups
+```
+
+Both cases verified: all 16 inputs produce identical results through the interpreter and the compiled C `[Empirical]`.
+
 ### Claim Matrix
 
 | Claim | Scope | Status | Evidence |
@@ -496,6 +566,9 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Recovery spell (pure Ψ-Lisp, IO-only) | specific model | `[Empirical]` | `examples/psi_recovery_spell.lisp` |
 | Recovery spell: 62-probe adaptive, 100% on 1M seeds | specific model | `[Empirical]` | `psi_blackbox.py --seeds 1000000` |
 | Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
+| Supercompiler: 5-pass partial evaluator (fold, QE, branch, let, lambda) | universal | `[Empirical]` | `psi_supercompile.py` — all optimizations algebraically justified |
+| C transpiler: supercompiled Ψ∗ → C with 256-byte runtime | specific model | `[Empirical]` | `psi_transpile.py` — verified against interpreter for all 16 inputs |
+| End-to-end compilation: Ψ-Lisp → supercompile → C → native binary | specific model | `[Empirical]` | Full pipeline tested on counter arithmetic and branching programs |
 
 Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
@@ -549,6 +622,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi_reflective_tower.lisp     # Three-level reflective tower + branch swap demo
 │   ├── psi_recovery_spell.lisp       # Black-box recovery as pure Ψ-Lisp
 │   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
+│   ├── psi_counter_known.psi          # Supercompiler test: known-base counter increments
+│   ├── psi_counter_free.psi           # Supercompiler test: free-variable counter
+│   ├── psi_branch_test.psi            # Supercompiler test: branch elimination
+│   ├── psi_fold_constants.lisp        # Supercompiler test: constant folding
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
@@ -561,9 +638,13 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
+│   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+├── psi_supercompile.py               # Partial evaluator: 5-pass supercompiler
+├── psi_transpile.py                  # Supercompiled Ψ∗ → C transpiler
+├── psi_runtime.h                     # C runtime: 256-byte Cayley table + inline dot
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── psi_repl.py                       # Interactive Ψ-Lisp REPL
 ├── CLAIMS.md                         # Claim status registry
@@ -581,6 +662,8 @@ uv run python psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective
 uv run python psi_repl.py                                     # interactive REPL
 uv run python examples/psi16_corrupted_host_demo.py           # TUI demo
 uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
+python3 psi_repl.py --algebraic                              # Q-chain number representation
+python3 psi_lisp.py --algebraic examples/psi_fibonacci.lisp  # verify: same results, algebraic encoding
 
 # Rust (requires rustup — https://rustup.rs)
 cd kamea-rs
