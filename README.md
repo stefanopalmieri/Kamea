@@ -263,7 +263,7 @@ cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
 # → open http://localhost:8080
 ```
 
-### The Reflective Tower
+### The Reflective Tower (Boba's Tower)
 
 **The defunctionalized CPS evaluator.** [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) is a CPS Lisp interpreter written in Ψ-Lisp — approximately 350 lines. Every evaluation step takes an explicit continuation `k`, but unlike a standard CPS interpreter, `k` is never a lambda. Every continuation is a **tagged data structure** — a cons-list with a tag symbol and captured values. This is Reynolds' (1972) definitional interpreters combined with Danvy & Nielsen's (2001) defunctionalization: the evaluator contains zero lambdas in its control flow. A dispatch function `apply-k` pattern-matches on 14 continuation types (`k-id`, `k-if`, `k-cond`, `k-let-body`, `k-let-bind`, `k-seq`, `k-apply-fn`, `k-do-apply`, `k-args-head`, `k-args-tail`, `k-reflect-state`, `k-reflect-jump`, `k-top-wrap`, `k-program-step`) and performs what each lambda would have done.
 
