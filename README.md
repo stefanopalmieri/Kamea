@@ -1,13 +1,12 @@
-<p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Albrecht_D%C3%BCrer_-_Melencolia_I_-_Google_Art_Project_%28_AGDdr3EHmNGyA%29.jpg/1280px-Albrecht_D%C3%BCrer_-_Melencolia_I_-_Google_Art_Project_%28_AGDdr3EHmNGyA%29.jpg" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
-</p>
-
 # Kamea
 
 **Seven axiom-forced elements. One Turing-complete term algebra. 130+ Lean theorems. Zero `sorry`.**
 
 *Seven algebraic elements, forced by axioms alone, are sufficient for Turing-complete self-describing computation — and the boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
 
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Albrecht_D%C3%BCrer_-_Melencolia_I_-_Google_Art_Project_%28_AGDdr3EHmNGyA%29.jpg/1280px-Albrecht_D%C3%BCrer_-_Melencolia_I_-_Google_Art_Project_%28_AGDdr3EHmNGyA%29.jpg" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
+</p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
 ## Quick Start
