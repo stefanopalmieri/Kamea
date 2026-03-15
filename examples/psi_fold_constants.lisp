@@ -45,6 +45,15 @@
     ((= idx  8) "s6")
     (T (atom-name idx))))
 
+(defun show-param-list (params)
+  "Print a list of parameter symbol IDs."
+  (if (null params) NIL
+    (progn
+      (display (car params))
+      (if (not (null (cdr params)))
+        (progn (write-string " ") (show-param-list (cdr params)))
+        NIL))))
+
 (defun show-expr (expr)
   "Print an expression tree with counter-state names."
   (if (null expr) (write-string "NIL")
@@ -77,6 +86,20 @@
               (write-string " ")
               (show-expr (car (cdr (car (car (cdr expr))))))
               (write-string ")) ")
+              (show-expr (car (cdr (cdr expr))))
+              (write-string ")")))
+          ((= head LAMBDA-TAG)
+            (progn
+              (write-string "(lam (")
+              (show-param-list (lambda-params expr))
+              (write-string ") ")
+              (show-expr (lambda-body expr))
+              (write-string ")")))
+          ((= head APP-TAG)
+            (progn
+              (write-string "(")
+              (show-expr (car (cdr expr)))
+              (write-string " ")
               (show-expr (car (cdr (cdr expr))))
               (write-string ")")))
           (T (progn
@@ -128,7 +151,9 @@
 ;;                   (BOT = falsy → Y, any other atom = truthy → X)
 
 (setq IF-TAG 'if)
-(setq LET-TAG 'xlet)  ;; 'let collides with base interpreter; use 'xlet as tag
+(setq LET-TAG 'xlet)    ;; 'let collides with base interpreter; use 'xlet as tag
+(setq LAMBDA-TAG 'xlam)  ;; lambda expression tag
+(setq APP-TAG 'xapp)     ;; explicit application tag: (xapp fn arg)
 (setq Q-IDX 6)   ;; Q = element 6
 (setq E-IDX 7)   ;; E = element 7
 
@@ -146,6 +171,15 @@
 ;; with val. Respects shadowing: if an inner let rebinds the same
 ;; variable, substitution stops at that scope boundary.
 
+(defun lambda-node? (expr)
+  "True if expr is a (xlam ...) node."
+  (if (null expr) NIL
+    (if (numberp expr) NIL
+      (= (car expr) LAMBDA-TAG))))
+
+(defun lambda-params (expr) (car (cdr expr)))
+(defun lambda-body (expr) (car (cdr (cdr expr))))
+
 (defun subst (var val expr)
   (cond
     ;; Leaf: if it equals var, replace
@@ -153,10 +187,10 @@
     ;; Other leaf (number, nil): unchanged
     ((leaf? expr) expr)
     ((null expr) expr)
-    ;; Compound: check for let that shadows
+    ;; Compound: check for binding forms that shadow
     (T (let ((head (car expr)))
          (cond
-           ;; (let ((v e)) body) — if v = var, only subst into e, not body
+           ;; (xlet ((v e)) body) — if v = var, only subst into e, not body
            ((= head LET-TAG)
              (let ((binding-var (car (car (car (cdr expr)))))
                    (binding-val (car (cdr (car (car (cdr expr))))))
@@ -170,9 +204,24 @@
                  (list LET-TAG
                        (list (list binding-var (subst var val binding-val)))
                        (subst var val body)))))
+           ;; (xlam (params) body) — if var is in params, don't subst body
+           ((= head LAMBDA-TAG)
+             (let ((params (lambda-params expr))
+                   (body   (lambda-body expr)))
+               (if (member-eq var params)
+                 ;; Shadowed by lambda parameter
+                 expr
+                 ;; Not shadowed: subst into body (params are just names)
+                 (list LAMBDA-TAG params (subst var val body)))))
            ;; Other compound: recurse into all elements
            (T (cons (subst var val (car expr))
                     (subst var val (cdr expr)))))))))
+
+(defun member-eq (x lst)
+  "True if x is = to any element of lst."
+  (if (null lst) NIL
+    (if (= x (car lst)) T
+      (member-eq x (cdr lst)))))
 
 (defun fold-all (expr)
   (if (leaf? expr) expr
@@ -237,6 +286,38 @@
                   (list LET-TAG
                         (list (list binding-var folded-val))
                         (fold-all body))))))
+
+          ;; (xlam (params) body) — fold the body
+          ((= head LAMBDA-TAG)
+            (let ((params (lambda-params expr))
+                  (body   (lambda-body expr)))
+              (list LAMBDA-TAG params (fold-all body))))
+
+          ;; (xapp fn arg) — explicit application
+          ((= head APP-TAG)
+            (let ((fn-expr (car (cdr expr)))
+                  (arg-expr (car (cdr (cdr expr)))))
+              (let ((fn (fold-all fn-expr))
+                    (arg (fold-all arg-expr)))
+                (if (lambda-node? fn)
+                  ;; Beta reduction: ((xlam (x) body) arg)
+                  (let ((params (lambda-params fn))
+                        (body   (lambda-body fn)))
+                    (if (null params)
+                      ;; No params — just fold body
+                      (fold-all body)
+                      (if (leaf? arg)
+                        ;; Arg is known: substitute first param, fold result
+                        (let ((substituted (subst (car params) arg body)))
+                          (if (null (cdr params))
+                            ;; Single param: fully applied
+                            (fold-all substituted)
+                            ;; Multiple params: partial application, return reduced lambda
+                            (fold-all (list LAMBDA-TAG (cdr params) substituted))))
+                        ;; Arg not fully reduced: keep application
+                        (list APP-TAG fn arg))))
+                  ;; fn is not a lambda: keep application
+                  (list APP-TAG fn arg)))))
 
           ;; anything else: return as-is
           (T expr))))))
@@ -568,3 +649,110 @@
                  (mk-dot INC c-var)))))
 (write-string "  input:   ") (show-expr let6) (terpri)
 (write-string "  result:  ") (show-expr (fold-all let6)) (terpri)
+
+;; ═════════════════════════════════════════════════════════════════════
+;; LAMBDA APPLICATION INLINING (BETA REDUCTION)
+;; ═════════════════════════════════════════════════════════════════════
+
+;; Constructors
+(defun mk-lam (params body) (list LAMBDA-TAG params body))
+(defun mk-app (fn arg) (list APP-TAG fn arg))
+
+(terpri)
+(write-string "=== Lambda Application Inlining ===")
+(terpri)
+
+;; ── Test 24: Basic lambda inlining ───────────────────────────────────
+;; ((lambda (x) (dot INC x)) s0) → x=s0 → INC·s0 → s1
+
+(terpri)
+(write-string "--- ((lam (x) (dot INC x)) s0) → s1 ---")
+(terpri)
+(setq lam1 (mk-app (mk-lam (list x-var) (mk-dot INC x-var)) s0))
+(write-string "  input:   ") (show-expr lam1) (terpri)
+(write-string "  result:  ") (show-expr (fold-all lam1)) (terpri)
+
+;; ── Test 25: Lambda with branch ──────────────────────────────────────
+;; ((lambda (x) (if (dot tau x) 42 99)) s0)
+;; → x=s0, tau·s0→TOP, if TOP→42
+
+(terpri)
+(write-string "--- ((lam (x) (if (dot tau x) 42 99)) s0) → 42 ---")
+(terpri)
+(setq lam2 (mk-app (mk-lam (list x-var) (mk-if (mk-dot TAU x-var) 42 99)) s0))
+(write-string "  input:   ") (show-expr lam2) (terpri)
+(write-string "  result:  ") (show-expr (fold-all lam2)) (terpri)
+
+;; ── Test 26: Lambda with multiple uses of variable ───────────────────
+;; ((lambda (x) (dot x x)) s0) → dot(s0, s0)
+
+(terpri)
+(write-string "--- ((lam (x) (dot x x)) s0) → dot(s0,s0) ---")
+(terpri)
+(setq lam3 (mk-app (mk-lam (list x-var) (mk-dot x-var x-var)) s0))
+(write-string "  input:   ") (show-expr lam3) (terpri)
+(setq lam3-result (fold-all lam3))
+(write-string "  result:  ") (show-expr lam3-result) (terpri)
+(write-string "  verify:  dot(s0,s0) = TABLE[12][12] = ")
+(show-expr (dot s0 s0)) (terpri)
+
+;; ── Test 27: Nested lambda ───────────────────────────────────────────
+;; ((lambda (x) ((lambda (y) (dot x y)) s1)) s0)
+;; → outer: x=s0, inner: y=s1, dot(s0,s1)
+
+(terpri)
+(write-string "--- nested: ((lam (x) ((lam (y) (dot x y)) s1)) s0) ---")
+(terpri)
+(setq lam4 (mk-app
+  (mk-lam (list x-var)
+    (mk-app (mk-lam (list y-var) (mk-dot x-var y-var)) s1))
+  s0))
+(write-string "  input:   ") (show-expr lam4) (terpri)
+(setq lam4-result (fold-all lam4))
+(write-string "  result:  ") (show-expr lam4-result) (terpri)
+(write-string "  verify:  dot(s0,s1) = TABLE[12][14] = ")
+(show-expr (dot s0 s1)) (terpri)
+
+;; ── Test 28: Lambda where argument needs folding ─────────────────────
+;; ((lambda (x) (dot INC x)) (dot INC s0))
+;; → fold arg: INC·s0→s1, then x=s1, INC·s1→s2
+
+(terpri)
+(write-string "--- ((lam (x) (dot INC x)) (dot INC s0)) → s2 ---")
+(terpri)
+(setq lam5 (mk-app (mk-lam (list x-var) (mk-dot INC x-var)) (mk-dot INC s0)))
+(write-string "  input:   ") (show-expr lam5) (terpri)
+(write-string "  result:  ") (show-expr (fold-all lam5)) (terpri)
+
+;; ── Test 29: Partial application (curried) ───────────────────────────
+;; ((lambda (x) (lambda (y) (dot x y))) s0)
+;; → x=s0, result is (lambda (y) (dot s0 y)) — specialized function
+
+(terpri)
+(write-string "--- partial: ((lam (x) (lam (y) (dot x y))) s0) ---")
+(terpri)
+(setq lam6 (mk-app
+  (mk-lam (list x-var) (mk-lam (list y-var) (mk-dot x-var y-var)))
+  s0))
+(write-string "  input:   ") (show-expr lam6) (terpri)
+(write-string "  result:  ") (show-expr (fold-all lam6)) (terpri)
+(write-string "  (specialized: x=s0 fixed, y still free)")
+(terpri)
+
+;; ── Test 30: Full curried application ────────────────────────────────
+;; (((lambda (x) (lambda (y) (dot x y))) s0) s1)
+;; → x=s0, then y=s1, dot(s0,s1)
+
+(terpri)
+(write-string "--- full curried: (((lam (x) (lam (y) (dot x y))) s0) s1) ---")
+(terpri)
+(setq lam7 (mk-app
+  (mk-app
+    (mk-lam (list x-var) (mk-lam (list y-var) (mk-dot x-var y-var)))
+    s0)
+  s1))
+(write-string "  input:   ") (show-expr lam7) (terpri)
+(setq lam7-result (fold-all lam7))
+(write-string "  result:  ") (show-expr lam7-result) (terpri)
+(write-string "  verify:  dot(s0,s1) = TABLE[12][14] = ")
+(show-expr (dot s0 s1)) (terpri)
