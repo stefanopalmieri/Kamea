@@ -1,0 +1,4 @@
+; Test 2: Free variable — double-increment
+; Can't fold because input is unknown. Emits runtime table lookups.
+(defun double-inc x (dot INC (dot INC x)))
+(main (app double-inc input))

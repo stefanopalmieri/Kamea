@@ -1,0 +1,8 @@
+; Test 1: Fully known — counter chain
+; s0 →INC→ s1 →INC→ s2 →INC→ s3
+; Should fold to a single constant at compile time.
+(main
+  (let x s0
+    (let a (dot INC x)
+      (let b (dot INC a)
+        (dot INC b)))))

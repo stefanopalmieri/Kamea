@@ -1,0 +1,7 @@
+; Test 3: Branch on free variable — runtime conditional
+; Can't fold because input is unknown. Emits runtime branch.
+(defun classify x
+  (if (dot TAU x)
+    (dot INC x)
+    (dot DEC x)))
+(main (app classify input))
