@@ -19,7 +19,7 @@ python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower
 ```
 
 ```
-=== PSI REFLECTIVE TOWER (Meta-Circular CPS) ===
+=== PSI REFLECTIVE TOWER (Defunctionalized CPS) ===
 Layer 3: User programs (fib, fact)
 Layer 2: CPS meta-circular evaluator (psi_metacircular.lisp)
 Layer 1: Base evaluator (psi_lisp.py)
@@ -31,19 +31,27 @@ Defining fact and computing fact(10)... 3628800
 
 --- Level 1: Ground Verification (Cayley table probes) ---
 Absorber laws (TOP/BOT): ALL HOLD
-Tester boolean output: ALL HOLD
-QE round-trip: ALL HOLD
-Idempotents (only absorbers): ALL HOLD
 Table health: ALL INVARIANTS HOLD
 
---- Level 2: Reification (CPS continuation capture) ---
-Reify + reflect (expect 99): 99
-Reify + reflect + compute (expect 92): 92
+--- Level 2b: Continuation Chain Inspection ---
+Reify inside (let ((x (reify))) x):
+  Chain depth: 3
+  Frame 0 tag = k-let-bind? YES
+  Frame 1 tag = k-let-body? YES
+  Frame 2 tag = k-id? YES
 
-=== THREE LEVELS. ONE ALGEBRA. ONE TABLE. ===
+--- Level 2c: Continuation Modification (rewriting the future) ---
+K-IF BRANCH SWAP — the definitive 3-Lisp demo:
+  Without modification: (if 1 42 99) → 42
+  With branch swap: (if 1 42 99) → 99
+  CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A CPS meta-circular evaluator — Ψ-Lisp interpreting itself — computes fibonacci through explicit continuations, verifies the Cayley table it runs on, then reifies its own continuation and reflects back with a modified value. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
+A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose seven primitive roles are axiom-forced and provably sufficient for Turing completeness.
+
+Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
+
+The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpreting itself with inspectable continuations — computes fibonacci, verifies the Cayley table it runs on, then reifies its own continuation as walkable data, navigates to a pending `k-if` frame, swaps the then/else branches, reflects, and takes the opposite branch from what the source code says. The program rewrites its own future. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
 
 ```bash
 python3 psi_repl.py                                        # interactive REPL
@@ -79,7 +87,7 @@ Any system that can inspect and modify its own components needs a representation
 
 The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can the language that emerges from this table interpret itself — can a program written in it verify the table, capture its own continuation, and modify its own future, all within the same algebra?
 
-The answer is yes, and it fits in a 16×16 table. A 300-line CPS meta-circular evaluator runs fibonacci through a Lisp written in itself, after verifying the 256-byte table it runs on.
+The answer is yes, and it fits in a 16×16 table. A 350-line defunctionalized CPS meta-circular evaluator runs fibonacci through a Lisp written in itself, after verifying the 256-byte table it runs on — and a program running inside it can inspect its own continuation chain, swap the branches of a pending `if`, and take the opposite path from what the source code says.
 
 The primary contribution is methodological: a demonstration that axiom-driven SAT search combined with Lean verification can systematically explore the space of self-describing finite structures, producing both universal theorems about the axiom class and specific verified models. The specific algebra Ψ₁₆ᶠ is one output of this methodology. The universal theorems — forced rigidity, actuality irreducibility, separation of judgment and synthesis — are the more durable results. Whether these properties translate to practical self-verifying systems is an open question.
 
@@ -92,9 +100,11 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - No right identity in any model satisfying role axioms L0–L3 `[Lean]`
 - Card ≥ 4 from role axioms (tight: 4-element countermodel exists) `[Lean]`
 - Tester cells are completely free across all tested sizes `[SAT]`
-- CPS meta-circular evaluator: Ψ-Lisp interpreting Ψ-Lisp with explicit continuations, handles arithmetic, conditionals, lambda, let, defun, cond, progn, recursive closures `[Empirical]`
-- Reify captures continuation + environment as first-class Ψ-Lisp value; reflect installs modified state `[Empirical]`
-- 3-level reflective tower: compute → verify ground → reify/reflect via CPS `[Empirical]`
+- Defunctionalized CPS meta-circular evaluator: Ψ-Lisp interpreting Ψ-Lisp with inspectable tagged continuations (14 continuation types, zero lambdas in control flow), handles arithmetic, conditionals, lambda, let, defun, cond, progn, recursive closures `[Empirical]`
+- Reify captures continuation (tagged data structure) + environment as first-class inspectable Ψ-Lisp value; reflect installs modified state including modified continuations `[Empirical]`
+- Continuation chain walkable as data: `k-walk`, `k-depth`, `k-next`, `describe-continuation` `[Empirical]`
+- K-IF branch swap: program reifies, navigates to k-if frame, swaps then/else branches, reflects — if takes opposite branch from source code `[Empirical]`
+- 3-level reflective tower: compute → verify ground → inspect/modify continuations → branch swap `[Empirical]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
@@ -109,8 +119,8 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 ### How to Read This Repo
 
 1. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
-2. [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — CPS meta-circular evaluator: Ψ-Lisp interpreting Ψ-Lisp with explicit continuations
-3. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower demo (compute → verify table → reify/reflect)
+2. [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator with inspectable continuations
+3. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap
 4. [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp (the "spell" cast by the wizard)
 5. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another using the spell
 6. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
@@ -254,9 +264,18 @@ cd kamea-rs/crates/psi-web && python3 -m http.server 8080 --directory www
 
 ### The Reflective Tower
 
-**The meta-circular evaluator.** [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) is a CPS Lisp interpreter written in Ψ-Lisp — approximately 300 lines. Every evaluation step takes an explicit continuation `k`: a lambda that receives the result. The evaluator is a state machine `(expr, env, k) → (expr', env', k')`. This follows Reynolds' definitional interpreters (1972) and connects to the Scheme-79 chip insight: a CPS interpreter is a state machine that can be implemented in hardware. It handles arithmetic, conditionals, lambda, let, defun, cond, progn, and recursive closures.
+**The defunctionalized CPS evaluator.** [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) is a CPS Lisp interpreter written in Ψ-Lisp — approximately 350 lines. Every evaluation step takes an explicit continuation `k`, but unlike a standard CPS interpreter, `k` is never a lambda. Every continuation is a **tagged data structure** — a cons-list with a tag symbol and captured values. This is Reynolds' (1972) definitional interpreters combined with Danvy & Nielsen's (2001) defunctionalization: the evaluator contains zero lambdas in its control flow. A dispatch function `apply-k` pattern-matches on 14 continuation types (`k-id`, `k-if`, `k-cond`, `k-let-body`, `k-let-bind`, `k-seq`, `k-apply-fn`, `k-do-apply`, `k-args-head`, `k-args-tail`, `k-reflect-state`, `k-reflect-jump`, `k-top-wrap`, `k-program-step`) and performs what each lambda would have done.
 
-**Reify and reflect.** These are cases in `meval`, not builtins. `(reify)` packages the current continuation `k` and environment as a Lisp data structure — the program receives its own future as data. `(reflect state value)` extracts a saved continuation from a reified state and jumps to it, abandoning the current future. The program can modify the environment between reify and reflect, altering its own evaluation from the meta-level. This is Brian Cantwell Smith's 3-Lisp (1984) architecture: `shift-up` and `shift-down` on a grounded algebraic substrate.
+**Inspectable continuations.** Because continuations are data, the program can examine them with `car`/`cdr`/`nth`:
+
+- `(k-walk k)` — returns the chain of tags from a continuation to `k-id` (e.g., `(k-let-bind k-let-body k-id)`)
+- `(k-depth k)` — counts frames in the continuation chain
+- `(k-next k)` — follows the chain to the next frame
+- `(describe-continuation k)` — human-readable description of what `k` will do next
+
+This is the architecture of Smith's 3-Lisp (1984): reified state is fully inspectable, not an opaque closure. The program can walk the continuation chain, see what computation is pending, modify any of it, and reflect into an altered future.
+
+**Reify and reflect.** These are cases in `meval`, not builtins. `(reify)` packages the current continuation `k` (a tagged data structure) and environment (a cons-list alist) as a Lisp value — the program receives its own future as inspectable data. `(reflect state value)` extracts a (possibly modified) continuation from a reified state and jumps to it, abandoning the current future. The program can inspect and rewrite the continuation between reify and reflect — not just the environment, but the control flow itself.
 
 **The grounded tower.** Unlike 3-Lisp's infinite tower of interpreters resting on nothing, this tower terminates at the Cayley table. The demo ([`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp)) runs three levels in a single program:
 
@@ -269,11 +288,11 @@ Layer 0: Cayley table (256 bytes, verified by Level 1)
 
 - **Level 0: Computation.** The meta-circular evaluator interprets fibonacci and factorial — Ψ-Lisp running inside Ψ-Lisp through explicit continuations. Each evaluation step is a continuation-passing call built from the seven axiom-forced atoms.
 - **Level 1: Ground verification.** The program shifts up and probes the Cayley table directly, checking algebraic invariants: absorber laws (`⊤·x = ⊤`), tester boolean output (`τ·x ∈ {⊤,⊥}`), QE round-trips (`E·(Q·x) = x`), idempotent classification. These are actual table lookups via the `dot` builtin — if any cell were wrong, the check would fail.
-- **Level 2: Reification.** The program shifts up again and reifies the evaluator's continuation via CPS. `(reify)` captures the current continuation and environment as a first-class value. `(reflect state value)` installs a saved continuation with a new value, abandoning the current future. The demo verifies: reify + reflect produces 99, reify + reflect + compute produces 92.
+- **Level 2: Inspectable reification.** The program reifies its evaluator state via CPS. `(reify)` captures the continuation as a tagged data structure and the environment as an alist — both fully inspectable with `car`/`cdr`. The demo verifies: reify + reflect produces 99, reify + reflect + compute produces 92.
+- **Level 2b: Continuation chain inspection.** The program walks the continuation chain as a linked list of frames. Inside `(let ((x (reify))) x)`, the chain is `k-let-bind → k-let-body → k-id` — three frames, each verified by tag comparison.
+- **Level 2c: Continuation modification — the branch swap.** The definitive 3-Lisp demo. A program reifies inside the test position of an `(if TEST 42 99)`. It navigates the continuation chain (`k-let-bind → k-let-body → k-if`), finds the `k-if` frame, swaps the then/else branches, rebuilds the chain, and reflects. The if receives `1` (truthy) as the test value — which would normally select the then-branch (42) — but because the branches were swapped in the continuation, it returns 99 instead. **The program rewrote its own control flow from the meta-level.**
 
 Level 1 verifies the table before Level 2 trusts the evaluator. There is nothing beneath the table to worry about — it IS the algebra, not an implementation of it.
-
-**Scope and limitations.** The reification captures the continuation and environment, but the continuation is opaque at the Ψ-Lisp level — it is a host-level lambda, not a defunctionalized Ψ∗ data structure. The environment is fully inspectable (it's a cons-list alist), but the continuation cannot be pattern-matched or structurally decomposed. Full continuation inspection would require defunctionalization: representing each continuation variant as a Ψ∗ term. This is a concrete engineering step, not a theoretical barrier `[Open]`.
 
 ### The Recovery Spell
 
@@ -462,9 +481,11 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 | Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
 | TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
-| CPS meta-circular evaluator correct on test suite | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
-| Reify/reflect via CPS continuation capture | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — reify + reflect produces expected values |
-| Reflective tower (3-level demonstration) | specific model | `[Empirical]` | `examples/psi_reflective_tower.lisp` |
+| Defunctionalized CPS evaluator (14 continuation types, zero lambdas) | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
+| Inspectable continuations: k-walk, k-depth, k-next, describe-continuation | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — chain tags verified by comparison |
+| Reify/reflect with continuation modification | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — reify + reflect, value injection, branch swap |
+| K-IF branch swap: program rewrites own control flow | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — `(if 1 42 99)` → 99 after swap |
+| Reflective tower (3-level + continuation inspection/modification) | specific model | `[Empirical]` | `examples/psi_reflective_tower.lisp` |
 | Recovery spell (pure Ψ-Lisp, IO-only) | specific model | `[Empirical]` | `examples/psi_recovery_spell.lisp` |
 | Recovery spell: 62-probe adaptive, 100% on 1M seeds | specific model | `[Empirical]` | `psi_blackbox.py --seeds 1000000` |
 | Symmetric impossibility (general) | universal | `[Open]` | demonstrated, not proved |
@@ -517,8 +538,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi16_bijection_designer.py   # Interactive bijection designer for wiz2 sprite
 │   ├── psi16_wizard_sprites.py       # Sprite rendering utilities
 │   ├── wiz2.json                     # Hand-designed bijective sprite mapping
-│   ├── psi_metacircular.lisp         # CPS meta-circular evaluator (~300 lines)
-│   ├── psi_reflective_tower.lisp     # Three-level reflective tower demo
+│   ├── psi_metacircular.lisp         # Defunctionalized CPS evaluator (~350 lines, 14 continuation types)
+│   ├── psi_reflective_tower.lisp     # Three-level reflective tower + branch swap demo
 │   ├── psi_recovery_spell.lisp       # Black-box recovery as pure Ψ-Lisp
 │   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
