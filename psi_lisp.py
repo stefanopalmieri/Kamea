@@ -51,13 +51,13 @@ _VOID = object()
 # ═══════════════════════════════════════════════════════════════════════
 
 def encode_int(n: int) -> Term:
-    """Encode integer n as (n+1) Q layers around ⊤.
+    """Encode integer n as Q layers around ⊤.
 
-    0 = App(Q, ⊤), 1 = App(Q, App(Q, ⊤)), etc.
-    Numbers and NIL (⊥) are structurally distinct.
+    Normal mode: (n+1) layers. 0 = App(Q, ⊤). Numbers and NIL distinct.
+    Algebraic mode: n layers. 0 = ⊤. The term algebra's native encoding.
     """
     t: Term = TOP
-    for _ in range(n + 1):
+    for _ in range(n + (0 if ALGEBRAIC else 1)):
         t = App(Q, t)
     return t
 
@@ -65,15 +65,17 @@ def encode_int(n: int) -> Term:
 def decode_int(t: Term) -> int | None:
     """Decode a Ψ∗ term as an integer. None if not a number.
 
-    Counts Q layers, verifies core is ⊤, returns count - 1.
+    Normal mode: counts Q layers, requires ≥ 1, returns count - 1.
+    Algebraic mode: counts Q layers, 0 = ⊤ (zero layers), returns count.
     """
     count = 0
     while isinstance(t, App) and t.fun == Q:
         count += 1
         t = t.arg
-    if t == TOP and count >= 1:
-        return count - 1
-    return None
+    if ALGEBRAIC:
+        return count if t == TOP else None
+    else:
+        return count - 1 if t == TOP and count >= 1 else None
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -209,27 +211,39 @@ class Function:
 # Display: Ψ∗ Term → Lisp-readable string
 # ═══════════════════════════════════════════════════════════════════════
 
+def _algebraic_int_display(n: int) -> str:
+    """Format a number in algebraic mode: Q·(Q·(⊤)) [= 2]."""
+    if n == 0:
+        return "⊤ [= 0]"
+    s = "⊤"
+    for i in range(n):
+        s = f"Q·{s}" if i == 0 else f"Q·({s})"
+    return f"{s} [= {n}]"
+
+
 def display(t: Term) -> str:
     """Convert Ψ∗ term to Lisp-readable string.
 
     Three distinct base values:
       ⊥ (BOT)  → NIL
-      ⊤ (TOP)  → T
+      ⊤ (TOP)  → T (normal) or ⊤ [= 0] (algebraic)
       Q-chain rooted at ⊤ → integer
     """
     if t == BOT:
         return "NIL"
-    if t == TOP:
+    if not ALGEBRAIC and t == TOP:
         return "T"
+    # Check for integer (Q-chain rooted at ⊤) — before list check
+    n = decode_int(t)
+    if n is not None:
+        if ALGEBRAIC:
+            return _algebraic_int_display(n)
+        return str(n)
     # Check for list (g-pairs terminating at ⊥)
     if is_proper_list(t) and is_pair_term(t):
         return "(" + " ".join(display(e) for e in list_elements(t)) + ")"
     if is_pair_term(t):
         return f"({display(fst(t))} . {display(snd(t))})"
-    # Check for integer (Q-chain rooted at ⊤)
-    n = decode_int(t)
-    if n is not None:
-        return str(n)
     if isinstance(t, int):
         return NAMES.get(t, str(t))
     return term_str(t)
@@ -241,6 +255,7 @@ def display(t: Term) -> str:
 
 SHOW_TERM = False
 TRACE = False
+ALGEBRAIC = False
 
 
 def eval_term(t: Term) -> Term:
@@ -572,7 +587,10 @@ def _builtin_null(a):
 
 
 def _builtin_zerop(a):
-    """ZEROP — T if a is 0 = App(Q, ⊤), else NIL."""
+    """ZEROP — T if a is 0.
+
+    Normal: 0 = App(Q, ⊤). Algebraic: 0 = ⊤.
+    """
     return TOP if a == encode_int(0) else BOT
 
 
@@ -739,9 +757,13 @@ def run_file(path: str, env: dict | None = None) -> list:
 def repl():
     """Interactive REPL."""
     env = builtin_env()
-    print("Ψ∗ Mini-Lisp — type expressions, Ctrl-D to exit")
-    print("  T = ⊤ (true), NIL = ⊥ (false/empty list)")
-    print("  Integers = Q-chains rooted at ⊤. Only NIL is falsy.")
+    if ALGEBRAIC:
+        print("Ψ∗ Mini-Lisp [algebraic mode] — type expressions, Ctrl-D to exit")
+        print("  0 = ⊤, n = n Q layers around ⊤. NIL = ⊥ (only falsy value).")
+    else:
+        print("Ψ∗ Mini-Lisp — type expressions, Ctrl-D to exit")
+        print("  T = ⊤ (true), NIL = ⊥ (false/empty list)")
+        print("  Integers = Q-chains rooted at ⊤. Only NIL is falsy.")
     print()
 
     while True:
@@ -776,7 +798,7 @@ def repl():
 # ═══════════════════════════════════════════════════════════════════════
 
 def main():
-    global SHOW_TERM, TRACE
+    global SHOW_TERM, TRACE, ALGEBRAIC
 
     # CPS meta-circular evaluator needs deep recursion
     sys.setrecursionlimit(50000)
@@ -789,6 +811,8 @@ def main():
             SHOW_TERM = True
         elif a == "--trace":
             TRACE = True
+        elif a == "--algebraic":
+            ALGEBRAIC = True
         elif a.startswith("-"):
             print(f"unknown flag: {a}", file=sys.stderr)
             sys.exit(1)

@@ -35,12 +35,14 @@
 ;; ── Display ──────────────────────────────────────────────────────────
 
 (defun counter-name (idx)
-  "Map atom index to counter-state name for readable output."
+  "Map atom index to readable name. Prefer role names for Q, E, tau."
   (cond
-    ((= idx 12) "s0") ((= idx 14) "s1") ((= idx  6) "s2")
-    ((= idx 11) "s3") ((= idx 10) "s4") ((= idx 15) "s5")
-    ((= idx  8) "s6") ((= idx  7) "s7") ((= idx 13) "INC")
-    ((= idx  0) "TOP") ((= idx 1) "BOT")
+    ((= idx  6) "Q")   ((= idx  7) "E")   ((= idx  3) "tau")
+    ((= idx 13) "INC") ((= idx 15) "DEC")
+    ((= idx  0) "TOP") ((= idx  1) "BOT")
+    ((= idx 12) "s0")  ((= idx 14) "s1")
+    ((= idx 11) "s3")  ((= idx 10) "s4")
+    ((= idx  8) "s6")
     (T (atom-name idx))))
 
 (defun show-expr (expr)
@@ -111,25 +113,56 @@
 ;;
 ;; Handles:
 ;;   (dot A B)     — Cayley table lookup when both A, B are known atoms
+;;   (dot E (dot Q x)) → x   — QE cancellation (Lean-proved inverse law)
+;;   (dot Q (dot E x)) → x   — EQ cancellation (Lean-proved inverse law)
 ;;   (if T X Y)    — dead branch elimination when test is a known atom
 ;;                   (BOT = falsy → Y, any other atom = truthy → X)
 
 (setq IF-TAG 'if)
+(setq Q-IDX 6)   ;; Q = element 6
+(setq E-IDX 7)   ;; E = element 7
+
+(defun dot-node? (expr)
+  "True if expr is a (dot ...) node."
+  (if (null expr) NIL
+    (if (numberp expr) NIL
+      (= (car expr) DOT-TAG))))
+
+(defun dot-arg1 (expr) (car (cdr expr)))
+(defun dot-arg2 (expr) (car (cdr (cdr expr))))
 
 (defun fold-all (expr)
-  (if (atom-idx? expr) expr
+  (if (leaf? expr) expr
     (if (null expr) expr
       (let ((head (car expr)))
         (cond
-          ;; (dot A B) — constant fold via Cayley table
+          ;; (dot A B) — constant fold, with QE cancellation
           ((= head DOT-TAG)
-            (let ((a (fold-all (car (cdr expr))))
-                  (b (fold-all (car (cdr (cdr expr))))))
-              (if (atom-idx? a)
-                (if (atom-idx? b)
-                  (dot a b)
-                  (list DOT-TAG a b))
-                (list DOT-TAG a b))))
+            (let ((a-expr (car (cdr expr)))
+                  (b-expr (car (cdr (cdr expr)))))
+              ;; Fold the left operand first
+              (let ((a (fold-all a-expr)))
+                ;; QE cancellation checked on RAW b (before folding would
+                ;; resolve the inner dot via the Cayley table). This is a
+                ;; term algebra law: E·(Q·x) = x, Q·(E·x) = x.
+                (cond
+                  ;; E·(Q·x) → x
+                  ((if (= a E-IDX) (if (dot-node? b-expr) (= (dot-arg1 b-expr) Q-IDX) NIL) NIL)
+                    (fold-all (dot-arg2 b-expr)))
+                  ;; Q·(E·x) → x
+                  ((if (= a Q-IDX) (if (dot-node? b-expr) (= (dot-arg1 b-expr) E-IDX) NIL) NIL)
+                    (fold-all (dot-arg2 b-expr)))
+                  ;; No QE pattern — fold b normally, then try table lookup
+                  (T (let ((b (fold-all b-expr)))
+                       (cond
+                         ((if (atom-idx? a) (atom-idx? b) NIL)
+                           (dot a b))
+                         ;; Post-fold QE check (b might have become a dot-node)
+                         ((if (= a E-IDX) (if (dot-node? b) (= (dot-arg1 b) Q-IDX) NIL) NIL)
+                           (dot-arg2 b))
+                         ((if (= a Q-IDX) (if (dot-node? b) (= (dot-arg1 b) E-IDX) NIL) NIL)
+                           (dot-arg2 b))
+                         (T (list DOT-TAG a b)))))))))
 
           ;; (if test then else) — dead branch elimination
           ((= head IF-TAG)
@@ -318,3 +351,67 @@
 (write-string "--- Step-by-step: (if (dot tau (dot INC s0)) 42 99) ---")
 (terpri)
 (setq _ (fold-show expr10 0))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; QE CANCELLATION
+;; ═════════════════════════════════════════════════════════════════════
+
+(terpri)
+(write-string "=== QE Cancellation (Lean-proved inverse laws) ===")
+(terpri)
+
+(setq QQ 6)  ;; Q = element 6
+(setq EE 7)  ;; E = element 7
+
+;; ── Test 13: E·(Q·x) → x ────────────────────────────────────────────
+
+(terpri)
+(write-string "--- (dot E (dot Q s0)) → s0 ---")
+(terpri)
+(setq qe1 (mk-dot EE (mk-dot QQ s0)))
+(write-string "  input:   ") (show-expr qe1) (terpri)
+(write-string "  result:  ") (show-expr (fold-all qe1)) (terpri)
+
+;; ── Test 14: Q·(E·x) → x ────────────────────────────────────────────
+
+(terpri)
+(write-string "--- (dot Q (dot E s0)) → s0 ---")
+(terpri)
+(setq qe2 (mk-dot QQ (mk-dot EE s0)))
+(write-string "  input:   ") (show-expr qe2) (terpri)
+(write-string "  result:  ") (show-expr (fold-all qe2)) (terpri)
+
+;; ── Test 15: QE inside larger expression ─────────────────────────────
+;; (dot INC (dot E (dot Q s0))) → (dot INC s0) → s1
+
+(terpri)
+(write-string "--- (dot INC (dot E (dot Q s0))) → s1 ---")
+(terpri)
+(setq qe3 (mk-dot INC (mk-dot EE (mk-dot QQ s0))))
+(write-string "  input:   ") (show-expr qe3) (terpri)
+(write-string "  result:  ") (show-expr (fold-all qe3)) (terpri)
+
+;; ── Test 16: Nested QE cancellation ──────────────────────────────────
+;; (dot E (dot Q (dot E (dot Q s0)))) → s0
+
+(terpri)
+(write-string "--- (dot E (dot Q (dot E (dot Q s0)))) → s0 ---")
+(terpri)
+(setq qe4 (mk-dot EE (mk-dot QQ (mk-dot EE (mk-dot QQ s0)))))
+(write-string "  input:   ") (show-expr qe4) (terpri)
+(write-string "  result:  ") (show-expr (fold-all qe4)) (terpri)
+
+;; ── Test 17: QE with compound argument ───────────────────────────────
+;; (dot E (dot Q (dot INC s0)))
+;; QE cancellation fires on raw structure: E·(Q·x) → x where x = (dot INC s0).
+;; Then INC·s0 folds to s1 via table.
+;; Result: s1.
+
+(terpri)
+(write-string "--- (dot E (dot Q (dot INC s0))) → s1 ---")
+(terpri)
+(write-string "  QE cancels E·(Q·x) → x, then INC·s0 → s1 via table")
+(terpri)
+(setq qe5 (mk-dot EE (mk-dot QQ (mk-dot INC s0))))
+(write-string "  input:   ") (show-expr qe5) (terpri)
+(write-string "  result:  ") (show-expr (fold-all qe5)) (terpri)

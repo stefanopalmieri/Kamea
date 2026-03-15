@@ -421,7 +421,10 @@ def eval_string(text: str) -> Any:
 
 def repl():
     """Interactive REPL loop."""
-    print("Ψ₁₆ᶠ / Ψ∗ REPL  (type Ctrl-D to exit)")
+    if ALGEBRAIC:
+        print("Ψ₁₆ᶠ / Ψ∗ REPL [algebraic mode]  (type Ctrl-D to exit)")
+    else:
+        print("Ψ₁₆ᶠ / Ψ∗ REPL  (type Ctrl-D to exit)")
     print(f"  Atoms: {', '.join(':' + k for k in KEYWORD_MAP)}")
     print(f"  Forms: def, do, print, table, dot, nat, pair, fst, snd, succ, pred, to-nat")
     print()
@@ -441,7 +444,11 @@ def repl():
             for expr in exprs:
                 result = psi_repl_eval(expr)
             if result is not None:
-                print(format_val(result))
+                if ALGEBRAIC:
+                    ad = _algebraic_nat_display(result)
+                    print(ad if ad else format_val(result))
+                else:
+                    print(format_val(result))
         except Exception as exc:
             print(f"error: {exc}")
 
@@ -449,16 +456,40 @@ def repl():
 # Main
 # ============================================================
 
+ALGEBRAIC = False
+
+
+def _algebraic_nat_display(t) -> str | None:
+    """If t is a nat (Q-chain rooted at ⊤), format as Q·(Q·(⊤)) [= 2]."""
+    n = to_nat(t)
+    if n is None:
+        return None
+    if n == 0:
+        return "⊤ [= 0]"
+    s = "⊤"
+    for i in range(n):
+        s = f"Q·{s}" if i == 0 else f"Q·({s})"
+    return f"{s} [= {n}]"
+
+
 def main():
+    global ALGEBRAIC
     import argparse
     ap = argparse.ArgumentParser(description="Ψ₁₆ᶠ / Ψ∗ REPL")
     ap.add_argument("-e", "--eval", type=str, help="Evaluate expression and exit")
+    ap.add_argument("--algebraic", action="store_true", help="Show Q-chain representations")
     args = ap.parse_args()
+
+    ALGEBRAIC = args.algebraic
 
     if args.eval:
         try:
             result = eval_string(args.eval)
-            print(format_val(result))
+            if ALGEBRAIC:
+                ad = _algebraic_nat_display(result)
+                print(ad if ad else format_val(result))
+            else:
+                print(format_val(result))
         except Exception as exc:
             print(f"error: {exc}", file=sys.stderr)
             sys.exit(1)
