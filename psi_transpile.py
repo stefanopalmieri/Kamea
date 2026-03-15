@@ -1,63 +1,28 @@
 #!/usr/bin/env python3
 """
-Ψ∗ → C transpiler.
+Ψ-Lisp → C transpiler.
 
-Reads a .psi intermediate representation (output of psi_supercompile.py)
-and emits C code that uses psi_runtime.h for Cayley table lookups.
+Reads Ψ-Lisp source (.lisp) or .psi IR and emits C code using psi_runtime.h.
+
+Handles: defun (recursive, multi-arg), nested defun (lifted), arithmetic,
+if/cond, let, progn, cons/car/cdr/null/list, print/display/terpri/write-string,
+and/or/not, lambda in direct application, setq, quote.
+
+Does NOT handle: closures (lambda as value), higher-order functions (passing
+functions as arguments), function values in setq. These require a closure
+representation that C doesn't natively support.
 
 Usage:
-  python3 psi_transpile.py input.psi > output.c
+  python3 psi_transpile.py program.lisp > program.c
+  gcc -O2 -I. -o program program.c
 """
 
 import sys
+import re
 
 # ═══════════════════════════════════════════════════════════════════════
-# Same IR and parser as psi_supercompile.py
+# S-expression parser (handles both .lisp and .psi)
 # ═══════════════════════════════════════════════════════════════════════
-
-ATOM_NAMES = {
-    'TOP': 0, 'BOT': 1, 'f': 2, 'TAU': 3, 'g': 4, 'SEQ': 5,
-    'Q': 6, 'E': 7, 'RHO': 8, 'ETA': 9, 'Y': 10, 'PAIR': 11,
-    's0': 12, 'INC': 13, 'GET': 14, 'DEC': 15,
-    's1': 14, 's2': 6, 's3': 11, 's4': 10, 's5': 15, 's6': 8, 's7': 7,
-}
-
-ATOM_COMMENTS = {
-    0: 'TOP', 1: 'BOT', 2: 'f', 3: 'TAU', 4: 'g', 5: 'SEQ',
-    6: 'Q', 7: 'E', 8: 'RHO', 9: 'ETA', 10: 'Y', 11: 'PAIR',
-    12: 's0', 13: 'INC', 14: 'GET/s1', 15: 'DEC',
-}
-
-class Atom:
-    __slots__ = ['idx']
-    def __init__(self, idx): self.idx = idx
-
-class Var:
-    __slots__ = ['name']
-    def __init__(self, name): self.name = name
-
-class Dot:
-    __slots__ = ['a', 'b']
-    def __init__(self, a, b): self.a = a; self.b = b
-
-class If:
-    __slots__ = ['test', 'then_b', 'else_b']
-    def __init__(self, test, then_b, else_b):
-        self.test = test; self.then_b = then_b; self.else_b = else_b
-
-class Let:
-    __slots__ = ['var', 'val', 'body']
-    def __init__(self, var, val, body):
-        self.var = var; self.val = val; self.body = body
-
-class Lam:
-    __slots__ = ['param', 'body']
-    def __init__(self, param, body): self.param = param; self.body = body
-
-class App:
-    __slots__ = ['fn', 'arg']
-    def __init__(self, fn, arg): self.fn = fn; self.arg = arg
-
 
 def tokenize(s):
     tokens = []
@@ -72,6 +37,17 @@ def tokenize(s):
         elif c in '()':
             tokens.append(c)
             i += 1
+        elif c == "'":
+            tokens.append("'")
+            i += 1
+        elif c == '"':
+            j = i + 1
+            while j < len(s) and s[j] != '"':
+                if s[j] == '\\':
+                    j += 1
+                j += 1
+            tokens.append(s[i:j+1])
+            i = j + 1
         else:
             j = i
             while j < len(s) and s[j] not in ' \t\n\r();':
@@ -80,215 +56,558 @@ def tokenize(s):
             i = j
     return tokens
 
-def parse_tokens(tokens, pos):
+def parse_one(tokens, pos):
     if pos >= len(tokens):
         raise SyntaxError("unexpected end")
     tok = tokens[pos]
+    if tok == "'":
+        expr, pos = parse_one(tokens, pos + 1)
+        return ['quote', expr], pos
     if tok == '(':
         pos += 1
         items = []
         while pos < len(tokens) and tokens[pos] != ')':
-            item, pos = parse_tokens(tokens, pos)
+            item, pos = parse_one(tokens, pos)
             items.append(item)
+        if pos >= len(tokens):
+            raise SyntaxError("missing )")
         return items, pos + 1
     if tok == ')':
         raise SyntaxError("unexpected )")
+    # String literal
+    if tok.startswith('"') and tok.endswith('"'):
+        return tok, pos + 1
+    # Number
+    try:
+        return int(tok), pos + 1
+    except ValueError:
+        pass
+    # Symbol
     return tok, pos + 1
 
-def parse_all_tokens(tokens):
+def parse_all(source):
+    tokens = tokenize(source)
     forms = []
     pos = 0
     while pos < len(tokens):
-        form, pos = parse_tokens(tokens, pos)
+        form, pos = parse_one(tokens, pos)
         forms.append(form)
     return forms
 
-def to_expr(form):
-    if isinstance(form, str):
-        if form in ATOM_NAMES:
-            return Atom(ATOM_NAMES[form])
-        try:
-            n = int(form)
-            if 0 <= n <= 15:
-                return Atom(n)
-            return Var(form)
-        except ValueError:
-            pass
-        return Var(form)
-    if isinstance(form, list) and len(form) >= 1:
-        head = form[0]
-        if head == 'dot' and len(form) == 3:
-            return Dot(to_expr(form[1]), to_expr(form[2]))
-        if head == 'if' and len(form) == 4:
-            return If(to_expr(form[1]), to_expr(form[2]), to_expr(form[3]))
-        if head == 'let' and len(form) == 4:
-            return Let(form[1], to_expr(form[2]), to_expr(form[3]))
-        if head == 'lam' and len(form) == 3:
-            return Lam(form[1], to_expr(form[2]))
-        if head == 'app' and len(form) == 3:
-            return App(to_expr(form[1]), to_expr(form[2]))
-        if head == 'defun' and len(form) == 4:
-            return ('defun', form[1], form[2], to_expr(form[3]))
-        if head == 'main' and len(form) == 2:
-            return ('main', to_expr(form[1]))
-    raise SyntaxError(f"bad form: {form}")
+# ═══════════════════════════════════════════════════════════════════════
+# Compiler state
+# ═══════════════════════════════════════════════════════════════════════
 
-def parse_file(source):
-    tokens = tokenize(source)
-    forms = parse_all_tokens(tokens)
-    return [to_expr(f) for f in forms]
+BUILTINS = {'+', '-', '*', '<', '>', '<=', '>=', '=', 'eq', 'equal',
+            'mod', 'zerop', 'null', 'numberp', 'atom',
+            'cons', 'car', 'cdr', 'list',
+            'print', 'display', 'terpri', 'write-string', 'write-char',
+            'dot', 'atom-name', '1+', '1-', 'not',
+            'env-size', 'env-keys', 'bound?'}
+
+SPECIAL_FORMS = {'if', 'cond', 'let', 'progn', 'begin', 'defun', 'define',
+                 'setq', 'lambda', 'quote', 'and', 'or', 'not'}
+
+class Compiler:
+    def __init__(self):
+        self.functions = []        # [(name, params, body_sexpr)]
+        self.globals = []          # [(name, init_sexpr)]
+        self.main_stmts = []       # [sexpr]  — bare expressions to evaluate
+        self.known_fns = set()     # all known function names
+        self.tmp_count = 0
+        self.errors = []           # constructs we couldn't handle
+
+    def fresh(self, prefix='_t'):
+        self.tmp_count += 1
+        return f'{prefix}{self.tmp_count}'
+
+    # ── Top-level processing ──────────────────────────────────────────
+
+    def process(self, forms):
+        for form in forms:
+            if isinstance(form, list) and len(form) >= 1:
+                head = form[0]
+                if head == 'defun' and len(form) >= 4:
+                    self.process_defun(form, prefix='')
+                    continue
+                elif head == 'define' and len(form) >= 3 and isinstance(form[1], list):
+                    name = form[1][0]
+                    params = form[1][1:]
+                    body = form[2] if len(form) == 3 else ['progn'] + form[2:]
+                    self.process_defun(['defun', name, params, body], prefix='')
+                    continue
+                elif head == 'setq' and len(form) == 3:
+                    self.globals.append((form[1], form[2]))
+                    continue
+            self.main_stmts.append(form)
+
+    def process_defun(self, form, prefix):
+        name = form[1]
+        params = form[2] if isinstance(form[2], list) else [form[2]]
+        body = form[3] if len(form) == 4 else ['progn'] + form[3:]
+
+        full_name = f'{prefix}{name}' if prefix else name
+        self.known_fns.add(full_name)
+
+        # Lift nested defuns
+        body = self.lift_nested(body, full_name)
+
+        self.functions.append((full_name, params, body))
+
+    def lift_nested(self, sexpr, parent_name):
+        """Walk sexpr, lift any nested (defun ...) to top level."""
+        if not isinstance(sexpr, list) or len(sexpr) == 0:
+            return sexpr
+        if sexpr[0] == 'defun' and len(sexpr) >= 4:
+            name = sexpr[1]
+            params = sexpr[2] if isinstance(sexpr[2], list) else [sexpr[2]]
+            body = sexpr[3] if len(sexpr) == 4 else ['progn'] + sexpr[3:]
+            lifted_name = f'{c_ident(parent_name)}__{c_ident(name)}'
+            # Register before processing body (for self-recursive calls)
+            self.known_fns.add(name)
+            self.known_fns.add(lifted_name)
+            body = self.lift_nested(body, lifted_name)
+            # Detect captured variables (name itself is known, not captured)
+            free = find_free_vars(body, set(params), self.known_fns | BUILTINS | SPECIAL_FORMS | {name})
+            extra_params = sorted(free)
+            all_params = params + extra_params
+            # Rewrite self-calls in body: name → lifted_name (with extra params)
+            body = rewrite_calls(body, {name: (lifted_name, extra_params)})
+            self.functions.append((lifted_name, all_params, body))
+            # Return a marker so the parent knows this name was lifted
+            return ('__lifted__', name, lifted_name, extra_params)
+        # Recurse into sub-expressions, handling lifted markers
+        result = []
+        lifted_map = {}  # original_name → (lifted_name, extra_params)
+        for item in sexpr:
+            processed = self.lift_nested(item, parent_name)
+            if isinstance(processed, tuple) and processed[0] == '__lifted__':
+                _, orig_name, lifted_name, extra = processed
+                lifted_map[orig_name] = (lifted_name, extra)
+                # Don't add the defun to the result — it's been lifted
+            else:
+                result.append(processed)
+        # Rewrite calls to lifted functions
+        if lifted_map:
+            result = rewrite_calls(result, lifted_map)
+        return result
+
+    # ── C emission ────────────────────────────────────────────────────
+
+    def emit_c(self):
+        lines = []
+        lines.append('/* Generated by psi_transpile.py — Ψ-Lisp → C transpiler */')
+        lines.append('#include "psi_runtime.h"')
+        lines.append('')
+
+        # Forward declarations
+        for name, params, _ in self.functions:
+            cname = c_ident(name)
+            cparams = ', '.join(f'psi_val {c_ident(p)}' for p in params)
+            lines.append(f'psi_val {cname}({cparams});')
+        if self.functions:
+            lines.append('')
+
+        # Function definitions
+        for name, params, body in self.functions:
+            cname = c_ident(name)
+            cparams = ', '.join(f'psi_val {c_ident(p)}' for p in params)
+            lines.append(f'psi_val {cname}({cparams}) {{')
+            lines.extend(self.emit_return(body, indent=1))
+            lines.append('}')
+            lines.append('')
+
+        # Main
+        lines.append('int main(void) {')
+        for name, init in self.globals:
+            lines.append(f'    psi_val {c_ident(name)};')
+        for name, init in self.globals:
+            lines.extend(self.emit_assign(c_ident(name), init, indent=1))
+        for stmt in self.main_stmts:
+            tmp = self.fresh()
+            lines.append(f'    psi_val {tmp};')
+            lines.extend(self.emit_assign(tmp, stmt, indent=1))
+            lines.append(f'    psi_println({tmp});')
+        lines.append('    return 0;')
+        lines.append('}')
+        return '\n'.join(lines) + '\n'
+
+    def emit_return(self, sexpr, indent=1):
+        """Emit statements that return the value of sexpr."""
+        pad = '    ' * indent
+        # Check if we can emit as a simple expression
+        if self.is_simple_expr(sexpr):
+            return [f'{pad}return {self.emit_expr(sexpr)};']
+        # Complex forms need statement-level emission
+        return self.emit_stmt_return(sexpr, indent)
+
+    def emit_stmt_return(self, sexpr, indent):
+        """Emit complex forms as statements, ending with a return."""
+        pad = '    ' * indent
+        lines = []
+        if isinstance(sexpr, list) and len(sexpr) >= 1:
+            head = sexpr[0]
+            if head == 'if':
+                test, then_b = sexpr[1], sexpr[2]
+                else_b = sexpr[3] if len(sexpr) >= 4 else 'NIL'
+                if self.is_simple_expr(test):
+                    lines.append(f'{pad}if (IS_TRUE({self.emit_expr(test)})) {{')
+                else:
+                    tmp = self.fresh()
+                    lines.append(f'{pad}psi_val {tmp};')
+                    lines.extend(self.emit_assign(tmp, test, indent))
+                    lines.append(f'{pad}if (IS_TRUE({tmp})) {{')
+                lines.extend(self.emit_return(then_b, indent + 1))
+                lines.append(f'{pad}}} else {{')
+                lines.extend(self.emit_return(else_b, indent + 1))
+                lines.append(f'{pad}}}')
+                return lines
+            if head == 'cond':
+                for clause in sexpr[1:]:
+                    test, val = clause[0], clause[1]
+                    if isinstance(test, str) and test.upper() == 'T':
+                        lines.extend(self.emit_return(val, indent))
+                        return lines
+                    if self.is_simple_expr(test):
+                        lines.append(f'{pad}if (IS_TRUE({self.emit_expr(test)})) {{')
+                    else:
+                        tmp = self.fresh()
+                        lines.append(f'{pad}psi_val {tmp};')
+                        lines.extend(self.emit_assign(tmp, test, indent))
+                        lines.append(f'{pad}if (IS_TRUE({tmp})) {{')
+                    lines.extend(self.emit_return(val, indent + 1))
+                    lines.append(f'{pad}}}')
+                lines.append(f'{pad}return PSI_NIL;')
+                return lines
+            if head == 'let':
+                bindings = sexpr[1]
+                body = sexpr[2] if len(sexpr) == 3 else ['progn'] + sexpr[2:]
+                for binding in bindings:
+                    vname = c_ident(binding[0])
+                    lines.append(f'{pad}psi_val {vname};')
+                    lines.extend(self.emit_assign(vname, binding[1], indent))
+                lines.extend(self.emit_return(body, indent))
+                return lines
+            if head in ('progn', 'begin'):
+                for expr in sexpr[1:-1]:
+                    tmp = self.fresh()
+                    lines.append(f'{pad}psi_val {tmp};')
+                    lines.extend(self.emit_assign(tmp, expr, indent))
+                if len(sexpr) >= 2:
+                    lines.extend(self.emit_return(sexpr[-1], indent))
+                else:
+                    lines.append(f'{pad}return PSI_NIL;')
+                return lines
+        # Fallback: treat as expression
+        return [f'{pad}return {self.emit_expr(sexpr)};']
+
+    def emit_assign(self, target, sexpr, indent=1):
+        """Emit statements that assign value of sexpr to target."""
+        pad = '    ' * indent
+        lines = []
+        if isinstance(sexpr, list) and len(sexpr) >= 1:
+            head = sexpr[0]
+            if head == 'if':
+                test, then_b = sexpr[1], sexpr[2]
+                else_b = sexpr[3] if len(sexpr) >= 4 else 'NIL'
+                if self.is_simple_expr(test):
+                    lines.append(f'{pad}if (IS_TRUE({self.emit_expr(test)})) {{')
+                else:
+                    tmp = self.fresh()
+                    lines.append(f'{pad}psi_val {tmp};')
+                    lines.extend(self.emit_assign(tmp, test, indent))
+                    lines.append(f'{pad}if (IS_TRUE({tmp})) {{')
+                lines.extend(self.emit_assign(target, then_b, indent + 1))
+                lines.append(f'{pad}}} else {{')
+                lines.extend(self.emit_assign(target, else_b, indent + 1))
+                lines.append(f'{pad}}}')
+                return lines
+            if head == 'cond':
+                for clause in sexpr[1:]:
+                    test, val = clause[0], clause[1]
+                    if isinstance(test, str) and test.upper() == 'T':
+                        lines.extend(self.emit_assign(target, val, indent))
+                        return lines
+                    if self.is_simple_expr(test):
+                        lines.append(f'{pad}if (IS_TRUE({self.emit_expr(test)})) {{')
+                    else:
+                        tmp = self.fresh()
+                        lines.append(f'{pad}psi_val {tmp};')
+                        lines.extend(self.emit_assign(tmp, test, indent))
+                        lines.append(f'{pad}if (IS_TRUE({tmp})) {{')
+                    lines.extend(self.emit_assign(target, val, indent + 1))
+                    lines.append(f'{pad}}}')
+                lines.append(f'{pad}{target} = PSI_NIL;')
+                return lines
+            if head == 'let':
+                bindings = sexpr[1]
+                body = sexpr[2] if len(sexpr) == 3 else ['progn'] + sexpr[2:]
+                lines.append(f'{pad}{{')
+                for binding in bindings:
+                    vname = c_ident(binding[0])
+                    lines.append(f'{pad}    psi_val {vname};')
+                    lines.extend(self.emit_assign(vname, binding[1], indent + 1))
+                lines.extend(self.emit_assign(target, body, indent + 1))
+                lines.append(f'{pad}}}')
+                return lines
+            if head in ('progn', 'begin'):
+                for expr in sexpr[1:-1]:
+                    tmp = self.fresh()
+                    lines.append(f'{pad}psi_val {tmp};')
+                    lines.extend(self.emit_assign(tmp, expr, indent))
+                if len(sexpr) >= 2:
+                    lines.extend(self.emit_assign(target, sexpr[-1], indent))
+                else:
+                    lines.append(f'{pad}{target} = PSI_NIL;')
+                return lines
+            if head == 'lambda':
+                self.errors.append(f"lambda-as-value: {sexpr}")
+                lines.append(f'{pad}{target} = PSI_NIL; /* ERROR: lambda as value not supported */')
+                return lines
+        # Simple expression
+        lines.append(f'{pad}{target} = {self.emit_expr(sexpr)};')
+        return lines
+
+    def is_simple_expr(self, sexpr):
+        """Can this be emitted as a single C expression (no statements)?"""
+        if isinstance(sexpr, (int, str)):
+            return True
+        if isinstance(sexpr, list) and len(sexpr) >= 1:
+            head = sexpr[0]
+            if head in ('if', 'cond', 'let', 'progn', 'begin', 'lambda',
+                        'defun', 'define', 'setq'):
+                return False
+            return all(self.is_simple_expr(a) for a in sexpr[1:])
+        return True
+
+    def emit_expr(self, sexpr):
+        """Emit a C expression for a simple S-expression."""
+        if isinstance(sexpr, int):
+            return f'(psi_val){sexpr}'
+        if isinstance(sexpr, str):
+            if sexpr.startswith('"') and sexpr.endswith('"'):
+                # String literal for write-string — handle at call site
+                return f'"{sexpr[1:-1]}"'
+            up = sexpr.upper()
+            if up == 'NIL':
+                return 'PSI_NIL'
+            if up == 'T':
+                return '(psi_val)1'  # T = truthy non-NIL
+            return c_ident(sexpr)
+        if not isinstance(sexpr, list) or len(sexpr) == 0:
+            return 'PSI_NIL'
+
+        head = sexpr[0]
+
+        # Arithmetic
+        if head == '+' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} + {self.emit_expr(sexpr[2])})'
+        if head == '-' and len(sexpr) == 3:
+            a, b = self.emit_expr(sexpr[1]), self.emit_expr(sexpr[2])
+            return f'(({a}) >= ({b}) ? ({a}) - ({b}) : (psi_val)0)'
+        if head == '*' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} * {self.emit_expr(sexpr[2])})'
+        if head == 'mod' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} % {self.emit_expr(sexpr[2])})'
+        if head == '1+' and len(sexpr) == 2:
+            return f'({self.emit_expr(sexpr[1])} + 1)'
+        if head == '1-' and len(sexpr) == 2:
+            a = self.emit_expr(sexpr[1])
+            return f'(({a}) > 0 ? ({a}) - 1 : (psi_val)0)'
+
+        # Comparison (return 1 for true, PSI_NIL for false)
+        if head == '<' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} < {self.emit_expr(sexpr[2])} ? (psi_val)1 : PSI_NIL)'
+        if head == '>' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} > {self.emit_expr(sexpr[2])} ? (psi_val)1 : PSI_NIL)'
+        if head == '<=' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} <= {self.emit_expr(sexpr[2])} ? (psi_val)1 : PSI_NIL)'
+        if head == '>=' and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} >= {self.emit_expr(sexpr[2])} ? (psi_val)1 : PSI_NIL)'
+        if head in ('=', 'eq', 'equal') and len(sexpr) == 3:
+            return f'({self.emit_expr(sexpr[1])} == {self.emit_expr(sexpr[2])} ? (psi_val)1 : PSI_NIL)'
+
+        # Predicates
+        if head == 'zerop' and len(sexpr) == 2:
+            return f'({self.emit_expr(sexpr[1])} == 0 ? (psi_val)1 : PSI_NIL)'
+        if head == 'null' and len(sexpr) == 2:
+            return f'(IS_NIL({self.emit_expr(sexpr[1])}) ? (psi_val)1 : PSI_NIL)'
+        if head == 'not' and len(sexpr) == 2:
+            return f'(IS_NIL({self.emit_expr(sexpr[1])}) ? (psi_val)1 : PSI_NIL)'
+
+        # List operations
+        if head == 'cons' and len(sexpr) == 3:
+            return f'psi_cons({self.emit_expr(sexpr[1])}, {self.emit_expr(sexpr[2])})'
+        if head == 'car' and len(sexpr) == 2:
+            return f'psi_car({self.emit_expr(sexpr[1])})'
+        if head == 'cdr' and len(sexpr) == 2:
+            return f'psi_cdr({self.emit_expr(sexpr[1])})'
+        if head == 'list':
+            if len(sexpr) == 1:
+                return 'PSI_NIL'
+            # Build cons chain right-to-left
+            result = 'PSI_NIL'
+            for item in reversed(sexpr[1:]):
+                result = f'psi_cons({self.emit_expr(item)}, {result})'
+            return result
+
+        # IO
+        if head == 'print' and len(sexpr) == 2:
+            return f'(psi_println({self.emit_expr(sexpr[1])}), PSI_NIL)'
+        if head == 'display' and len(sexpr) == 2:
+            return f'(psi_print_val({self.emit_expr(sexpr[1])}), PSI_NIL)'
+        if head == 'terpri':
+            return '(printf("\\n"), PSI_NIL)'
+        if head == 'write-string' and len(sexpr) == 2:
+            arg = sexpr[1]
+            if isinstance(arg, str) and arg.startswith('"'):
+                inner = arg[1:-1].replace('\\', '\\\\').replace('\n', '\\n')
+                return f'(printf("%s", "{inner}"), PSI_NIL)'
+            return f'(psi_print_val({self.emit_expr(arg)}), PSI_NIL)'
+
+        # Cayley table
+        if head == 'dot' and len(sexpr) == 3:
+            return f'(psi_val)psi_dot((uint8_t){self.emit_expr(sexpr[1])}, (uint8_t){self.emit_expr(sexpr[2])})'
+
+        # Logical (short-circuit — only works as simple expr if args are simple)
+        if head == 'and':
+            if len(sexpr) == 1:
+                return '(psi_val)1'
+            parts = [self.emit_expr(a) for a in sexpr[1:]]
+            # Chain: check each, return last truthy or first falsy
+            result = parts[-1]
+            for p in reversed(parts[:-1]):
+                result = f'(IS_TRUE({p}) ? {result} : PSI_NIL)'
+            return result
+        if head == 'or':
+            if len(sexpr) == 1:
+                return 'PSI_NIL'
+            parts = [self.emit_expr(a) for a in sexpr[1:]]
+            result = parts[-1]
+            for p in reversed(parts[:-1]):
+                result = f'(IS_TRUE({p}) ? {p} : {result})'
+            return result
+
+        # Quote
+        if head == 'quote' and len(sexpr) == 2:
+            return self.emit_datum(sexpr[1])
+
+        # If as ternary (simple case)
+        if head == 'if' and len(sexpr) >= 3:
+            test = self.emit_expr(sexpr[1])
+            then_e = self.emit_expr(sexpr[2])
+            else_e = self.emit_expr(sexpr[3]) if len(sexpr) >= 4 else 'PSI_NIL'
+            return f'(IS_TRUE({test}) ? {then_e} : {else_e})'
+
+        # Direct lambda application: ((lambda (x) body) arg)
+        if isinstance(head, list) and len(head) >= 3 and head[0] == 'lambda':
+            params = head[1]
+            body = head[2]
+            if len(params) == 1 and len(sexpr) == 2:
+                # Inline as let
+                return self.emit_expr(['let', [[params[0], sexpr[1]]], body])
+
+        # Function call
+        if isinstance(head, str) and head not in SPECIAL_FORMS:
+            cname = c_ident(head)
+            args = ', '.join(self.emit_expr(a) for a in sexpr[1:])
+            return f'{cname}({args})'
+
+        self.errors.append(f"unhandled expression: {sexpr}")
+        return f'PSI_NIL /* unhandled: {head} */'
+
+    def emit_datum(self, datum):
+        """Emit a quoted datum as a C expression."""
+        if isinstance(datum, int):
+            return f'(psi_val){datum}'
+        if isinstance(datum, str):
+            up = datum.upper()
+            if up == 'NIL':
+                return 'PSI_NIL'
+            if up == 'T':
+                return '(psi_val)1'
+            return c_ident(datum)
+        if isinstance(datum, list):
+            if len(datum) == 0:
+                return 'PSI_NIL'
+            result = 'PSI_NIL'
+            for item in reversed(datum):
+                result = f'psi_cons({self.emit_datum(item)}, {result})'
+            return result
+        return 'PSI_NIL'
+
 
 # ═══════════════════════════════════════════════════════════════════════
-# C code generation
+# Utilities
 # ═══════════════════════════════════════════════════════════════════════
 
 def c_ident(name):
-    """Sanitize a name for C identifier use."""
-    return name.replace('-', '_').replace('?', '_p').replace('!', '_b')
+    """Sanitize a name for C."""
+    if isinstance(name, int):
+        return str(name)
+    s = str(name)
+    s = s.replace('-', '_').replace('?', '_p').replace('!', '_b')
+    s = s.replace('+', '_plus').replace('*', '_star').replace('/', '_slash')
+    s = s.replace('<', '_lt').replace('>', '_gt').replace('=', '_eq')
+    if s in ('int', 'float', 'double', 'char', 'void', 'return', 'if',
+             'else', 'for', 'while', 'do', 'switch', 'case', 'break',
+             'continue', 'struct', 'typedef', 'const', 'static', 'main'):
+        s = 'psi_' + s
+    return s
 
-def atom_comment(idx):
-    return ATOM_COMMENTS.get(idx, '')
+def find_free_vars(sexpr, bound, known):
+    """Find variables in sexpr that are not in bound or known."""
+    if isinstance(sexpr, str):
+        up = sexpr.upper()
+        if up in ('NIL', 'T'):
+            return set()
+        if sexpr in bound or sexpr in known:
+            return set()
+        if sexpr.startswith('"'):
+            return set()
+        return {sexpr}
+    if isinstance(sexpr, int):
+        return set()
+    if isinstance(sexpr, list) and len(sexpr) >= 1:
+        head = sexpr[0]
+        if head == 'let' and len(sexpr) >= 3:
+            free = set()
+            new_bound = set(bound)
+            for binding in sexpr[1]:
+                free |= find_free_vars(binding[1], bound, known)
+                new_bound.add(binding[0])
+            for b in sexpr[2:]:
+                free |= find_free_vars(b, new_bound, known)
+            return free
+        if head == 'lambda' and len(sexpr) >= 3:
+            params = set(sexpr[1]) if isinstance(sexpr[1], list) else {sexpr[1]}
+            return find_free_vars(sexpr[2], bound | params, known)
+        if head == 'defun' and len(sexpr) >= 4:
+            # Skip nested defuns — handled by lifting
+            return set()
+        if head == 'quote':
+            return set()
+        free = set()
+        for i, item in enumerate(sexpr):
+            if i == 0 and isinstance(item, str) and item in (SPECIAL_FORMS | BUILTINS):
+                continue
+            free |= find_free_vars(item, bound, known)
+        return free
+    return set()
 
-def emit_expr(e):
-    """Emit a C expression string for an IR node."""
-    if isinstance(e, Atom):
-        cmt = atom_comment(e.idx)
-        if cmt:
-            return f'{e.idx} /* {cmt} */'
-        return str(e.idx)
-    if isinstance(e, Var):
-        return c_ident(e.name)
-    if isinstance(e, Dot):
-        return f'psi_dot({emit_expr(e.a)}, {emit_expr(e.b)})'
-    if isinstance(e, If):
-        return f'({emit_expr(e.test)} != 1 /* !BOT */ ? {emit_expr(e.then_b)} : {emit_expr(e.else_b)})'
-    if isinstance(e, App):
-        if isinstance(e.fn, Var):
-            return f'{c_ident(e.fn.name)}({emit_expr(e.arg)})'
-        return f'({emit_expr(e.fn)})({emit_expr(e.arg)})'
-    if isinstance(e, Let):
-        # Let in expression context — caller handles the block
-        raise ValueError("let in expression context — use emit_stmt")
-    if isinstance(e, Lam):
-        raise ValueError("lambda in expression context — should be lifted to defun")
-    return str(e)
-
-def emit_stmt(e, result_var, indent=1):
-    """Emit C statements that compute e and store in result_var."""
-    pad = '    ' * indent
-    if isinstance(e, Let):
-        val_name = c_ident(e.var)
-        if isinstance(e.val, Let):
-            # Nested let in value position
-            emit_stmt(e.val, val_name, indent)
-            lines = [f'{pad}/* {val_name} already set above */']
-        else:
-            lines = [f'{pad}uint8_t {val_name} = {emit_expr(e.val)};']
-        body_lines = emit_stmt(e.body, result_var, indent)
-        return lines + body_lines
-    else:
-        return [f'{pad}{result_var} = {emit_expr(e)};']
-
-def has_let(e):
-    """Check if expression contains a Let node (needs statement form)."""
-    if isinstance(e, Let):
-        return True
-    if isinstance(e, Dot):
-        return has_let(e.a) or has_let(e.b)
-    if isinstance(e, If):
-        return has_let(e.test) or has_let(e.then_b) or has_let(e.else_b)
-    if isinstance(e, App):
-        return has_let(e.fn) or has_let(e.arg)
-    return False
-
-# ═══════════════════════════════════════════════════════════════════════
-# Top-level code generation
-# ═══════════════════════════════════════════════════════════════════════
-
-def generate(forms):
-    """Generate complete C program from a list of IR forms."""
-    lines = []
-    lines.append('/* Generated by psi_transpile.py — Ψ∗ → C transpiler */')
-    lines.append('/* Cayley table operations verified in Lean. */')
-    lines.append('')
-    lines.append('#include "psi_runtime.h"')
-    lines.append('')
-
-    defuns = []
-    main_expr = None
-
-    for form in forms:
-        if isinstance(form, tuple) and form[0] == 'defun':
-            defuns.append(form)
-        elif isinstance(form, tuple) and form[0] == 'main':
-            main_expr = form[1]
-        # bare expression: treat as main
-        elif main_expr is None:
-            main_expr = form
-
-    # Emit function definitions
-    for _, name, param, body in defuns:
-        cname = c_ident(name)
-        cparam = c_ident(param)
-        if has_let(body):
-            lines.append(f'uint8_t {cname}(uint8_t {cparam}) {{')
-            lines.append(f'    uint8_t _result;')
-            stmts = emit_stmt(body, '_result')
-            lines.extend(stmts)
-            lines.append(f'    return _result;')
-            lines.append(f'}}')
-        else:
-            lines.append(f'uint8_t {cname}(uint8_t {cparam}) {{')
-            lines.append(f'    return {emit_expr(body)};')
-            lines.append(f'}}')
-        lines.append('')
-
-    # Emit main
-    lines.append('int main(int argc, char *argv[]) {')
-    if main_expr is None:
-        lines.append('    printf("No main expression.\\n");')
-        lines.append('    return 0;')
-    else:
-        # Check if main uses 'input' variable
-        if uses_var(main_expr, 'input'):
-            lines.append('    if (argc < 2) {')
-            lines.append('        fprintf(stderr, "Usage: %s <atom-index-0-15>\\n", argv[0]);')
-            lines.append('        return 1;')
-            lines.append('    }')
-            lines.append('    uint8_t input = (uint8_t)atoi(argv[1]);')
-            lines.append('')
-
-        if has_let(main_expr):
-            lines.append('    uint8_t result;')
-            stmts = emit_stmt(main_expr, 'result')
-            lines.extend(stmts)
-        elif isinstance(main_expr, Atom):
-            lines.append(f'    uint8_t result = {emit_expr(main_expr)};')
-        else:
-            lines.append(f'    uint8_t result = {emit_expr(main_expr)};')
-
-        lines.append('    printf("%s (%u)\\n", psi_names[result], result);')
-        lines.append('    return 0;')
-    lines.append('}')
-    return '\n'.join(lines) + '\n'
-
-def uses_var(e, name):
-    """Check if expression references a variable."""
-    if isinstance(e, Var):
-        return e.name == name
-    if isinstance(e, Atom):
-        return False
-    if isinstance(e, Dot):
-        return uses_var(e.a, name) or uses_var(e.b, name)
-    if isinstance(e, If):
-        return uses_var(e.test, name) or uses_var(e.then_b, name) or uses_var(e.else_b, name)
-    if isinstance(e, Let):
-        return uses_var(e.val, name) or (e.var != name and uses_var(e.body, name))
-    if isinstance(e, Lam):
-        return e.param != name and uses_var(e.body, name)
-    if isinstance(e, App):
-        return uses_var(e.fn, name) or uses_var(e.arg, name)
-    return False
+def rewrite_calls(sexpr, lifted_map):
+    """Rewrite calls to lifted functions, adding extra args."""
+    if isinstance(sexpr, str):
+        return sexpr
+    if isinstance(sexpr, int):
+        return sexpr
+    if isinstance(sexpr, list):
+        if len(sexpr) >= 1 and isinstance(sexpr[0], str) and sexpr[0] in lifted_map:
+            lifted_name, extra = lifted_map[sexpr[0]]
+            new_call = [lifted_name] + [rewrite_calls(a, lifted_map) for a in sexpr[1:]] + list(extra)
+            return new_call
+        return [rewrite_calls(item, lifted_map) for item in sexpr]
+    return sexpr
 
 # ═══════════════════════════════════════════════════════════════════════
 # Main
@@ -296,14 +615,25 @@ def uses_var(e, name):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: psi_transpile.py input.psi", file=sys.stderr)
+        print("Usage: psi_transpile.py program.lisp", file=sys.stderr)
         sys.exit(1)
 
-    with open(sys.argv[1]) as f:
+    path = sys.argv[1]
+    with open(path) as f:
         source = f.read()
 
-    forms = parse_file(source)
-    print(generate(forms), end='')
+    forms = parse_all(source)
+    compiler = Compiler()
+    compiler.process(forms)
+
+    c_code = compiler.emit_c()
+    print(c_code, end='')
+
+    if compiler.errors:
+        print(f'/* TRANSPILER WARNINGS:', file=sys.stderr)
+        for e in compiler.errors:
+            print(f'   {e}', file=sys.stderr)
+        print(f'*/', file=sys.stderr)
 
 
 if __name__ == '__main__':

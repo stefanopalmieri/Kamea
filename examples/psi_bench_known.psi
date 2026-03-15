@@ -1,0 +1,7 @@
+; Benchmark: fully known counter chain (INC^3 from s0)
+; Should supercompile to a single constant.
+(main
+  (let x s0
+    (let a (dot INC x)
+      (let b (dot INC a)
+        (dot INC b)))))

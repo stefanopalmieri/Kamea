@@ -1,0 +1,4 @@
+; Benchmark: counter chain with free variable
+; INC^3 on unknown input — 3 table lookups at runtime.
+(defun inc3 x (dot INC (dot INC (dot INC x))))
+(main (app inc3 input))

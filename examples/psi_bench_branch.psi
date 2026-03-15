@@ -1,0 +1,6 @@
+; Benchmark: branch + counter on free variable
+; If tau accepts, INC^2; else DEC. Then INC the result.
+(defun process x
+  (let r (if (dot TAU x) (dot INC (dot INC x)) (dot DEC x))
+    (dot INC r)))
+(main (app process input))
