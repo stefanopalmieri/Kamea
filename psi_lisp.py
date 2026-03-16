@@ -27,14 +27,28 @@ Usage:
 from __future__ import annotations
 
 import sys
+import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from psi_star import (
-    App, Term, psi_eval, EvalError,
-    TOP, BOT, Q, E, F_ENC, G_ENC, ETA, RHO, Y_COMB, TAU,
-    pair, fst, snd, term_str, NAMES, TABLE,
-)
+# Table selection: use Ψ₁₆ᶜ if PSI_TABLE=c or --table=c, else Ψ₁₆ᶠ
+_table_mode = os.environ.get('PSI_TABLE', '')
+if '--table=c' in sys.argv:
+    _table_mode = 'c'
+    sys.argv.remove('--table=c')
+
+if _table_mode == 'c':
+    from psi_star_c import (
+        App, Term, psi_eval, EvalError,
+        TOP, BOT, Q, E, F_ENC, G_ENC, ETA, RHO, Y_COMB, TAU,
+        pair, fst, snd, term_str, NAMES, TABLE,
+    )
+else:
+    from psi_star import (
+        App, Term, psi_eval, EvalError,
+        TOP, BOT, Q, E, F_ENC, G_ENC, ETA, RHO, Y_COMB, TAU,
+        pair, fst, snd, term_str, NAMES, TABLE,
+    )
 
 # ═══════════════════════════════════════════════════════════════════════
 # Lisp constants mapped to Ψ∗ atoms
