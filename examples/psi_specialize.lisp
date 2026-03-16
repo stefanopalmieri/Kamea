@@ -147,12 +147,12 @@
     ((is-lam expr)
      (mk-lam (lam-var expr) (specialize (lam-body expr))))
 
-    ; App — beta reduce if function is a lambda and arg is known
+    ; App — beta reduce if function is a lambda
     ((is-app expr)
      (let ((fn (specialize (app-fn expr)))
            (arg (specialize (app-arg expr))))
-       (if (and (is-lam fn) (is-atom arg))
-           ; Beta reduce: substitute arg into lambda body
+       (if (is-lam fn)
+           ; Beta reduce: substitute arg (any value) into lambda body
            (specialize (subst-expr (lam-var fn) arg (lam-body fn)))
            ; Otherwise: residualize
            (mk-app fn arg))))
