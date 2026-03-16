@@ -1,0 +1,99 @@
+; ═══════════════════════════════════════════════════════════════════════
+; Futamura Projections on the Ψ∗ Algebra (Ψ₁₆ᶜ table)
+; ═══════════════════════════════════════════════════════════════════════
+;
+; Three routes to the same result. The supercompiler folds all to
+; the same constant, demonstrating:
+;
+;   1st projection: specialize(interpreter, program) = compiled program
+;   2nd projection: the supercompiler IS the specializer — applying it
+;                   to the interpreter+program pair produces the same
+;                   result as direct compilation
+;
+; The .psi IR evaluator is a function (lam op (lam arg (dot op arg)))
+; that takes an opcode and an argument, computing via Cayley table lookup.
+; The supercompiler's beta reduction + constant folding eliminates all
+; interpretation overhead, producing the same constant as direct computation.
+;
+; All programs use core elements {f=2, TAU=3, g=4, 5} where INC/DEC/INV
+; arithmetic is well-defined:
+;   INC: 2→3→4→5→2  (4-cycle)
+;   DEC: 2→5→4→3→2  (reverse)
+;   INV: 2↔5, 3↔4   (involution, 7-x)
+;
+; Run with: python3 psi_supercompile.py --table=c examples/psi_futamura.psi
+; ═══════════════════════════════════════════════════════════════════════
+
+; ── Test 1: INC chain — INC(INC(INC(f))) ────────────────────────────
+; f=2, INC(2)=3, INC(3)=4, INC(4)=5 → result: 5
+
+; Direct
+(main (dot INC (dot INC (dot INC f))))
+
+; Via evaluator (first Futamura projection)
+(main
+  (app (app (lam op (lam arg (dot op arg))) INC)
+       (app (app (lam op (lam arg (dot op arg))) INC)
+            (app (app (lam op (lam arg (dot op arg))) INC)
+                 f))))
+
+; Via let-bound step (same thing, cleaner syntax)
+(main
+  (let run (lam op (lam arg (dot op arg)))
+    (app (app run INC)
+         (app (app run INC)
+              (app (app run INC)
+                   f)))))
+
+; ── Test 2: Mixed opcodes — INV(INC(f)) ─────────────────────────────
+; f=2, INC(2)=3, INV(3)=4 → result: 4 (=g)
+
+; Direct
+(main (dot INV (dot INC f)))
+
+; Via evaluator
+(main
+  (app (app (lam op (lam arg (dot op arg))) INV)
+       (app (app (lam op (lam arg (dot op arg))) INC)
+            f)))
+
+; ── Test 3: QE round-trip — E(Q(g)) ─────────────────────────────────
+; g=4, Q(4)=10, E(10)=4 → result: 4 (=g) by QE cancellation
+
+; Direct
+(main (dot E (dot Q g)))
+
+; Via evaluator
+(main
+  (app (app (lam op (lam arg (dot op arg))) E)
+       (app (app (lam op (lam arg (dot op arg))) Q)
+            g)))
+
+; ── Test 4: DEC(INV(INC(TAU))) ───────────────────────────────────────
+; TAU=3, INC(3)=4, INV(4)=3, DEC(3)=2 → result: 2 (=f)
+
+; Direct
+(main (dot DEC (dot INV (dot INC TAU))))
+
+; Via evaluator
+(main
+  (app (app (lam op (lam arg (dot op arg))) DEC)
+       (app (app (lam op (lam arg (dot op arg))) INV)
+            (app (app (lam op (lam arg (dot op arg))) INC)
+                 TAU))))
+
+; ── Test 5: Four-step pipeline via let ───────────────────────────────
+; INC(DEC(INV(INC(f)))) = INC(DEC(INV(3))) = INC(DEC(4)) = INC(3) = 4
+; f=2, INC(2)=3, INV(3)=4, DEC(4)=3, INC(3)=4 → result: 4 (=g)
+
+; Direct
+(main (dot INC (dot DEC (dot INV (dot INC f)))))
+
+; Via let-bound evaluator
+(main
+  (let run (lam op (lam arg (dot op arg)))
+    (app (app run INC)
+         (app (app run DEC)
+              (app (app run INV)
+                   (app (app run INC)
+                        f))))))

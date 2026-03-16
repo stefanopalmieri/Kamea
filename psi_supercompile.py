@@ -217,22 +217,49 @@ def subst(var, val, expr):
 # ═══════════════════════════════════════════════════════════════════════
 
 Q_IDX, E_IDX = 6, 7
+CORE = frozenset({2, 3, 4, 5})
 
-# Cancellation pairs: (outer, inner) such that outer·(inner·x) → x
-# QE/EQ are universal (both tables). INC/DEC and INV/INV are Ψ₁₆ᶜ only.
-CANCEL_PAIRS = [
-    (E_IDX, Q_IDX),       # E·(Q·x) → x
-    (Q_IDX, E_IDX),       # Q·(E·x) → x
+# Cancellation rules: (outer, inner, valid_set)
+# valid_set = None means total (holds for all 16 elements).
+# valid_set = frozenset means partial (only fire when x is a known Atom in the set).
+#
+# Verified exhaustively over all 16 elements of the Ψ₁₆ᶜ table:
+#   INV·(INV·x)=x:   TOTAL  (16/16)
+#   E·(Q·x)=x:       PARTIAL ({2,3,4,5,6,7,12,13,15} — 9/16)
+#   Q·(E·x)=x:       PARTIAL ({2,3,4,5,6,10,11,13,15} — 9/16)
+#   INC·(DEC·x)=x:   PARTIAL ({2,3,4,5,15} — 5/16)
+#   DEC·(INC·x)=x:   PARTIAL ({2,3,4,5,14} — 5/16)
+CANCEL_RULES = [
+    (E_IDX, Q_IDX, frozenset({2,3,4,5,6,7,12,13,15})),   # E·(Q·x) → x
+    (Q_IDX, E_IDX, frozenset({2,3,4,5,6,10,11,13,15})),   # Q·(E·x) → x
 ]
 if _table_mode == 'c':
-    CANCEL_PAIRS += [
-        (INC_IDX, DEC_IDX),   # INC·(DEC·x) → x  (Ψ₁₆ᶜ: mutual inverses on core)
-        (DEC_IDX, INC_IDX),   # DEC·(INC·x) → x
-        (INV_IDX, INV_IDX),   # INV·(INV·x) → x  (Ψ₁₆ᶜ: full involution)
+    CANCEL_RULES += [
+        (INC_IDX, DEC_IDX, frozenset({2,3,4,5,15})),     # INC·(DEC·x) → x
+        (DEC_IDX, INC_IDX, frozenset({2,3,4,5,14})),     # DEC·(INC·x) → x
+        (INV_IDX, INV_IDX, None),                          # INV·(INV·x) → x  (TOTAL)
     ]
-_CANCEL_MAP = {}  # outer_idx → set of inner_idx that cancel
-for _o, _i in CANCEL_PAIRS:
-    _CANCEL_MAP.setdefault(_o, set()).add(_i)
+
+# Build lookup: outer_idx → [(inner_idx, valid_set), ...]
+_CANCEL_MAP = {}
+for _o, _i, _valid in CANCEL_RULES:
+    _CANCEL_MAP.setdefault(_o, []).append((_i, _valid))
+
+
+def _can_cancel(outer_idx, inner_idx, x_expr):
+    """Check if the cancellation outer·(inner·x) → x is sound for the given x."""
+    entries = _CANCEL_MAP.get(outer_idx, [])
+    for (inner, valid_set) in entries:
+        if inner != inner_idx:
+            continue
+        if valid_set is None:
+            return True  # total rule — always safe
+        # Partial rule: only safe if x is a known Atom in the valid set
+        if isinstance(x_expr, Atom) and x_expr.idx in valid_set:
+            return True
+        # x is a variable or non-valid atom — cannot fire
+        return False
+    return False
 
 
 def is_value(e):
@@ -247,9 +274,10 @@ def fold_all(e):
         a = fold_all(e.a)
         b_raw = e.b
         # Cancellation on raw b (pre-fold): outer·(inner·x) → x
+        # Only fires if _can_cancel verifies x is in the valid set.
         if isinstance(a, Atom) and isinstance(b_raw, Dot):
             b_head = b_raw.a if isinstance(b_raw.a, Atom) else None
-            if b_head and b_head.idx in _CANCEL_MAP.get(a.idx, ()):
+            if b_head and _can_cancel(a.idx, b_head.idx, b_raw.b):
                 return fold_all(b_raw.b)
         b = fold_all(b_raw)
         # Table lookup
@@ -257,7 +285,7 @@ def fold_all(e):
             return Atom(TABLE[a.idx][b.idx])
         # Post-fold cancellation
         if isinstance(a, Atom) and isinstance(b, Dot) and isinstance(b.a, Atom):
-            if b.a.idx in _CANCEL_MAP.get(a.idx, ()):
+            if _can_cancel(a.idx, b.a.idx, b.b):
                 return b.b
         return Dot(a, b)
 
