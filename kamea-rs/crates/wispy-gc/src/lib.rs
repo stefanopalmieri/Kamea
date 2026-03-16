@@ -1,3 +1,8 @@
+// Single-threaded runtime uses static mut for the global mutator.
+// Safe because only one thread accesses it (the mutator thread).
+// Proper SyncUnsafeCell refactor is future work.
+#![allow(static_mut_refs)]
+
 //! wispy-gc: MMTk garbage collector integration for compiled Ψ∗ programs.
 //!
 //! WispY has exactly one heap-allocated type: cons cells (car: i64, cdr: i64).
