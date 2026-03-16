@@ -1,11 +1,12 @@
 //! Allocation API: wispy_cons, wispy_car, wispy_cdr.
 //!
-//! These have the same semantics as Arena::cons/car/cdr but allocate
-//! through MMTk instead of a bump allocator.
+//! Same semantics as Arena::cons/car/cdr but allocate through MMTk.
+//! GC is triggered automatically when the heap is full.
 
 use mmtk::memory_manager;
 use mmtk::AllocationSemantics;
 use mmtk::util::{Address, ObjectReference};
+use mmtk::util::opaque_pointer::{VMThread, VMMutatorThread};
 use mmtk::Mutator;
 use mmtk::MMTK;
 
@@ -14,7 +15,7 @@ use crate::vm::WispyVM;
 use crate::{WispyVal, WISPY_NIL};
 
 /// Global MMTk instance (leaked Box for 'static lifetime).
-static mut MMTK_INSTANCE: Option<&'static MMTK<WispyVM>> = None;
+pub static mut MMTK_INSTANCE: Option<&'static MMTK<WispyVM>> = None;
 
 /// Global mutator (single-threaded).
 pub static mut MUTATOR: Option<Box<Mutator<WispyVM>>> = None;
@@ -24,11 +25,18 @@ pub fn mmtk_ref() -> &'static MMTK<WispyVM> {
     unsafe { MMTK_INSTANCE.expect("MMTk not initialized") }
 }
 
-/// Initialize the MMTk GC. Call once at program start.
-pub fn wispy_init() {
-    let builder = mmtk::MMTKBuilder::new();
-    // Use NoGC for initial bring-up; switch to MarkSweep/SemiSpace later
-    // builder.options.plan.set(mmtk::util::options::PlanSelector::NoGC);
+/// Initialize the MMTk GC with a given heap size in bytes.
+/// Uses MarkSweep for actual garbage collection.
+pub fn wispy_init_with_heap(heap_bytes: usize) {
+    let mut builder = mmtk::MMTKBuilder::new();
+
+    // Use MarkSweep plan (non-copying, simplest real GC)
+    builder.options.plan.set(mmtk::util::options::PlanSelector::MarkSweep);
+
+    // Configure heap size
+    builder.options.gc_trigger.set(
+        mmtk::util::options::GCTriggerSelector::FixedHeapSize(heap_bytes)
+    );
 
     let mmtk: Box<MMTK<WispyVM>> = memory_manager::mmtk_init(&builder);
     let mmtk_static: &'static MMTK<WispyVM> = Box::leak(mmtk);
@@ -38,27 +46,35 @@ pub fn wispy_init() {
     }
 
     // Create the single mutator
-    let tls = mmtk::util::opaque_pointer::VMMutatorThread(
-        mmtk::util::opaque_pointer::VMThread::UNINITIALIZED,
-    );
+    let tls = VMMutatorThread(VMThread::UNINITIALIZED);
     let mutator = memory_manager::bind_mutator(mmtk_static, tls);
 
     unsafe {
         MUTATOR = Some(mutator);
     }
+
+    // Start GC worker threads — required for collection to work
+    memory_manager::initialize_collection(mmtk_static, VMThread::UNINITIALIZED);
 }
 
-/// Shut down the MMTk GC. Call at program end.
+/// Initialize with default heap size (32 MB).
+pub fn wispy_init() {
+    wispy_init_with_heap(32 * 1024 * 1024);
+}
+
+/// Shut down the MMTk GC.
 pub fn wispy_shutdown() {
     unsafe {
-        MUTATOR = None;
-        MMTK_INSTANCE = None;
+        if let Some(mut mutator) = MUTATOR.take() {
+            memory_manager::destroy_mutator(&mut mutator);
+        }
+        // Note: MMTK_INSTANCE is leaked and not freed (by design — 'static).
     }
 }
 
 /// Allocate a new cons cell via MMTk.
-///
 /// Returns a tagged WispyVal with WISPY_CONS_TAG set.
+#[inline(never)]
 pub fn wispy_cons(car: WispyVal, cdr: WispyVal) -> WispyVal {
     let mutator = unsafe {
         MUTATOR
@@ -76,7 +92,7 @@ pub fn wispy_cons(car: WispyVal, cdr: WispyVal) -> WispyVal {
     );
 
     if addr.is_zero() {
-        eprintln!("wispy-gc: allocation failed");
+        eprintln!("wispy-gc: allocation returned null");
         std::process::exit(1);
     }
 
@@ -98,19 +114,21 @@ pub fn wispy_cons(car: WispyVal, cdr: WispyVal) -> WispyVal {
 }
 
 /// Read the car field of a cons cell.
+#[inline(always)]
 pub fn wispy_car(cell: WispyVal) -> WispyVal {
     if !crate::is_cons(cell) {
         return WISPY_NIL;
     }
     let addr = unsafe { Address::from_usize(crate::val_to_addr(cell)) };
-    unsafe { addr.load() }
+    unsafe { addr.load::<i64>() }
 }
 
 /// Read the cdr field of a cons cell.
+#[inline(always)]
 pub fn wispy_cdr(cell: WispyVal) -> WispyVal {
     if !crate::is_cons(cell) {
         return WISPY_NIL;
     }
     let addr = unsafe { Address::from_usize(crate::val_to_addr(cell)) };
-    unsafe { (addr + CDR_OFFSET).load() }
+    unsafe { (addr + CDR_OFFSET).load::<i64>() }
 }

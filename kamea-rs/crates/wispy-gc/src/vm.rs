@@ -2,6 +2,8 @@
 //!
 //! Single-threaded runtime with one object type (cons cells).
 
+use std::sync::{Condvar, Mutex};
+
 use mmtk::util::alloc::AllocationError;
 use mmtk::util::opaque_pointer::*;
 use mmtk::vm::*;
@@ -27,17 +29,24 @@ impl VMBinding for WispyVM {
     const MAX_ALIGNMENT: usize = 8;
 }
 
+// ── GC synchronization for single-threaded stop-the-world ──────────
+
+lazy_static::lazy_static! {
+    /// Condvar for blocking the mutator during GC.
+    static ref GC_LOCK: Mutex<bool> = Mutex::new(false);
+    static ref GC_CONDVAR: Condvar = Condvar::new();
+}
+
 // ── WispySlot: tagged pointer slot ──────────────────────────────────
 
 use mmtk::util::{Address, ObjectReference};
 use std::fmt;
 
 /// A slot that holds a tagged WispyVal (i64).
-/// Cons cell pointers have PSI_CONS_TAG (bit 62) set.
+/// Cons cell pointers have WISPY_CONS_TAG (bit 62) set.
 /// Integers and NIL are not heap references.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WispySlot {
-    /// Address of the i64 field in memory (car or cdr of a cons cell, or shadow stack entry).
     pub addr: Address,
 }
 
@@ -56,7 +65,7 @@ impl Slot for WispySlot {
             let raw_addr = crate::val_to_addr(val);
             ObjectReference::from_raw_address(unsafe { Address::from_usize(raw_addr) })
         } else {
-            None // integer or NIL — not a heap reference
+            None
         }
     }
 
@@ -74,7 +83,6 @@ impl Scanning<WispyVM> for WispyVM {
         object: ObjectReference,
         slot_visitor: &mut SV,
     ) {
-        // A cons cell has two fields: car at +0, cdr at +8 from ObjectReference
         let obj_addr = object.to_raw_address();
         slot_visitor.visit_slot(WispySlot { addr: obj_addr });
         slot_visitor.visit_slot(WispySlot {
@@ -87,7 +95,6 @@ impl Scanning<WispyVM> for WispyVM {
         _mutator: &'static mut Mutator<WispyVM>,
         mut factory: impl RootsWorkFactory<WispySlot>,
     ) {
-        // Scan the shadow stack for roots.
         let shadow = SHADOW_STACK.lock().unwrap();
         let mut slots = Vec::new();
         for entry_ptr in shadow.slots() {
@@ -102,20 +109,16 @@ impl Scanning<WispyVM> for WispyVM {
         _tls: VMWorkerThread,
         _factory: impl RootsWorkFactory<WispySlot>,
     ) {
-        // No VM-specific roots beyond the shadow stack (handled in mutator scan).
+        // No VM-specific roots beyond the shadow stack.
     }
 
-    fn notify_initial_thread_scan_complete(_partial_scan: bool, _tls: VMWorkerThread) {
-        // Nothing to do for single-threaded.
-    }
+    fn notify_initial_thread_scan_complete(_partial_scan: bool, _tls: VMWorkerThread) {}
 
     fn supports_return_barrier() -> bool {
         false
     }
 
-    fn prepare_for_roots_re_scanning() {
-        // Nothing to do.
-    }
+    fn prepare_for_roots_re_scanning() {}
 }
 
 // ── Collection ──────────────────────────────────────────────────────
@@ -125,8 +128,16 @@ impl Collection<WispyVM> for WispyVM {
     where
         F: FnMut(&'static mut Mutator<WispyVM>),
     {
-        // Single-threaded: the one mutator is already stopped (we're in GC).
-        // Visit it so MMTk can scan its allocator state.
+        // Wait for the mutator to signal it's blocked.
+        loop {
+            let locked = GC_LOCK.lock().unwrap();
+            if *locked {
+                break;
+            }
+            drop(locked);
+            std::thread::yield_now();
+        }
+        // Visit the single mutator so MMTk scans its allocator state.
         unsafe {
             if let Some(m) = crate::alloc::MUTATOR.as_mut() {
                 mutator_visitor(&mut **m);
@@ -135,25 +146,34 @@ impl Collection<WispyVM> for WispyVM {
     }
 
     fn resume_mutators(_tls: VMWorkerThread) {
-        // Single-threaded: nothing to resume.
+        let mut locked = GC_LOCK.lock().unwrap();
+        *locked = false;
+        GC_CONDVAR.notify_all();
     }
 
     fn block_for_gc(_tls: VMMutatorThread) {
-        // Single-threaded: GC runs synchronously, so this is a no-op.
-        // The mutator IS the GC thread.
+        // Called on the mutator thread when allocation triggers GC.
+        let mut locked = GC_LOCK.lock().unwrap();
+        *locked = true;
+        while *locked {
+            locked = GC_CONDVAR.wait(locked).unwrap();
+        }
     }
 
     fn spawn_gc_thread(_tls: VMThread, ctx: GCThreadContext<WispyVM>) {
         match ctx {
             GCThreadContext::Worker(worker) => {
-                std::thread::spawn(move || {
-                    let tls = VMWorkerThread(VMThread::UNINITIALIZED);
-                    mmtk::memory_manager::start_worker(
-                        crate::alloc::mmtk_ref(),
-                        tls,
-                        worker,
-                    );
-                });
+                std::thread::Builder::new()
+                    .name("wispy-gc-worker".to_string())
+                    .spawn(move || {
+                        let tls = VMWorkerThread(VMThread::UNINITIALIZED);
+                        mmtk::memory_manager::start_worker(
+                            crate::alloc::mmtk_ref(),
+                            tls,
+                            worker,
+                        );
+                    })
+                    .expect("failed to spawn GC worker thread");
             }
         }
     }
@@ -168,7 +188,7 @@ impl Collection<WispyVM> for WispyVM {
 
 impl ActivePlan<WispyVM> for WispyVM {
     fn is_mutator(_tls: VMThread) -> bool {
-        true // single-threaded: everything is the mutator
+        true
     }
 
     fn mutator(_tls: VMMutatorThread) -> &'static mut Mutator<WispyVM> {
@@ -194,24 +214,13 @@ impl ActivePlan<WispyVM> for WispyVM {
     }
 }
 
-// ── ReferenceGlue (stub — no weak refs) ─────────────────────────────
+// ── ReferenceGlue (stub) ────────────────────────────────────────────
 
 impl ReferenceGlue<WispyVM> for WispyVM {
     type FinalizableType = ObjectReference;
 
-    fn clear_referent(_new_reference: ObjectReference) {
-        // No weak references in WispY.
-    }
-
-    fn get_referent(_object: ObjectReference) -> Option<ObjectReference> {
-        None
-    }
-
-    fn set_referent(_reff: ObjectReference, _referent: ObjectReference) {
-        // No weak references.
-    }
-
-    fn enqueue_references(_references: &[ObjectReference], _tls: VMWorkerThread) {
-        // No weak references.
-    }
+    fn clear_referent(_new_reference: ObjectReference) {}
+    fn get_referent(_object: ObjectReference) -> Option<ObjectReference> { None }
+    fn set_referent(_reff: ObjectReference, _referent: ObjectReference) {}
+    fn enqueue_references(_references: &[ObjectReference], _tls: VMWorkerThread) {}
 }

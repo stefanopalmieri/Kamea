@@ -11,8 +11,8 @@ pub mod object;
 pub mod roots;
 pub mod alloc;
 
-pub use alloc::{wispy_cons, wispy_car, wispy_cdr, wispy_init, wispy_shutdown};
-pub use roots::{shadow_push, shadow_pop};
+pub use alloc::{wispy_cons, wispy_car, wispy_cdr, wispy_init, wispy_init_with_heap, wispy_shutdown};
+pub use roots::{shadow_push, shadow_pop, shadow_get};
 
 /// Value representation — same as psi_runtime.rs.
 /// All values are i64. Numbers are plain integers.

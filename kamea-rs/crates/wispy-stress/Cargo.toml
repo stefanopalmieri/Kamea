@@ -1,0 +1,11 @@
+[package]
+name = "wispy-stress"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wispy-stress"
+path = "src/main.rs"
+
+[dependencies]
+wispy-gc = { path = "../wispy-gc" }
