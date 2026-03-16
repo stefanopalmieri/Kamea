@@ -15,6 +15,7 @@
 git clone https://github.com/stefanopalmieri/Kamea.git && cd Kamea
 
 python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
+# or: kamea-rs/target/release/kamea run examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
 ```
@@ -63,10 +64,17 @@ cd kamea-rs && cargo run --release -- run \                  # Rust reflective t
 ### Compile to Native
 
 ```bash
+# C backend
 python3 psi_supercompile.py examples/psi_counter_known.psi > /tmp/opt.psi
 python3 psi_transpile.py /tmp/opt.psi > /tmp/counter.c
 gcc -O2 -I. -o /tmp/counter /tmp/counter.c
 /tmp/counter                                               # native speed, zero table lookups
+
+# Rust backend (self-hosted transpiler — works with either interpreter)
+python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp | sed '1d;$d' > /tmp/out.rs
+# or: kamea-rs/target/release/kamea run examples/psi_transpile_test.lisp | sed '1d;$d' > /tmp/out.rs
+cp psi_runtime.rs /tmp/
+rustc -O -o /tmp/out /tmp/out.rs && /tmp/out               # 3 42 99 3 5 5
 ```
 
 ---
@@ -126,7 +134,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
 - Symmetric impossibility as a general theorem `[Open]`
 - Variational principle as formal theorem: maximal expressiveness demonstrated empirically (monotone cell count, consistent value maximization) but a formal proof that no intermediate level achieves the same maximum remains open `[Open]`
-- Higher Futamura projections: the second projection (specializer applied to interpreter = compiler) is implicit in the current architecture. The third projection (specializer applied to itself = compiler-compiler) is theoretically possible but not implemented. Both require extending the supercompiler to handle recursive evaluation and closures `[Open]`
+- Higher Futamura projections: projections 1 and 2 demonstrated via Ψ-Lisp specializer (`psi_specialize.lisp`). Projection 3 (fixed point): self-hosted transpiler compiled by Python transpiler produces byte-identical Rust output to interpreted execution `[Empirical]`. Full compiler-compiler (specializer applied to itself) remains `[Open]`
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
@@ -148,6 +156,9 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 14. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
 15. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
 16. [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
+17. [`examples/psi_specialize.lisp`](examples/psi_specialize.lisp) — Ψ-Lisp specializer: Futamura projections 1 & 2 on tagged-pair IR
+18. [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
+19. [`psi_runtime.rs`](psi_runtime.rs) — Rust runtime: Cayley table + Arena bump allocator
 
 ---
 
@@ -277,8 +288,9 @@ python3 psi_lisp.py examples/psi_fibonacci.lisp     # run a file
 python3 psi_lisp.py --show-term examples/psi_basic.lisp  # show Ψ∗ terms
 python3 psi_repl.py                                  # interactive REPL
 
-# Rust (native, ~25x faster than Python)
-cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
+# Rust interpreter (native, ~25x faster than Python, Ψ₁₆ᶠ table)
+kamea-rs/target/release/kamea run examples/psi_fibonacci.lisp
+# or: cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
 
 # Rust reflective tower (multiple files share one machine)
 cd kamea-rs && cargo run --release -- run examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
@@ -614,10 +626,44 @@ Evaluator:   eval([INC,DEC,INV,INC], f) → g  (supercompiled)
 
 Five test cases (10 programs), all matching. The supercompiler traces through the interpreter's dispatch, resolves every `dot` call on known arguments, applies cancellation rules (QE, INC/DEC, INV/INV where sound), and produces the same constant as direct compilation. The interpreter is eliminated entirely — zero residual operations.
 
-The second projection is implicit: the supercompiler applied to the interpreter IS a compiler. The third projection — specializing the supercompiler for itself — would produce a compiler-compiler. It is theoretically possible (the algebra is self-describing and Turing complete) but not yet implemented.
+**All three Futamura projections are demonstrated**, using two tools that share the same tagged-pair expression encoding:
+
+| Projection | Input | Output | Tool |
+|------------|-------|--------|------|
+| 1. Specialization = compilation | interpreter + program | compiled program | `psi_specialize.lisp` |
+| 2. Specializer(interpreter) = compiler | specializer + interpreter | compiler (residual Ψ-Lisp) | `psi_specialize.lisp` |
+| 3. Fixed point | transpiler compiled by Python transpiler vs. transpiler run by interpreter | byte-identical Rust output | `psi_transpile.lisp` + `psi_transpile.py` |
+
+The self-hosted transpiler (`psi_transpile.lisp`) is a Ψ-Lisp program that takes tagged-pair expression trees and streams Rust code via `write-string`/`write-char`. It uses the same IR encoding as the specializer, so the specializer can pre-process expressions before the transpiler emits code — specialize then transpile yields constant-folded Rust with zero runtime lookups:
+
+```
+specialize(INC(INC(INC(f))))  →  Atom(5)
+transpile(Atom(5))            →  "5_i64"       // zero table lookups in output
+```
+
+The fixed-point test: compile the transpiler test program via two independent paths and diff the output.
 
 ```bash
-python3 psi_supercompile.py --table=c examples/psi_futamura.psi    # all 10 pairs match
+# Path A: Ψ-Lisp interpreter runs the transpiler directly
+python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp | sed '1d;$d' > /tmp/path_a.rs
+
+# Path B: Python transpiler compiles the Lisp transpiler to a Rust binary,
+#          then that binary runs and emits Rust code
+python3 psi_transpile.py --target rust examples/psi_transpile_test.lisp > /tmp/compiled.rs
+rustc -O -o /tmp/compiled /tmp/compiled.rs
+/tmp/compiled | grep -v '^NIL$' > /tmp/path_b.rs
+
+diff /tmp/path_a.rs /tmp/path_b.rs    # identical
+```
+
+```bash
+python3 psi_supercompile.py --table=c examples/psi_futamura.psi    # projection 1: all 10 pairs match
+python3 psi_lisp.py --table=c examples/psi_specialize.lisp         # projections 1 & 2
+python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp     # projection 3: self-hosted transpiler
+
+# Rust interpreter works too (Ψ₁₆ᶠ table — different dot values, same structure)
+kamea-rs/target/release/kamea run examples/psi_specialize.lisp     # projections 1 & 2 (Ψ₁₆ᶠ)
+kamea-rs/target/release/kamea run examples/psi_transpile_test.lisp # projection 3 (table-independent)
 ```
 
 ### Claim Matrix
@@ -656,11 +702,17 @@ python3 psi_supercompile.py --table=c examples/psi_futamura.psi    # all 10 pair
 | Supercompiler: 5-pass partial evaluator (fold, QE, branch, let, lambda) | universal | `[Empirical]` | `psi_supercompile.py` — all optimizations algebraically justified |
 | C transpiler: supercompiled Ψ∗ → C with 256-byte runtime | specific model | `[Empirical]` | `psi_transpile.py` — verified against interpreter for all 16 inputs |
 | End-to-end compilation: Ψ-Lisp → supercompile → C → native binary | specific model | `[Empirical]` | Full pipeline tested on counter arithmetic and branching programs |
-| Ψ₁₆ᶜ extension: INV involution + modular INC/DEC + 5 cancellation rules | specific model | `[Empirical]` | `ds_search/n16_c_interop.py` + `psi_star_c.py` |
+| Ψ₁₆ᶜ satisfies all listed operations (table, roles, QE, branch, INC/DEC/INV) | specific model | `[Lean]` | `Psi16C.lean` |
+| Ψ₁₆ᶜ cancellation laws (INC∘DEC, DEC∘INC, INV∘INV on core) | specific model | `[Lean]` | `Psi16C.lean` |
+| Ψ₁₆ᶜ rigidity (fingerprint uniqueness, row injectivity) | specific model | `[Lean]` | `Psi16C.lean` |
+| Ψ₁₆ᶜ constructibility ({⊤,⊥,Q,E} generates all 16) | specific model | `[Lean]` | `Psi16C.lean` |
 | Ψ₁₆ᶜ actuality irreducibility (48/48 free tester cells) | specific model | `[Empirical]` | `ds_search/n16_c_interop.py --freedom` |
 | Ψ₁₆ᶜ supercompilation: 50–67% residual reduction vs Ψ₁₆ᶠ | specific model | `[Empirical]` | `bench_c_interop.py` — cancel_chain, deep_cancel, mixed, branch |
 | Extension profile modularity: same core theorems, different extension cells | architectural | `[Empirical]` | Both profiles satisfy all base axioms, differ only in free cells |
 | Futamura projection 1: supercompile(interpreter, program) = supercompile(program) | universal | `[Empirical]` | `examples/psi_futamura.psi` — 10/10 pairs match under Ψ₁₆ᶜ |
+| Futamura projection 2: specializer + interpreter = compiler | universal | `[Empirical]` | `examples/psi_specialize.lisp` — beta reduction eliminates interpreter |
+| Futamura projection 3 (fixed point): compiled transpiler = interpreted transpiler | tooling | `[Empirical]` | `psi_transpile.lisp` compiled via `psi_transpile.py` → byte-identical Rust output |
+| Self-hosted transpiler: Ψ-Lisp → Rust (6 expression types, INC/INV/DEC specialization) | tooling | `[Empirical]` | `examples/psi_transpile.lisp` — all 6 tests compile and match |
 | Cancellation rule soundness: partial rules restricted to verified domain | universal | `[Empirical]` | Exhaustive 16-element check; counterexample: INC(DEC(12))=13≠12 |
 | Ψ-Lisp → C/Rust transpiler (output matches interpreter) | tooling | `[Empirical]` | `psi_transpile.py --target c\|rust` — fibonacci, recursion verified |
 | MMTk GC: 10M allocs in 4MB heap (MarkSweep + shadow stack roots) | tooling | `[Empirical]` | `HEAP_MB=4 cargo run -p wispy-stress --release` |
@@ -678,6 +730,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── BasePlusA7Derivation.lean     # Adding generic A7′ still doesn't force card ≥ 17
 │   ├── OntologicalSchema.lean        # Abstract four-lift schema theorem
 │   ├── Psi16.lean                    # Ψ₁₆ with selection axiom (42 theorems)
+│   ├── Psi16C.lean                  # Ψ₁₆ᶜ C-interop table (INC/DEC/INV cancellations)
 │   ├── Psi16Full.lean               # Ψ₁₆ᶠ full operations (83 theorems)
 │   ├── Psi16Discoverable.lean       # Behavioral discoverability (4-probe injectivity)
 │   ├── Psi16Rigidity.lean           # Automorphism rigidity (Aut = {id})
@@ -731,6 +784,9 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi_branch_test.psi            # Supercompiler test: branch elimination
 │   ├── psi_fold_constants.lisp        # Supercompiler test: constant folding
 │   ├── psi_futamura.psi              # Futamura projection demo (10 test cases, Ψ₁₆ᶜ)
+│   ├── psi_specialize.lisp           # Ψ-Lisp specializer: Futamura projections 1 & 2
+│   ├── psi_transpile.lisp            # Self-hosted transpiler: Ψ-Lisp IR → Rust code
+│   ├── psi_transpile_test.lisp       # Transpiler test harness (6 expression types)
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
@@ -782,12 +838,14 @@ uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
 python3 psi_repl.py --algebraic                              # Q-chain number representation
 python3 psi_lisp.py --algebraic examples/psi_fibonacci.lisp  # verify: same results, algebraic encoding
 
-# Rust (requires rustup — https://rustup.rs)
+# Rust interpreter (requires rustup — https://rustup.rs)
 cd kamea-rs
 cargo test                                                     # run all tests (40 total)
 cargo run --release -- run examples/psi_fibonacci.lisp         # run a Lisp program (~25x faster)
 cargo run --release -- repl                                    # interactive REPL
 cargo run --release -- bench examples/psi_fibonacci.lisp       # benchmark with timing
+# Note: kamea uses Ψ₁₆ᶠ table only. For --table=c (Ψ₁₆ᶜ) examples, use psi_lisp.py.
+# Most examples work with either interpreter; dot() values differ between tables.
 
 # Compiled Ψ-Lisp (C and Rust backends)
 python3 psi_transpile.py examples/psi_fibonacci.lisp > /tmp/fib.c    # C (default)
