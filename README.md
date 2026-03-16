@@ -118,11 +118,12 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements generates a TC system (stepped 2CM simulation matches reference interpreter on all test programs). The finite algebra is decidable; TC lives in the term algebra + evaluation semantics, as with combinatory logic over {S, K} `[Empirical]` — formal Lean verification open
-- TC minimality (canonical construction): all 7 TC roles pairwise forced distinct (21/21 merge attempts UNSAT); alternative constructions with fewer elements remain open `[SAT]`
+- Forced Roles Theorem: 5 behavioral categories with hard walls (32/45 pairs UNSAT); rigidity survives all collapse levels; maximal expressiveness selects 7-role specialization matching McCarthy's Lisp primitives `[SAT]`
 
 **Not formally established:**
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
 - Symmetric impossibility as a general theorem `[Open]`
+- Variational principle as formal theorem: maximal expressiveness demonstrated empirically (monotone cell count, consistent value maximization) but a formal proof that no intermediate level achieves the same maximum remains open `[Open]`
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
@@ -255,7 +256,7 @@ This is structurally identical to how {S, K} supports Turing completeness in com
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
-**TC Minimality (canonical construction).** The 7 roles used in the 2CM construction — ground (⊤), quote (Q), eval (E), branch (ρ), pair constructor (g), first projection (f), second projection (η) — are pairwise forced distinct. 21 satisfiability checks (`ds_search/tc_merge_test.py`), each asserting that one element satisfies both role axioms simultaneously, return UNSAT — all instantaneously, indicating shallow contradictions `[SAT]`. The canonical construction cannot be done with fewer than 7 elements. Whether an alternative TC construction in Ψ∗ exists using fewer elements remains open.
+**The Forced Roles Theorem.** The axioms force five behavioral categories: polarity (⊤/⊥), judgment (τ), substrate (g), composition (η), and computation (Q/E/f/ρ/Y). The Kleene barrier and inert role constraints create hard walls — judgment cannot merge with computation, substrate cannot merge with anything active (32/45 role pairs forced distinct at N=12) `[SAT]`. All instantiations of these categories, from maximally collapsed (5 role-bearing elements) to fully specialized (7+ elements), produce rigid discoverable algebras with trivial automorphism groups (verified at all 6 collapse levels) `[SAT]`. Among these, a variational principle of maximal compositional expressiveness uniquely selects full specialization: the model whose role-bearing elements produce the most distinct pairwise compositions (49 vs 16 1-step cells, 343 vs 64 2-step cells). The seven roles selected by this principle correspond to McCarthy's 1960 Lisp primitives — not by design, but by constrained optimization over the space of self-describing algebras. Four roles (⊤, τ, g, η) are forced by axioms alone; three (Q≠E, f≠ρ, ρ≠Y) are forced by the variational principle. Full argument in [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 **Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Example programs:
 
@@ -609,7 +610,11 @@ Programs that use `(dot ...)` operations — where the table choice matters. Sup
 | Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
 | Ψ∗ Turing-completeness (term algebra + eval over 7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
-| TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
+| Five behavioral categories forced (32/45 pairs UNSAT, min 5 elements) | universal | `[SAT]` | `forced_roles_test.py` — role-aliasing at N=12 |
+| Kleene wall: τ cannot merge with any encoder or inert role | universal | `[SAT]` | `forced_roles_test.py` — τ vs all 9 others UNSAT |
+| Inert wall: g cannot merge with any other role | universal | `[SAT]` | `forced_roles_test.py` — g vs all 9 others UNSAT |
+| Rigidity survives all collapse levels (5→7 role elements) | universal | `[SAT]` | `collapse_rigidity_test.py` — all 6 levels: |Aut|=1, WL-1 rigid |
+| Maximal expressiveness selects 7 roles (49 vs 16 cells) | structural | `[Empirical]` | `compositional_expressiveness.py` — monotone in role count |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
 | Defunctionalized CPS evaluator (14 continuation types, zero lambdas) | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
 | Inspectable continuations: k-walk, k-depth, k-next, describe-continuation | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — chain tags verified by comparison |
@@ -690,11 +695,17 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── substrate_analysis.py         # Substrate/stacking analysis
 │   ├── n16_freedom.py                # Ψ₁₆ᶠ cell-by-cell SAT freedom analysis
 │   ├── n16_c_interop.py              # Ψ₁₆ᶜ SAT search + freedom analysis
-│   ├── tc_merge_test.py              # TC minimality: 21 pairwise merge checks (all UNSAT)
+│   ├── forced_roles_test.py           # Layer 1: 45 pairwise role-aliasing tests (forced categories)
+│   ├── collapse_rigidity_test.py     # Layer 2: rigidity at 6 collapse levels (universal rigidity)
+│   ├── compositional_expressiveness.py # Layer 3: compositional cell/value counts (variational selection)
+│   ├── collapse_model_count.py       # Model diversity at maximal collapse (20+ models, all rigid)
+│   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── rigid_census.py               # Small rigid magma census
 │   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
+│   ├── forced_roles_theorem.md        # The Forced Roles Theorem (core theoretical result)
+│   ├── forced_roles.md               # Forced categories: raw SAT data + necessity analysis
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture
 │   ├── continuation_protocol.md      # Continuation protocol documentation

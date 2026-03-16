@@ -41,7 +41,14 @@ This file is the canonical status registry for claims made in this repository.
 | Black-box recovery: all 16 elements recoverable from shuffled oracle (3 methods, 100% on 1000 seeds) | Empirical | `psi_blackbox.py` | `uv run python psi_blackbox.py --seeds 1000 --compare` |
 | Ψ∗ Turing-completeness: 7 axiom-forced elements (⊤, Q, E, f, g, η, ρ) simulate 2-counter machines; universal across all models | Empirical | `psi_star.py` — stepped 2CM matches reference interpreter on 4 test programs | `uv run python psi_star.py` |
 | 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `ds_search/n16_freedom.py` build_solver + XOR/AND/OR constraints |
-| TC minimality (canonical construction): 7 TC roles pairwise forced distinct; canonical 2CM construction cannot use fewer than 7 elements; alternative constructions open | Empirical | `ds_search/tc_merge_test.py` — 21/21 pairwise merge attempts UNSAT | `uv run python ds_search/tc_merge_test.py` |
+| Five behavioral categories forced (32/45 role pairs UNSAT, min 5 elements) | Empirical | `ds_search/forced_roles_test.py` — role-aliasing at N=12; `docs/forced_roles.md` | `uv run python -m ds_search.forced_roles_test` |
+| Kleene wall: τ cannot merge with any encoder or inert role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
+| Inert wall: g cannot merge with any other role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
+| Rigidity survives all collapse levels: 6/6 levels WL-1 rigid, |Aut|=1, 1-probe discoverable | Empirical | `ds_search/collapse_rigidity_test.py` | `uv run python -m ds_search.collapse_rigidity_test` |
+| Model diversity at maximal collapse: 20+ distinct rigid models, 116/144 cells free | Empirical | `ds_search/collapse_model_count.py` | `uv run python -m ds_search.collapse_model_count` |
+| Maximal expressiveness selects 7-role specialization (49 vs 16 1-step cells, monotone in k) | Empirical | `ds_search/compositional_expressiveness.py`; `docs/forced_roles_theorem.md` | `uv run python -m ds_search.compositional_expressiveness` |
+| Emergent pair structure from Branch + 1-Inert (g as CONS not axiomatized) | Empirical | Structural analysis in `docs/forced_roles_theorem.md` | N/A |
+| Variational principle as formal theorem (cell count monotonicity → uniqueness) | Conjecture/Open | Empirically demonstrated; formal proof open | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 

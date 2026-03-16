@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-Test whether any pair of TC elements {⊤, Q, E, ρ, f, g, η} can be merged
-(forced to have identical rows AND columns in the Cayley table) while still
-satisfying all Ψ₁₆ᶠ axioms.
+DEPRECATED — This test is trivially true due to Ext (extensionality).
 
-21 pairs total. For each pair (a, b), we add:
-  ∀j: dot[a][j] == dot[b][j]   (same row)
-  ∀i: dot[i][a] == dot[i][b]   (same column)
-and check SAT/UNSAT.
+Forcing two different indices to have identical rows contradicts Ext,
+regardless of any role axioms. Confirmed: merging indices 2 and 3 under
+Level 0 alone (absorbers + Ext, zero role axioms) is already UNSAT.
+
+The correct test assigns both roles to the SAME index and checks if the
+combined behavioral constraints are satisfiable. See:
+  ds_search/forced_roles_test.py  — the honest characterization
+  docs/forced_roles.md            — full analysis
+
+Result: 32/45 pairs forced distinct, 13 mergeable, minimum 5 elements.
+The previous "21/21 UNSAT" claim was testing extensionality, not role forcing.
 """
 
 import time
