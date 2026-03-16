@@ -1,8 +1,8 @@
 # Kamea
 
-**Seven axiom-forced elements. One Turing-complete term algebra. 130+ Lean theorems. Zero `sorry`.**
+**Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
 
-*The axioms force seven algebraic roles whose term algebra — like combinatory logic over {S, K} — is Turing complete. The boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
+*Judgment cannot merge with computation. Substrate cannot merge with anything active. Among all rigid algebras respecting these walls, maximal expressiveness selects seven roles — the same seven McCarthy needed for Lisp. The boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
