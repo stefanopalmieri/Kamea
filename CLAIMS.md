@@ -48,6 +48,8 @@ This file is the canonical status registry for claims made in this repository.
 | Model diversity at maximal collapse: 20+ distinct rigid models, 116/144 cells free | Empirical | `ds_search/collapse_model_count.py` | `uv run python -m ds_search.collapse_model_count` |
 | Maximal expressiveness selects 7-role specialization (49 vs 16 1-step cells, monotone in k) | Empirical | `ds_search/compositional_expressiveness.py`; `docs/forced_roles_theorem.md` | `uv run python -m ds_search.compositional_expressiveness` |
 | Emergent pair structure from Branch + 1-Inert (g as CONS not axiomatized) | Empirical | Structural analysis in `docs/forced_roles_theorem.md` | N/A |
+| Futamura projection 1: supercompile(interpreter, program) = supercompile(program) for all 10 test cases | Empirical | `examples/psi_futamura.psi` | `python3 psi_supercompile.py --table=c examples/psi_futamura.psi` |
+| Cancellation rule soundness: INC/DEC/QE restricted to verified element domain (exhaustive 16-element check) | Empirical | `psi_supercompile.py` — counterexample: INC(DEC(12))=13≠12 | N/A |
 | Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on fibonacci + recursion | Empirical | `psi_transpile.py --target c\|rust` | `python3 psi_transpile.py --target rust examples/psi_fibonacci.lisp > /tmp/fib.rs && cp psi_runtime.rs /tmp/ && rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib` |
 | MMTk GC stress test: 10M cons cells in 4MB heap (MarkSweep + shadow stack roots) | Empirical | `kamea-rs/crates/wispy-gc/` + `wispy-stress/` | `cd kamea-rs && HEAP_MB=4 cargo run -p wispy-stress --release` |
 | Variational principle as formal theorem (cell count monotonicity → uniqueness) | Conjecture/Open | Empirically demonstrated; formal proof open | N/A |

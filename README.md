@@ -126,6 +126,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
 - Symmetric impossibility as a general theorem `[Open]`
 - Variational principle as formal theorem: maximal expressiveness demonstrated empirically (monotone cell count, consistent value maximization) but a formal proof that no intermediate level achieves the same maximum remains open `[Open]`
+- Higher Futamura projections: the second projection (specializer applied to interpreter = compiler) is implicit in the current architecture. The third projection (specializer applied to itself = compiler-compiler) is theoretically possible but not implemented. Both require extending the supercompiler to handle recursive evaluation and closures `[Open]`
 
 Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`, `Conjecture/Open`).
 
@@ -146,6 +147,7 @@ Claim status is tracked in [`CLAIMS.md`](CLAIMS.md) (`Lean-proved`, `Empirical`,
 13. [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
 14. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
 15. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
+16. [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
 
 ---
 
@@ -512,9 +514,9 @@ The Cayley table is a specification. You don't have to interpret it at runtime �
 | Pass | Rule | Justification |
 |------|------|---------------|
 | Constant folding | `(dot A B)` → table lookup when both atoms known | Cayley table is total |
-| QE cancellation | `E·(Q·x)` → `x`, `Q·(E·x)` → `x` | QE inverse axiom `[Lean]` |
-| INC/DEC cancellation | `INC·(DEC·x)` → `x`, `DEC·(INC·x)` → `x` | Mutual inverses on core (Ψ₁₆ᶜ only) |
-| INV cancellation | `INV·(INV·x)` → `x` | Full involution (Ψ₁₆ᶜ only) |
+| QE cancellation | `E·(Q·x)` → `x`, `Q·(E·x)` → `x` | QE inverse axiom `[Lean]`; verified on 9/16 elements; fires only when x is known valid atom |
+| INC/DEC cancellation | `INC·(DEC·x)` → `x`, `DEC·(INC·x)` → `x` | Mutual inverses; fires only when x is known core element ∈ {2,3,4,5} (Ψ₁₆ᶜ only) |
+| INV cancellation | `INV·(INV·x)` → `x` | Full involution, verified on all 16 elements (Ψ₁₆ᶜ only) |
 | Dead branch elimination | `(if ⊤ then else)` → `then` | Tester output determines branch |
 | Let propagation | `(let ((x KNOWN)) body)` → substitute and fold | Standard substitution |
 | Lambda inlining | `((λ (x) body) KNOWN)` → beta reduce and fold | Standard beta reduction |
@@ -593,6 +595,31 @@ Programs that use `(dot ...)` operations — where the table choice matters. Sup
 
 Ψ₁₆ᶠ table lookups are fast (sub-nanosecond, L1-cached 256-byte array). But Ψ₁₆ᶜ supercompilation eliminates the lookups entirely. The gap widens with chain depth — 8 operations that survive Ψ₁₆ᶠ supercompilation cost 1.6 ns; the same 8 operations under Ψ₁₆ᶜ cost 0 ns because the supercompiler proved they cancel. Details: [`docs/extension_profiles.md`](docs/extension_profiles.md).
 
+### Futamura Projections
+
+The supercompiler is a specializer. Applying it to an interpreter paired with a known program produces a compiled version of that program — the first Futamura projection (1971). This works on the Ψ algebra because the Cayley table is total and known: every operation the interpreter performs on known data resolves at compile time.
+
+A minimal opcode interpreter written in .psi IR — a lambda that takes an opcode and an argument, then applies the opcode via `dot` — produces identical results to direct computation when supercompiled:
+
+```
+Direct:      INC(INC(INC(f)))           → 5
+Evaluator:   eval([INC,INC,INC], f)     → 5  (supercompiled)
+
+Direct:      DEC(INV(INC(τ)))           → f
+Evaluator:   eval([DEC,INV,INC], τ)     → f  (supercompiled)
+
+Direct:      INC(DEC(INV(INC(f))))      → g
+Evaluator:   eval([INC,DEC,INV,INC], f) → g  (supercompiled)
+```
+
+Five test cases (10 programs), all matching. The supercompiler traces through the interpreter's dispatch, resolves every `dot` call on known arguments, applies cancellation rules (QE, INC/DEC, INV/INV where sound), and produces the same constant as direct compilation. The interpreter is eliminated entirely — zero residual operations.
+
+The second projection is implicit: the supercompiler applied to the interpreter IS a compiler. The third projection — specializing the supercompiler for itself — would produce a compiler-compiler. It is theoretically possible (the algebra is self-describing and Turing complete) but not yet implemented.
+
+```bash
+python3 psi_supercompile.py --table=c examples/psi_futamura.psi    # all 10 pairs match
+```
+
 ### Claim Matrix
 
 | Claim | Scope | Status | Evidence |
@@ -633,6 +660,8 @@ Programs that use `(dot ...)` operations — where the table choice matters. Sup
 | Ψ₁₆ᶜ actuality irreducibility (48/48 free tester cells) | specific model | `[Empirical]` | `ds_search/n16_c_interop.py --freedom` |
 | Ψ₁₆ᶜ supercompilation: 50–67% residual reduction vs Ψ₁₆ᶠ | specific model | `[Empirical]` | `bench_c_interop.py` — cancel_chain, deep_cancel, mixed, branch |
 | Extension profile modularity: same core theorems, different extension cells | architectural | `[Empirical]` | Both profiles satisfy all base axioms, differ only in free cells |
+| Futamura projection 1: supercompile(interpreter, program) = supercompile(program) | universal | `[Empirical]` | `examples/psi_futamura.psi` — 10/10 pairs match under Ψ₁₆ᶜ |
+| Cancellation rule soundness: partial rules restricted to verified domain | universal | `[Empirical]` | Exhaustive 16-element check; counterexample: INC(DEC(12))=13≠12 |
 | Ψ-Lisp → C/Rust transpiler (output matches interpreter) | tooling | `[Empirical]` | `psi_transpile.py --target c\|rust` — fibonacci, recursion verified |
 | MMTk GC: 10M allocs in 4MB heap (MarkSweep + shadow stack roots) | tooling | `[Empirical]` | `HEAP_MB=4 cargo run -p wispy-stress --release` |
 
@@ -701,6 +730,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── psi_counter_free.psi           # Supercompiler test: free-variable counter
 │   ├── psi_branch_test.psi            # Supercompiler test: branch elimination
 │   ├── psi_fold_constants.lisp        # Supercompiler test: constant folding
+│   ├── psi_futamura.psi              # Futamura projection demo (10 test cases, Ψ₁₆ᶜ)
 │   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
