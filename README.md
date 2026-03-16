@@ -119,6 +119,8 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements generates a TC system (stepped 2CM simulation matches reference interpreter on all test programs). The finite algebra is decidable; TC lives in the term algebra + evaluation semantics, as with combinatory logic over {S, K} `[Empirical]` — formal Lean verification open
 - Forced Roles Theorem: 5 behavioral categories with hard walls (32/45 pairs UNSAT); rigidity survives all collapse levels; maximal expressiveness selects 7-role specialization matching McCarthy's Lisp primitives `[SAT]`
+- Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on all test programs; Rust backend compiles warning-free with `rustc -O` `[Empirical]`
+- MMTk garbage collection: 10M cons cell allocations in 4MB heap (would need 240MB without GC); MarkSweep plan with shadow stack root scanning `[Empirical]`
 
 **Not formally established:**
 - Uniqueness or optimality of Ψ₁₆ᶠ among satisfying models `[Open]`
@@ -631,6 +633,8 @@ Programs that use `(dot ...)` operations — where the table choice matters. Sup
 | Ψ₁₆ᶜ actuality irreducibility (48/48 free tester cells) | specific model | `[Empirical]` | `ds_search/n16_c_interop.py --freedom` |
 | Ψ₁₆ᶜ supercompilation: 50–67% residual reduction vs Ψ₁₆ᶠ | specific model | `[Empirical]` | `bench_c_interop.py` — cancel_chain, deep_cancel, mixed, branch |
 | Extension profile modularity: same core theorems, different extension cells | architectural | `[Empirical]` | Both profiles satisfy all base axioms, differ only in free cells |
+| Ψ-Lisp → C/Rust transpiler (output matches interpreter) | tooling | `[Empirical]` | `psi_transpile.py --target c\|rust` — fibonacci, recursion verified |
+| MMTk GC: 10M allocs in 4MB heap (MarkSweep + shadow stack roots) | tooling | `[Empirical]` | `HEAP_MB=4 cargo run -p wispy-stress --release` |
 
 Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
@@ -666,13 +670,22 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   │   │       └── io.rs                 # IO channel abstraction
 │   │   ├── psi-cli/                      # Native CLI — runner, REPL, benchmark
 │   │   │   └── src/main.rs
-│   │   └── psi-web/                      # WASM target + browser debugger
-│   │       ├── src/lib.rs                # wasm-bindgen exports
-│   │       └── www/
-│   │           ├── index.html            # Debugger UI
-│   │           ├── debugger.js           # UI logic (computation in Web Worker)
-│   │           ├── worker.js             # WASM Web Worker
-│   │           └── style.css
+│   │   ├── psi-web/                      # WASM target + browser debugger
+│   │   │   ├── src/lib.rs                # wasm-bindgen exports
+│   │   │   └── www/
+│   │   │       ├── index.html            # Debugger UI
+│   │   │       ├── debugger.js           # UI logic (computation in Web Worker)
+│   │   │       ├── worker.js             # WASM Web Worker
+│   │   │       └── style.css
+│   │   ├── wispy-gc/                     # MMTk garbage collector integration
+│   │   │   └── src/
+│   │   │       ├── lib.rs                # WispyVal type, tag helpers, public API
+│   │   │       ├── vm.rs                 # VMBinding impl, WispySlot, Collection, Scanning
+│   │   │       ├── object.rs             # 24-byte cons cell ObjectModel (header + car + cdr)
+│   │   │       ├── roots.rs              # Shadow stack for GC root scanning
+│   │   │       └── alloc.rs              # wispy_cons/car/cdr — allocation through MMTk
+│   │   └── wispy-stress/                 # GC stress test (10M allocs in 4MB heap)
+│   │       └── src/main.rs
 │   └── examples/
 │       └── psi_*.lisp                    # Lisp test programs (copied from examples/)
 ├── examples/
@@ -714,9 +727,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 ├── psi_star_c.py                     # Ψ∗ term algebra over Ψ₁₆ᶜ (C-interop table)
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 ├── psi_supercompile.py               # Partial evaluator: 2–5 pass supercompiler (table-dependent)
-├── psi_transpile.py                  # Supercompiled Ψ∗ → C transpiler (INC/DEC/INV specialization)
+├── psi_transpile.py                  # Ψ-Lisp → C/Rust transpiler (--target c|rust)
 ├── psi_runtime.h                     # C runtime for Ψ₁₆ᶠ: 256-byte table + inline dot
 ├── psi_runtime_c.h                   # C runtime for Ψ₁₆ᶜ: table + arithmetic helpers
+├── psi_runtime.rs                    # Rust runtime for Ψ₁₆ᶜ: table + Arena (bump allocator)
 ├── bench_c_interop.py                # Benchmark: Ψ₁₆ᶜ vs Ψ₁₆ᶠ comparison
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── psi_repl.py                       # Interactive Ψ-Lisp REPL
@@ -745,6 +759,18 @@ cargo run --release -- run examples/psi_fibonacci.lisp         # run a Lisp prog
 cargo run --release -- repl                                    # interactive REPL
 cargo run --release -- bench examples/psi_fibonacci.lisp       # benchmark with timing
 
+# Compiled Ψ-Lisp (C and Rust backends)
+python3 psi_transpile.py examples/psi_fibonacci.lisp > /tmp/fib.c    # C (default)
+gcc -O2 -I. -o /tmp/fib /tmp/fib.c && /tmp/fib
+
+python3 psi_transpile.py --target rust examples/psi_fibonacci.lisp > /tmp/fib.rs  # Rust
+cp psi_runtime.rs /tmp/
+rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib
+
+# MMTk garbage collection stress test
+cd kamea-rs
+HEAP_MB=4 cargo run -p wispy-stress --release                  # 10M allocs in 4MB heap
+
 # WASM browser debugger (requires wasm-pack — https://rustwasm.github.io/wasm-pack/)
 cd kamea-rs/crates/psi-web
 wasm-pack build --target web                                   # build WASM (124KB)
@@ -754,7 +780,7 @@ python3 -m http.server 8080 --directory www                    # serve debugger 
 
 All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
 
-All Mini-Lisp test programs produce identical output in Python, Rust, and WASM.
+All Mini-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
 
 ---
 
