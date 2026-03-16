@@ -2,7 +2,7 @@
 
 **Seven axiom-forced elements. One Turing-complete term algebra. 130+ Lean theorems. Zero `sorry`.**
 
-*Seven algebraic elements, forced by axioms alone, are sufficient for Turing-complete self-describing computation — and the boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
+*The axioms force seven algebraic roles whose term algebra — like combinatory logic over {S, K} — is Turing complete. The boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -46,7 +46,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose seven primitive roles are axiom-forced and provably sufficient for Turing completeness.
+A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose seven primitive roles are axiom-forced and whose term algebra is Turing complete.
 
 Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
 
@@ -117,7 +117,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - 3-level reflective tower: compute → verify ground → inspect/modify continuations → branch swap `[Empirical]`
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
-- Term algebra Ψ∗ over 7 axiom-forced elements is Turing complete: stepped 2CM simulation matches reference interpreter on all test programs (INC/DEC, transfer loop, clear loop) `[Empirical]` — formal Lean verification open
+- Term algebra Ψ∗ over 7 axiom-forced elements generates a TC system (stepped 2CM simulation matches reference interpreter on all test programs). The finite algebra is decidable; TC lives in the term algebra + evaluation semantics, as with combinatory logic over {S, K} `[Empirical]` — formal Lean verification open
 - TC minimality (canonical construction): all 7 TC roles pairwise forced distinct (21/21 merge attempts UNSAT); alternative constructions with fewer elements remain open `[SAT]`
 
 **Not formally established:**
@@ -222,7 +222,7 @@ These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but 
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
-- **Turing-completeness of Ψ∗.** `[Empirical]` The term algebra Ψ∗ over any Ψ model simulates 2-counter machines (Minsky 1961) using 7 axiom-forced elements: ⊤ (zero), Q (successor), E (predecessor), g (pair), f (fst), η (snd), ρ (branch). A stepped simulation matches a reference interpreter trace-for-trace on all test programs. This is universal — it holds for every model of the axiom class, not just Ψ₁₆ᶠ. The free cells provide efficiency, not capability. Formal Lean verification remains open. See below.
+- **Turing-completeness of Ψ∗.** `[Empirical]` The term algebra Ψ∗ over any Ψ model, equipped with constructor/destructor evaluation semantics and a stepped machine, simulates 2-counter machines (Minsky 1961) using 7 axiom-forced elements: ⊤ (zero), Q (successor), E (predecessor), g (pair), f (fst), η (snd), ρ (branch). The finite algebra is decidable; TC lives in the term algebra + eval, as with combinatory logic over {S, K}. The contribution is that the basis elements are axiom-forced rather than chosen. Universal — holds for every model of the axiom class, not just Ψ₁₆ᶠ. Formal Lean verification remains open. See below.
 - **Equational minimality.** `[Empirical]` Among the 4,694 equational laws cataloged by the [Equational Theories Project](https://github.com/teorth/equational_theories) (Tao et al., 2024), Ψ₁₆ᶠ satisfies exactly one non-trivial law: power-associativity (ETP Equation 4380). All other equational regularities — associativity, commutativity, idempotency, and 4,690 others — are violated. The structure that makes the algebra interesting (absorbers, role separation, Kleene barrier, actuality irreducibility, QE inverse pair) lives entirely in a richer logical fragment that the equational framework cannot express.
 
 ### The Decidability Boundary and Turing Completeness
@@ -250,6 +250,8 @@ The simulation (`psi_star.py`) matches a reference 2CM interpreter trace-for-tra
 1. **The step loop is the machine, not a gap.** Every TC system has an execution substrate. The Python loop is ours — small, fixed, program-independent. The Rust emulator will implement the same cycle.
 2. **The machine provides implicit duplication.** Non-destructive heap reads let the step function project c0, c1, and pc from the same state. This is the standard separation: the instruction set is combinational, the machine adds state.
 3. **The structural branch is a semantic design choice.** ρ dispatching on atom-vs-compound at the Ψ∗ level is the natural lifting of τ's boolean dispatch at the algebra level, but it is a choice in the evaluation semantics, not a direct axiom consequence.
+
+This is structurally identical to how {S, K} supports Turing completeness in combinatory logic — the combinators provide the instruction set, the evaluation semantics provides the machine. The contribution here is not TC per se (many finite bases generate TC term algebras) but that the basis elements are *axiom-forced* rather than chosen, and that the same elements also serve as the algebra's self-description mechanism.
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
@@ -606,7 +608,7 @@ Programs that use `(dot ...)` operations — where the table choice matters. Sup
 | N=16 determination: 64/256 fixed (25.0%) | size-specific | `[SAT]` | `n16_freedom.py` |
 | Black-box recovery (3 methods, 100%) | specific model | `[Empirical]` | `psi_blackbox.py` |
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
-| Ψ∗ Turing-completeness (7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
+| Ψ∗ Turing-completeness (term algebra + eval over 7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
 | TC minimality — canonical construction (7 roles pairwise distinct) | universal | `[SAT]` | `tc_merge_test.py` — 21/21 pairs UNSAT |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
 | Defunctionalized CPS evaluator (14 continuation types, zero lambdas) | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
