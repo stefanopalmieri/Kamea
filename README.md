@@ -562,14 +562,14 @@ Both cases verified: all 16 inputs produce identical results through the interpr
 
 ### Performance
 
-Each row runs the same five computations: fib(8), fib-iter(30), fact(10), power(2,10), gcd(100,75). Single invocation = wall-clock time including process startup. Amortized = per-iteration in a tight loop (10M iterations for C/Rust, 100K for Python).
+Each row runs the same five computations: fib(8), fib-iter(30), fact(10), power(2,10), gcd(100,75). These are pure arithmetic — `(+)`, `(-)`, `(*)`, `(if)` — with zero `psi_dot()` calls. The compiled C is identical under both Ψ₁₆ᶠ and Ψ₁₆ᶜ. Single invocation = wall-clock time including process startup. Amortized = per-iteration in a tight loop (10M iterations for C/Rust, 100K for Python).
 
 | Implementation | Single invocation | Amortized/iter | vs Ψ-Lisp Python |
 |----------------|------------------|---------------|-----------------|
 | **Ψ-Lisp (Python interpreter)** | ~2,000 ms | — | 1x |
 | **Ψ-Lisp (Rust interpreter)** | ~200 ms | — | 10x |
 | **Native Python** | ~30 ms (startup), 5 µs compute | 5 µs | 400,000x |
-| **Compiled Ψ-Lisp** (gcc -O2) | ~2.4 ms (startup) | 0.01 µs | 200,000,000x |
+| **Compiled Ψ-Lisp** (both profiles, gcc -O2) | ~2.4 ms (startup) | 0.01 µs | 200,000,000x |
 | **Native Rust** (LLVM -O) | ~1 ms (startup) | 0.003 µs | ~700,000,000x |
 
 The Ψ-Lisp interpreters are slow because of triple indirection: the host language runs an evaluator, which walks S-expressions, which encodes numbers as Q-chains (nested `App(Q, App(Q, ...))` trees). Every `(+ a b)` decodes two Q-chains, adds, and re-encodes. The transpiler eliminates all of that — `(+ a b)` becomes a single `add` instruction.
@@ -578,7 +578,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 
 ### Extension Profile Comparison (Ψ₁₆ᶠ vs Ψ₁₆ᶜ)
 
-The same program compiled against different tables. Supercompilation residual = AST nodes after optimization. Compiled C = 100M iterations, `gcc -O2`.
+Programs that use `(dot ...)` operations — where the table choice matters. Supercompilation residual = AST nodes after optimization. Compiled C = 100M iterations, `gcc -O2`.
 
 | Benchmark | Ψ₁₆ᶠ residual | Ψ₁₆ᶜ residual | Ψ₁₆ᶠ C (ns/iter) | Ψ₁₆ᶜ C (ns/iter) |
 |-----------|--------------|--------------|------------------|------------------|
