@@ -13,24 +13,38 @@ Usage:
 """
 
 import sys
-from psi_star import TABLE
+import os
+
+# Table selection: use Ψ₁₆ᶜ if PSI_TABLE=c or --table=c, else Ψ₁₆ᶠ
+_table_mode = os.environ.get('PSI_TABLE', '')
+if '--table=c' in sys.argv:
+    _table_mode = 'c'
+    sys.argv.remove('--table=c')
+
+if _table_mode == 'c':
+    from psi_star_c import TABLE
+    INC_IDX, DEC_IDX, INV_IDX = 13, 15, 14
+else:
+    from psi_star import TABLE
+    INC_IDX, DEC_IDX, INV_IDX = 13, 15, 14  # same indices, different table
 
 # ═══════════════════════════════════════════════════════════════════════
 # Named atom constants
 # ═══════════════════════════════════════════════════════════════════════
 
 ATOM_NAMES = {
-    'TOP': 0, 'BOT': 1, 'f': 2, 'TAU': 3, 'g': 4, 'SEQ': 5,
-    'Q': 6, 'E': 7, 'RHO': 8, 'ETA': 9, 'Y': 10, 'PAIR': 11,
-    's0': 12, 'INC': 13, 'GET': 14, 'DEC': 15,
-    # Counter state aliases
+    'TOP': 0, 'BOT': 1, 'f': 2, 'TAU': 3, 'g': 4, '5': 5,
+    'Q': 6, 'E': 7, 'RHO': 8, 'ETA': 9, 'Y': 10, '11': 11,
+    'SEQ': 12, 'INC': 13, 'INV': 14, 'DEC': 15,
+    # Legacy aliases (Ψ₁₆ᶠ names still accepted)
+    'PAIR': 11, 'GET': 14, 's0': 12,
     's1': 14, 's2': 6, 's3': 11, 's4': 10, 's5': 15, 's6': 8, 's7': 7,
 }
 
 ATOM_DISPLAY = {
-    0: 'TOP', 1: 'BOT', 2: 'f', 3: 'TAU', 4: 'g', 5: 'SEQ',
-    6: 'Q', 7: 'E', 8: 'RHO', 9: 'ETA', 10: 'Y', 11: 'PAIR',
-    12: 's0', 13: 'INC', 14: 'GET', 15: 'DEC',
+    0: 'TOP', 1: 'BOT', 2: 'f', 3: 'TAU', 4: 'g', 5: '5',
+    6: 'Q', 7: 'E', 8: 'RHO', 9: 'ETA', 10: 'Y', 11: '11',
+    12: 'SEQ', 13: 'INC', 14: 'INV', 15: 'DEC',
 }
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -204,6 +218,23 @@ def subst(var, val, expr):
 
 Q_IDX, E_IDX = 6, 7
 
+# Cancellation pairs: (outer, inner) such that outer·(inner·x) → x
+# QE/EQ are universal (both tables). INC/DEC and INV/INV are Ψ₁₆ᶜ only.
+CANCEL_PAIRS = [
+    (E_IDX, Q_IDX),       # E·(Q·x) → x
+    (Q_IDX, E_IDX),       # Q·(E·x) → x
+]
+if _table_mode == 'c':
+    CANCEL_PAIRS += [
+        (INC_IDX, DEC_IDX),   # INC·(DEC·x) → x  (Ψ₁₆ᶜ: mutual inverses on core)
+        (DEC_IDX, INC_IDX),   # DEC·(INC·x) → x
+        (INV_IDX, INV_IDX),   # INV·(INV·x) → x  (Ψ₁₆ᶜ: full involution)
+    ]
+_CANCEL_MAP = {}  # outer_idx → set of inner_idx that cancel
+for _o, _i in CANCEL_PAIRS:
+    _CANCEL_MAP.setdefault(_o, set()).add(_i)
+
+
 def is_value(e):
     """True if e is a fully reduced value (propagatable through let)."""
     return isinstance(e, (Atom, Lam))
@@ -215,22 +246,18 @@ def fold_all(e):
     if isinstance(e, Dot):
         a = fold_all(e.a)
         b_raw = e.b
-        # QE cancellation on raw b
+        # Cancellation on raw b (pre-fold): outer·(inner·x) → x
         if isinstance(a, Atom) and isinstance(b_raw, Dot):
             b_head = b_raw.a if isinstance(b_raw.a, Atom) else None
-            if a.idx == E_IDX and b_head and b_head.idx == Q_IDX:
-                return fold_all(b_raw.b)
-            if a.idx == Q_IDX and b_head and b_head.idx == E_IDX:
+            if b_head and b_head.idx in _CANCEL_MAP.get(a.idx, ()):
                 return fold_all(b_raw.b)
         b = fold_all(b_raw)
         # Table lookup
         if isinstance(a, Atom) and isinstance(b, Atom):
             return Atom(TABLE[a.idx][b.idx])
-        # Post-fold QE
-        if isinstance(a, Atom) and isinstance(b, Dot):
-            if a.idx == E_IDX and isinstance(b.a, Atom) and b.a.idx == Q_IDX:
-                return b.b
-            if a.idx == Q_IDX and isinstance(b.a, Atom) and b.a.idx == E_IDX:
+        # Post-fold cancellation
+        if isinstance(a, Atom) and isinstance(b, Dot) and isinstance(b.a, Atom):
+            if b.a.idx in _CANCEL_MAP.get(a.idx, ()):
                 return b.b
         return Dot(a, b)
 

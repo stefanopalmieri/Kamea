@@ -465,8 +465,21 @@ class Compiler:
                 return f'(printf("%s", "{inner}"), PSI_NIL)'
             return f'(psi_print_val({self.emit_expr(arg)}), PSI_NIL)'
 
-        # Cayley table
+        # Cayley table — specialize INC/DEC/INV for Ψ₁₆ᶜ inline helpers
         if head == 'dot' and len(sexpr) == 3:
+            first = sexpr[1]
+            # Check if first arg is a known atom (string name or integer)
+            first_idx = None
+            if isinstance(first, str) and first in ('INC', 'INV', 'DEC'):
+                first_idx = {'INC': 13, 'INV': 14, 'DEC': 15}[first]
+            elif isinstance(first, int) and first in (13, 14, 15):
+                first_idx = first
+            if first_idx == 13:
+                return f'(psi_val)psi_inc((uint8_t){self.emit_expr(sexpr[2])})'
+            if first_idx == 14:
+                return f'(psi_val)psi_inv((uint8_t){self.emit_expr(sexpr[2])})'
+            if first_idx == 15:
+                return f'(psi_val)psi_dec((uint8_t){self.emit_expr(sexpr[2])})'
             return f'(psi_val)psi_dot((uint8_t){self.emit_expr(sexpr[1])}, (uint8_t){self.emit_expr(sexpr[2])})'
 
         # Logical (short-circuit — only works as simple expr if args are simple)

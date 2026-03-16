@@ -440,6 +440,24 @@ INC · s1 = 6  (Q = s2)   -- increment again: counter state 2 is Q
 τ · s1   = 1  (⊥)        -- non-zero: tester rejects s1
 ```
 
+### Extension Profiles
+
+Ψ₁₆ᶠ is the **hardware profile** — designed for FPGA and embedded targets where every operation is a single table lookup. Its extensions (8-state counter, IO roundtrip, 2×2 product) pack maximum functionality into 256 bytes of ROM.
+
+Ψ₁₆ᶜ is the **software profile** — designed for conventional hosts via supercompile → transpile → C. Its extensions (4-cycle counter on core {2,3,4,5}, INV involution) have arithmetic interpretations (`INC(x) = ((x-1)&3)+2`, `INV(x) = 7-x`) that make three additional cancellation rules sound:
+
+| Rule | Identity | Sound because |
+|------|----------|---------------|
+| INC·(DEC·x) → x | mutual inverses on core | 4-cycle + reverse 4-cycle |
+| DEC·(INC·x) → x | mutual inverses on core | same |
+| INV·(INV·x) → x | full involution | SAT-enforced on all 16 elements |
+
+After supercompilation, Ψ₁₆ᶜ eliminates 50–67% more residual operations than Ψ₁₆ᶠ. An 8-operation chain of paired INV and INC/DEC operations supercompiles to the identity function — zero runtime cost. The arithmetic row interpretations exist to make the cancellation rules sound; the cancellation rules eliminate the code.
+
+Both profiles share the same base axioms, the same universal theorems, and the same evaluation semantics. They differ only in the free cells — different fillings of the extension space, optimized for different targets. The analogy to RISC-V ISA extensions (RV32I base + M/F/V/... extensions) is deliberate.
+
+Actuality irreducibility holds across both profiles: 48/48 free tester cells in Ψ₁₆ᶜ, 40/48 in Ψ₁₆ᶠ (8 fixed by counter-zero-test coupling). Full details: [`docs/extension_profiles.md`](docs/extension_profiles.md).
+
 ---
 
 ## 3. Black-Box Recovery
@@ -478,6 +496,7 @@ uv run python psi_blackbox.py --seeds 1000 --compare          # cost comparison
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
+- **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 
 ## 5. Supercompiler and Compilation Pipeline
 
@@ -489,6 +508,8 @@ The Cayley table is a specification. You don't have to interpret it at runtime �
 |------|------|---------------|
 | Constant folding | `(dot A B)` → table lookup when both atoms known | Cayley table is total |
 | QE cancellation | `E·(Q·x)` → `x`, `Q·(E·x)` → `x` | QE inverse axiom `[Lean]` |
+| INC/DEC cancellation | `INC·(DEC·x)` → `x`, `DEC·(INC·x)` → `x` | Mutual inverses on core (Ψ₁₆ᶜ only) |
+| INV cancellation | `INV·(INV·x)` → `x` | Full involution (Ψ₁₆ᶜ only) |
 | Dead branch elimination | `(if ⊤ then else)` → `then` | Tester output determines branch |
 | Let propagation | `(let ((x KNOWN)) body)` → substitute and fold | Standard substitution |
 | Lambda inlining | `((λ (x) body) KNOWN)` → beta reduce and fold | Standard beta reduction |
@@ -555,6 +576,18 @@ The Ψ-Lisp interpreters are slow because of triple indirection: the host langua
 
 The compiled output is within **4x of hand-written Rust compiled with LLVM** — and faster than native Python. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. A language designed for algebraic self-description, not performance, compiles to near-native speed through a pipeline small enough to audit in an afternoon.
 
+### Extension Profile Comparison (Ψ₁₆ᶠ vs Ψ₁₆ᶜ)
+
+The same program compiled against different tables. Supercompilation residual = AST nodes after optimization. Compiled C = 100M iterations, `gcc -O2`.
+
+| Benchmark | Ψ₁₆ᶠ residual | Ψ₁₆ᶜ residual | Ψ₁₆ᶠ C (ns/iter) | Ψ₁₆ᶜ C (ns/iter) |
+|-----------|--------------|--------------|------------------|------------------|
+| `INV·INV·INC·DEC·x` (4 ops) | 4 dots | **0 dots** (identity) | 0.9 | **0.5** |
+| `INV·INV·(INC·DEC)³·x` (8 ops) | 8 dots | **0 dots** (identity) | 1.6 | **0.6** |
+| `E·Q·INC·DEC·x` (mixed) | 2 dots | **0 dots** (identity) | 0.9 | **0.5** |
+
+Ψ₁₆ᶠ table lookups are fast (sub-nanosecond, L1-cached 256-byte array). But Ψ₁₆ᶜ supercompilation eliminates the lookups entirely. The gap widens with chain depth — 8 operations that survive Ψ₁₆ᶠ supercompilation cost 1.6 ns; the same 8 operations under Ψ₁₆ᶜ cost 0 ns because the supercompiler proved they cancel. Details: [`docs/extension_profiles.md`](docs/extension_profiles.md).
+
 ### Claim Matrix
 
 | Claim | Scope | Status | Evidence |
@@ -587,6 +620,10 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 | Supercompiler: 5-pass partial evaluator (fold, QE, branch, let, lambda) | universal | `[Empirical]` | `psi_supercompile.py` — all optimizations algebraically justified |
 | C transpiler: supercompiled Ψ∗ → C with 256-byte runtime | specific model | `[Empirical]` | `psi_transpile.py` — verified against interpreter for all 16 inputs |
 | End-to-end compilation: Ψ-Lisp → supercompile → C → native binary | specific model | `[Empirical]` | Full pipeline tested on counter arithmetic and branching programs |
+| Ψ₁₆ᶜ extension: INV involution + modular INC/DEC + 5 cancellation rules | specific model | `[Empirical]` | `ds_search/n16_c_interop.py` + `psi_star_c.py` |
+| Ψ₁₆ᶜ actuality irreducibility (48/48 free tester cells) | specific model | `[Empirical]` | `ds_search/n16_c_interop.py --freedom` |
+| Ψ₁₆ᶜ supercompilation: 50–67% residual reduction vs Ψ₁₆ᶠ | specific model | `[Empirical]` | `bench_c_interop.py` — cancel_chain, deep_cancel, mixed, branch |
+| Extension profile modularity: same core theorems, different extension cells | architectural | `[Empirical]` | Both profiles satisfy all base axioms, differ only in free cells |
 
 Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
@@ -649,20 +686,25 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
 │   ├── substrate_analysis.py         # Substrate/stacking analysis
-│   ├── n16_freedom.py                # N=16 cell-by-cell SAT freedom analysis
+│   ├── n16_freedom.py                # Ψ₁₆ᶠ cell-by-cell SAT freedom analysis
+│   ├── n16_c_interop.py              # Ψ₁₆ᶜ SAT search + freedom analysis
 │   ├── tc_merge_test.py              # TC minimality: 21 pairwise merge checks (all UNSAT)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── rigid_census.py               # Small rigid magma census
 │   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
+│   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
+├── psi_star_c.py                     # Ψ∗ term algebra over Ψ₁₆ᶜ (C-interop table)
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
-├── psi_supercompile.py               # Partial evaluator: 5-pass supercompiler
-├── psi_transpile.py                  # Supercompiled Ψ∗ → C transpiler
-├── psi_runtime.h                     # C runtime: 256-byte Cayley table + inline dot
+├── psi_supercompile.py               # Partial evaluator: 2–5 pass supercompiler (table-dependent)
+├── psi_transpile.py                  # Supercompiled Ψ∗ → C transpiler (INC/DEC/INV specialization)
+├── psi_runtime.h                     # C runtime for Ψ₁₆ᶠ: 256-byte table + inline dot
+├── psi_runtime_c.h                   # C runtime for Ψ₁₆ᶜ: table + arithmetic helpers
+├── bench_c_interop.py                # Benchmark: Ψ₁₆ᶜ vs Ψ₁₆ᶠ comparison
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── psi_repl.py                       # Interactive Ψ-Lisp REPL
 ├── CLAIMS.md                         # Claim status registry
