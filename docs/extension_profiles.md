@@ -1,6 +1,6 @@
 # Extension Profiles
 
-The Ψ framework separates **core** from **extension**. The core — seven axiom-forced elements (⊤, Q, E, f, g, η, ρ) plus the tester τ and Y-combinator — is pinned by the base axioms (L0–L8, C, D, PA, VV, QE, Branch, Compose, Y, Selection). These axioms fix ~18% of the 16×16 Cayley table: absorber rows, E-transparency, QE round-trip on core, the Selection identity η·ρ = τ, and the Y fixed-point Y·ρ = ρ·(Y·ρ). The remaining ~82% is the **extension space** — 209 free cells at N=16 under Ψ₁₆ᶜ, 192 under Ψ₁₆ᶠ.
+The Ψ framework separates **core** from **extension**. The core — seven role-bearing elements (⊤, Q, E, f, g, η, ρ) from five axiom-forced categories, plus the tester τ and Y-combinator — is pinned by the base axioms (L0–L8, C, D, PA, VV, QE, Branch, Compose, Y, Selection). These axioms fix ~18% of the 16×16 Cayley table: absorber rows, E-transparency, QE round-trip on core, the Selection identity η·ρ = τ, and the Y fixed-point Y·ρ = ρ·(Y·ρ). The remaining ~82% is the **extension space** — 209 free cells at N=16 under Ψ₁₆ᶜ, 192 under Ψ₁₆ᶠ.
 
 Different fillings of the extension space serve different deployment targets. All fillings share the same universal theorems: WL-1 rigidity (Ext axiom), actuality irreducibility (tester rows unconstrained by structural axioms), Kleene separation, no right identity, constructibility, and Turing completeness of Ψ∗.
 

@@ -2,13 +2,13 @@
 
 ## Statement
 
-The Ψ axioms force five behavioral categories with hard walls between judgment, substrate, and computation. All instantiations — from maximally collapsed (5 role-bearing elements) to fully specialized (7+ role-bearing elements) — produce rigid, discoverable algebras. Among these, a variational principle of maximal compositional expressiveness uniquely selects the fully specialized instantiation, whose seven roles correspond to McCarthy's 1960 Lisp primitives.
+The Ψ axioms force five behavioral categories with hard walls between judgment, substrate, and computation. All instantiations — from maximally collapsed (5 role-bearing elements) to fully specialized (7+ role-bearing elements) — produce rigid, discoverable algebras. Among tested collapses, seven specialized roles maximize compositional expressiveness, and these seven correspond to McCarthy's 1960 Lisp primitives. Five categories are axiom-forced (theorem). Seven roles are empirically optimal (not yet proved necessary).
 
 The argument has three layers, each building on the previous:
 
 1. **Forced Categories.** The axioms partition 10 TC roles into 5 categories with hard walls between them. This is a theorem (SAT/UNSAT), not a design choice.
 2. **Universal Rigidity.** Every instantiation of these categories — from 5 to 7+ role-bearing elements — produces a rigid, discoverable algebra. Rigidity is a property of the axiom geometry, not of role specialization.
-3. **Variational Selection.** Among all rigid instantiations, the fully specialized one (7 distinct role elements) maximizes the number of distinct pairwise compositions among role-bearing elements. This principle uniquely selects the natural unfolding.
+3. **Variational Selection.** Among tested collapse levels, the fully specialized instantiation (7 distinct role elements) maximizes the number of distinct pairwise compositions among role-bearing elements. This selects the natural unfolding empirically; a formal proof of uniqueness remains open.
 
 ---
 
@@ -317,4 +317,4 @@ The argument proceeds in three steps:
 2. All instantiations are rigid. This is an empirical universal. *(6/6 levels rigid, |Aut|=1)*
 3. Full specialization maximizes expressiveness. This is a variational selection. *(49 vs 16 cells, 11 vs 7 values, depth 2 vs 3)*
 
-The result: the axioms force the category structure; the variational principle forces the specialization; the specialization matches McCarthy. The seven-role architecture of self-describing algebras is not a design choice but a constrained optimum.
+The result: the axioms force the category structure (theorem); maximal expressiveness selects the specialization among tested collapses (empirical); the specialization matches McCarthy (structural observation). Five categories are proved necessary. Seven roles are the empirical optimum — a formal proof that no intermediate level achieves equal expressiveness remains open.

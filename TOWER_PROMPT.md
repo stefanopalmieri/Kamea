@@ -218,7 +218,7 @@ The tower terminates at Layer 0, which is finite and verified.
 - **Real reflection.** `(reflect)` jumps to a captured/modified continuation. The program genuinely alters its own future.
 - **Grounded tower.** Unlike 3-Lisp, Level 1 verifies the Cayley table before the meta-evaluator is trusted. The tower has a proved foundation.
 - **CPS evaluator as machine specification.** The meta-circular evaluator in CPS is a state machine. It could, in principle, be compiled down to Cayley table dispatch. This is the Scheme-79 insight applied to Ψ.
-- **Meta-circular closure.** Ψ-Lisp interpreting Ψ-Lisp. The seven axiom-forced atoms that implement the language are the same atoms the meta-circular evaluator is built from. The language interprets itself using itself.
+- **Meta-circular closure.** Ψ-Lisp interpreting Ψ-Lisp. The seven role-bearing atoms (from five axiom-forced categories) that implement the language are the same atoms the meta-circular evaluator is built from. The language interprets itself using itself.
 
 ## What NOT to Do
 

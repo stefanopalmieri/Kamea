@@ -2,7 +2,7 @@
 
 **Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
 
-*Judgment cannot merge with computation. Substrate cannot merge with anything active. Among all rigid algebras respecting these walls, maximal expressiveness selects seven roles — the same seven McCarthy needed for Lisp. The boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
+*Judgment cannot merge with computation. Substrate cannot merge with anything active. Five role categories are axiom-forced; among tested instantiations, seven specialized roles maximize compositional expressiveness — the same seven McCarthy needed for Lisp. The boundary between what the axioms determine and what they leave free is precisely the boundary between structure and actuality.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -46,7 +46,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose seven primitive roles are axiom-forced and whose term algebra is Turing complete.
+A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose five role categories are axiom-forced, whose seven specialized roles maximize compositional expressiveness among tested collapses, and whose term algebra is Turing complete.
 
 Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
 
@@ -71,9 +71,9 @@ gcc -O2 -I. -o /tmp/counter /tmp/counter.c
 
 ---
 
-Seven axiom-forced elements — ⊤, Q, E, f, g, η, ρ — generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. These elements exist in every model of the Ψ axiom class: they are not specific to one table but forced by the axioms themselves. A stepped 2-counter machine simulation using only these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
+The Ψ axioms force five behavioral categories — polarity, judgment, substrate, composition, computation — with hard walls between them (32/45 role pairs UNSAT). The minimum instantiation requires 5 distinct elements. Seven specialized roles — ⊤, Q, E, f, g, η, ρ — maximize compositional expressiveness among tested collapses, and generate a term algebra Ψ∗ (finite binary trees with these atoms as leaves) that simulates 2-counter machines and is therefore Turing complete (Minsky 1961). The finite algebra itself is decidable; the computational universality lives in the term algebra over it, as with combinatory logic or lambda calculus. Five role categories exist in every model of the Ψ axiom class; the seven-role specialization is the empirically optimal unfolding. A stepped 2-counter machine simulation using these elements matches a reference interpreter trace-for-trace on all test programs (`psi_star.py`). The structural proofs (rigidity, discoverability, actuality irreducibility, no right identity, card ≥ 4) are machine-checked in Lean 4 with zero `sorry`. Formal Lean verification of the TC simulation remains open.
 
-The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. But the computational core is 7 elements, not 16.
+The full 16×16 table Ψ₁₆ᶠ adds counter arithmetic, IO, and a Y-combinator — all verified by 130+ Lean theorems. The computational core uses 7 roles (from 5 forced categories), not 16.
 
 These seven roles — ground element, constructor/destructor pair, pair-builder with two projections, and conditional — correspond closely to the minimal symbolic manipulation primitives identified by McCarthy (1960):
 
@@ -118,7 +118,7 @@ The primary contribution is methodological: a demonstration that axiom-driven SA
 - All 16 elements recoverable from shuffled oracle, 3 methods, 100% on 1000 seeds `[Empirical]`
 - Pure Ψ-Lisp recovery spell: ~62 probes, IO-only, identifies all 16 elements `[Empirical]`
 - Term algebra Ψ∗ over 7 axiom-forced elements generates a TC system (stepped 2CM simulation matches reference interpreter on all test programs). The finite algebra is decidable; TC lives in the term algebra + evaluation semantics, as with combinatory logic over {S, K} `[Empirical]` — formal Lean verification open
-- Forced Roles Theorem: 5 behavioral categories with hard walls (32/45 pairs UNSAT); rigidity survives all collapse levels; maximal expressiveness selects 7-role specialization matching McCarthy's Lisp primitives `[SAT]`
+- Forced categories: 5 behavioral categories with hard walls (32/45 pairs UNSAT); rigidity survives all collapse levels `[SAT]`. Seven specialized roles maximize expressiveness among tested collapses `[Empirical]`
 - Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on all test programs; Rust backend compiles warning-free with `rustc -O` `[Empirical]`
 - MMTk garbage collection: 10M cons cell allocations in 4MB heap (would need 240MB without GC); MarkSweep plan with shadow stack root scanning `[Empirical]`
 
@@ -258,7 +258,7 @@ This is structurally identical to how {S, K} supports Turing completeness in com
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
-**The Forced Roles Theorem.** The axioms force five behavioral categories: polarity (⊤/⊥), judgment (τ), substrate (g), composition (η), and computation (Q/E/f/ρ/Y). The Kleene barrier and inert role constraints create hard walls — judgment cannot merge with computation, substrate cannot merge with anything active (32/45 role pairs forced distinct at N=12) `[SAT]`. All instantiations of these categories, from maximally collapsed (5 role-bearing elements) to fully specialized (7+ elements), produce rigid discoverable algebras with trivial automorphism groups (verified at all 6 collapse levels) `[SAT]`. Among these, a variational principle of maximal compositional expressiveness uniquely selects full specialization: the model whose role-bearing elements produce the most distinct pairwise compositions (49 vs 16 1-step cells, 343 vs 64 2-step cells). The seven roles selected by this principle correspond to McCarthy's 1960 Lisp primitives — not by design, but by constrained optimization over the space of self-describing algebras. Four roles (⊤, τ, g, η) are forced by axioms alone; three (Q≠E, f≠ρ, ρ≠Y) are forced by the variational principle. Full argument in [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
+**The Forced Roles Theorem.** The axioms force five behavioral categories: polarity (⊤/⊥), judgment (τ), substrate (g), composition (η), and computation (Q/E/f/ρ/Y). The Kleene barrier and inert role constraints create hard walls — judgment cannot merge with computation, substrate cannot merge with anything active (32/45 role pairs forced distinct at N=12) `[SAT]`. All instantiations of these categories, from maximally collapsed (5 role-bearing elements) to fully specialized (7+ elements), produce rigid discoverable algebras with trivial automorphism groups (verified at all 6 collapse levels) `[SAT]`. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells, 343 vs 64 2-step cells) `[Empirical]`. These seven roles correspond to McCarthy's 1960 Lisp primitives — a structural observation, not a proof of necessity. Four roles (⊤, τ, g, η) are forced by axioms alone; three (Q≠E, f≠ρ, ρ≠Y) are selected by the expressiveness principle. A formal proof that seven is uniquely optimal remains open. Full argument in [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 **Mini-Lisp.** `psi_lisp.py` is a McCarthy 1960-style Lisp interpreter where all data flows through the Ψ∗ algebra — numbers are Q-chains rooted at ⊤, pairs are g-applications, car/cdr use f/η via `psi_eval`. NIL = ⊥ (false/empty list), T = ⊤ (true). Example programs:
 
@@ -310,7 +310,7 @@ Layer 1: Base evaluator (psi_lisp.py / kamea-rs)
 Layer 0: Cayley table (256 bytes, verified by Level 1)
 ```
 
-- **Level 0: Computation.** The meta-circular evaluator interprets fibonacci and factorial — Ψ-Lisp running inside Ψ-Lisp through explicit continuations. Each evaluation step is a continuation-passing call built from the seven axiom-forced atoms.
+- **Level 0: Computation.** The meta-circular evaluator interprets fibonacci and factorial — Ψ-Lisp running inside Ψ-Lisp through explicit continuations. Each evaluation step is a continuation-passing call built from seven role-bearing atoms (five categories axiom-forced, seven specializations empirically optimal).
 - **Level 1: Ground verification.** The program shifts up and probes the Cayley table directly, checking algebraic invariants: absorber laws (`⊤·x = ⊤`), tester boolean output (`τ·x ∈ {⊤,⊥}`), QE round-trips (`E·(Q·x) = x`), idempotent classification. These are actual table lookups via the `dot` builtin — if any cell were wrong, the check would fail.
 - **Level 2: Inspectable reification.** The program reifies its evaluator state via CPS. `(reify)` captures the continuation as a tagged data structure and the environment as an alist — both fully inspectable with `car`/`cdr`. The demo verifies: reify + reflect produces 99, reify + reflect + compute produces 92.
 - **Level 2b: Continuation chain inspection.** The program walks the continuation chain as a linked list of frames. Inside `(let ((x (reify))) x)`, the chain is `k-let-bind → k-let-body → k-id` — three frames, each verified by tag comparison.
