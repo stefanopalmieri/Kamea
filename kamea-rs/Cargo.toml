@@ -4,5 +4,6 @@ members = [
     "crates/psi-runtime",
     "crates/psi-cli",
     "crates/psi-web",
+    "crates/wispy-gc",
 ]
 resolver = "2"

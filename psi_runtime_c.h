@@ -89,6 +89,10 @@ static inline uint8_t psi_inv(uint8_t x) {
 }
 
 /* ── Cons cell arena ──────────────────────────────────────────────── */
+/* Note: C runtime uses a bump allocator with no garbage collection.   */
+/* Suitable for benchmarks and short-lived programs.                    */
+/* For long-running programs, use the Rust backend (--target rust)     */
+/* which will integrate MMTk GC in a future release.                   */
 
 #define PSI_HEAP_SIZE 1000000
 

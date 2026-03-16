@@ -1,0 +1,9 @@
+[package]
+name = "wispy-gc"
+version = "0.1.0"
+edition = "2021"
+description = "MMTk garbage collector integration for compiled Ψ∗ programs"
+
+[dependencies]
+mmtk = "0.29"
+lazy_static = "1"
