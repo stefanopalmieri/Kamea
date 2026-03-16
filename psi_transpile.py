@@ -332,8 +332,8 @@ class Compiler:
         needs_arena = self._fn_needs_arena.get(cname, False)
         if not needs_arena:
             return False
-        # Does any argument use arena?
-        return any(uses_arena(a) for a in sexpr[1:])
+        # Does any argument use arena (directly or via function calls)?
+        return any(uses_arena(a) or self._calls_arena_fn(a) for a in sexpr[1:])
 
     def emit_rust_return(self, sexpr, indent=1):
         """Emit Rust statements that return the value of sexpr."""
@@ -344,6 +344,10 @@ class Compiler:
             return [f'{pad}{self.emit_rust_expr(sexpr)}']
         return self.emit_rust_stmt_return(sexpr, indent)
 
+    def _arg_needs_temp(self, a):
+        """Check if an argument to an arena-using function needs a temporary."""
+        return uses_arena(a) or self._needs_rust_temps(a) or self._calls_arena_fn(a)
+
     def _emit_rust_temped_call_return(self, sexpr, indent):
         """Emit a function call with arena args pulled into temporaries."""
         pad = '    ' * indent
@@ -353,7 +357,7 @@ class Compiler:
         cname = c_ident(head)
         args = [self._rust_arena_ref]
         for a in sexpr[1:]:
-            if uses_arena(a) or self._needs_rust_temps(a):
+            if self._arg_needs_temp(a):
                 tmp = self.fresh()
                 lines.append(f'{pad}let {tmp}: PsiVal;')
                 lines.extend(self.emit_rust_assign(tmp, a, indent))
@@ -372,7 +376,7 @@ class Compiler:
         cname = c_ident(head)
         args = [self._rust_arena_ref]
         for a in sexpr[1:]:
-            if uses_arena(a) or self._needs_rust_temps(a):
+            if self._arg_needs_temp(a):
                 tmp = self.fresh()
                 lines.append(f'{pad}let {tmp}: PsiVal;')
                 lines.extend(self.emit_rust_assign(tmp, a, indent))
@@ -403,21 +407,42 @@ class Compiler:
                 lines.append(f'{pad}}}')
                 return lines
             if head == 'cond':
+                first = True
                 for clause in sexpr[1:]:
                     test, val = clause[0], clause[1]
                     if isinstance(test, str) and test.upper() == 'T':
-                        lines.extend(self.emit_rust_return(val, indent))
+                        if not first:
+                            lines.append(f'{pad}}} else {{')
+                        else:
+                            lines.append(f'{pad}{{')
+                        lines.extend(self.emit_rust_return(val, indent + 1))
+                        lines.append(f'{pad}}}')
                         return lines
-                    if self.is_simple_expr(test):
-                        lines.append(f'{pad}if is_true({self.emit_rust_expr(test)}) {{')
+                    if first:
+                        if self.is_simple_expr(test):
+                            lines.append(f'{pad}if is_true({self.emit_rust_expr(test)}) {{')
+                        else:
+                            tmp = self.fresh()
+                            lines.append(f'{pad}let {tmp}: PsiVal;')
+                            lines.extend(self.emit_rust_assign(tmp, test, indent))
+                            lines.append(f'{pad}if is_true({tmp}) {{')
+                        first = False
                     else:
-                        tmp = self.fresh()
-                        lines.append(f'{pad}let {tmp}: PsiVal;')
-                        lines.extend(self.emit_rust_assign(tmp, test, indent))
-                        lines.append(f'{pad}if is_true({tmp}) {{')
+                        if self.is_simple_expr(test):
+                            lines.append(f'{pad}}} else if is_true({self.emit_rust_expr(test)}) {{')
+                        else:
+                            lines.append(f'{pad}}} else {{')
+                            tmp = self.fresh()
+                            lines.append(f'{pad}    let {tmp}: PsiVal;')
+                            lines.extend(self.emit_rust_assign(tmp, test, indent + 1))
+                            lines.append(f'{pad}    if is_true({tmp}) {{')
                     lines.extend(self.emit_rust_return(val, indent + 1))
+                if not first:
+                    lines.append(f'{pad}}} else {{')
+                    lines.append(f'{pad}    PSI_NIL')
                     lines.append(f'{pad}}}')
-                lines.append(f'{pad}PSI_NIL')
+                else:
+                    lines.append(f'{pad}PSI_NIL')
                 return lines
             if head == 'let':
                 bindings = sexpr[1]
@@ -573,6 +598,8 @@ class Compiler:
             return f'{{ let _a = {a}; let _b = {b}; if _a >= _b {{ _a - _b }} else {{ 0_i64 }} }}'
         if head == '*' and len(sexpr) == 3:
             return f'{self.emit_rust_expr(sexpr[1])} * {self.emit_rust_expr(sexpr[2])}'
+        if head == '/' and len(sexpr) == 3:
+            return f'{self.emit_rust_expr(sexpr[1])} / {self.emit_rust_expr(sexpr[2])}'
         if head == 'mod' and len(sexpr) == 3:
             return f'{self.emit_rust_expr(sexpr[1])} % {self.emit_rust_expr(sexpr[2])}'
         if head == '1+' and len(sexpr) == 2:
@@ -603,7 +630,12 @@ class Compiler:
 
         # List operations — thread arena
         if head == 'cons' and len(sexpr) == 3:
-            return f'arena.cons({self.emit_rust_expr(sexpr[1])}, {self.emit_rust_expr(sexpr[2])})'
+            a_expr = self.emit_rust_expr(sexpr[1])
+            b_expr = self.emit_rust_expr(sexpr[2])
+            # If either arg uses arena, pull to temps to avoid double borrow
+            if uses_arena(sexpr[2]) or uses_arena(sexpr[1]):
+                return f'{{ let _ca = {a_expr}; let _cb = {b_expr}; arena.cons(_ca, _cb) }}'
+            return f'arena.cons({a_expr}, {b_expr})'
         if head == 'car' and len(sexpr) == 2:
             return f'arena.car({self.emit_rust_expr(sexpr[1])})'
         if head == 'cdr' and len(sexpr) == 2:
@@ -627,8 +659,12 @@ class Compiler:
             arg = sexpr[1]
             if isinstance(arg, str) and arg.startswith('"'):
                 inner = arg[1:-1].replace('\\', '\\\\').replace('\n', '\\n')
+                # Escape { and } for Rust format strings
+                inner = inner.replace('{', '{{').replace('}', '}}')
                 return f'{{ print!("{inner}"); PSI_NIL }}'
             return f'{{ psi_print_val(&arena, {self.emit_rust_expr(arg)}); PSI_NIL }}'
+        if head == 'write-char' and len(sexpr) == 2:
+            return f'{{ print!("{{}}", ({self.emit_rust_expr(sexpr[1])}) as u8 as char); PSI_NIL }}'
 
         # Cayley table
         if head == 'dot' and len(sexpr) == 3:

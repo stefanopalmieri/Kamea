@@ -19,13 +19,41 @@ pub const TABLE: [[u8; 16]; 16] = [
     [1,3,13,15,3,7,14,8,15,4,11,6,7,14,12,10],
 ];
 
-/// Element names for debugging.
+/// The Ψ₁₆ᶜ Cayley table. Same axiom-forced core, different extension cells.
+/// Adds INC/DEC/INV with algebraic identities the supercompiler can exploit.
+/// Copied exactly from psi_star_c.py's TABLE constant.
+pub const TABLE_C: [[u8; 16]; 16] = [
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [ 1, 4, 7, 3,12, 5, 9,15,10,15,13,11, 3, 8,14, 2],
+    [ 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10],
+    [ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [ 1, 8,11,15,10, 6, 4,13, 7, 4,12,14, 3, 5, 9, 2],
+    [ 0, 1,15,12, 6,13, 5,11,14, 8, 4, 2, 7, 7, 6, 3],
+    [ 7, 1,10, 3,12, 5,12,14, 2, 4,11,13, 8, 6,14, 9],
+    [ 4, 1,11,11,11,11, 4, 5, 3, 6, 2,10, 7, 3,13, 9],
+    [ 1, 8, 2,13,10, 7, 7,12, 5, 9,14, 3,15, 4, 6,11],
+    [ 1, 6, 3, 3, 7, 3,11, 2,11, 4, 8,13, 5,11,11, 3],
+    [ 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [ 1, 2, 3, 4, 5, 2,14, 5,12, 3,13,11,13,15,15, 5],
+    [ 1, 0, 5, 4, 3, 2,10, 9,14, 7, 6,12,11,13, 8,15],
+    [ 0, 3, 5, 2, 3, 4, 3, 3, 5,13,13, 4,12, 5,15,14],
+];
+
+/// Element names for Ψ₁₆ᶠ.
 pub const NAMES: [&str; 16] = [
     "⊤", "⊥", "f", "τ", "g", "5", "Q", "E",
     "ρ", "η", "Y", "11", "12", "13", "14", "15",
 ];
 
-/// Role constants — axiom-forced elements.
+/// Element names for Ψ₁₆ᶜ.
+pub const NAMES_C: [&str; 16] = [
+    "⊤", "⊥", "f", "τ", "g", "5", "Q", "E",
+    "ρ", "η", "Y", "11", "SEQ", "INC", "INV", "DEC",
+];
+
+/// Role constants — axiom-forced elements (same indices in both tables).
 pub const TOP: u8 = 0;
 pub const BOT: u8 = 1;
 pub const F_ENC: u8 = 2;
@@ -41,4 +69,10 @@ pub const Y_COMB: u8 = 10;
 #[inline(always)]
 pub fn dot(a: u8, b: u8) -> u8 {
     TABLE[a as usize][b as usize]
+}
+
+/// Dot operation on a given table.
+#[inline(always)]
+pub fn dot_on(table: &[[u8; 16]; 16], a: u8, b: u8) -> u8 {
+    table[a as usize][b as usize]
 }

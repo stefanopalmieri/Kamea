@@ -651,6 +651,13 @@ def _builtin_mod(a, b):
     return encode_int(na % nb)
 
 
+def _builtin_div(a, b):
+    na, nb = decode_int(a), decode_int(b)
+    if na is None or nb is None or nb == 0:
+        raise TypeError("/ requires positive numbers")
+    return encode_int(na // nb)
+
+
 def _builtin_1plus(a):
     na = decode_int(a)
     if na is None:
@@ -734,6 +741,7 @@ def builtin_env() -> dict:
         "terpri": _builtin_terpri,
         "list": _builtin_list,
         "mod": _builtin_mod,
+        "/": _builtin_div,
         "1+": _builtin_1plus,
         "1-": _builtin_1minus,
         "write-char": _builtin_write_char,

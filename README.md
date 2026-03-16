@@ -288,9 +288,9 @@ python3 psi_lisp.py examples/psi_fibonacci.lisp     # run a file
 python3 psi_lisp.py --show-term examples/psi_basic.lisp  # show Ψ∗ terms
 python3 psi_repl.py                                  # interactive REPL
 
-# Rust interpreter (native, ~25x faster than Python, Ψ₁₆ᶠ table)
+# Rust interpreter (native, ~25x faster than Python)
 kamea-rs/target/release/kamea run examples/psi_fibonacci.lisp
-# or: cd kamea-rs && cargo run --release -- run examples/psi_fibonacci.lisp
+kamea-rs/target/release/kamea --table=c run examples/psi_specialize.lisp  # Ψ₁₆ᶜ table
 
 # Rust reflective tower (multiple files share one machine)
 cd kamea-rs && cargo run --release -- run examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
@@ -661,9 +661,9 @@ python3 psi_supercompile.py --table=c examples/psi_futamura.psi    # projection 
 python3 psi_lisp.py --table=c examples/psi_specialize.lisp         # projections 1 & 2
 python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp     # projection 3: self-hosted transpiler
 
-# Rust interpreter works too (Ψ₁₆ᶠ table — different dot values, same structure)
-kamea-rs/target/release/kamea run examples/psi_specialize.lisp     # projections 1 & 2 (Ψ₁₆ᶠ)
-kamea-rs/target/release/kamea run examples/psi_transpile_test.lisp # projection 3 (table-independent)
+# Rust interpreter (~25x faster — supports both tables)
+kamea-rs/target/release/kamea --table=c run examples/psi_specialize.lisp     # projections 1 & 2 (Ψ₁₆ᶜ)
+kamea-rs/target/release/kamea --table=c run examples/psi_transpile_test.lisp # projection 3
 ```
 
 ### Claim Matrix
@@ -842,10 +842,9 @@ python3 psi_lisp.py --algebraic examples/psi_fibonacci.lisp  # verify: same resu
 cd kamea-rs
 cargo test                                                     # run all tests (40 total)
 cargo run --release -- run examples/psi_fibonacci.lisp         # run a Lisp program (~25x faster)
+cargo run --release -- --table=c run examples/psi_specialize.lisp  # Ψ₁₆ᶜ table
 cargo run --release -- repl                                    # interactive REPL
 cargo run --release -- bench examples/psi_fibonacci.lisp       # benchmark with timing
-# Note: kamea uses Ψ₁₆ᶠ table only. For --table=c (Ψ₁₆ᶜ) examples, use psi_lisp.py.
-# Most examples work with either interpreter; dot() values differ between tables.
 
 # Compiled Ψ-Lisp (C and Rust backends)
 python3 psi_transpile.py examples/psi_fibonacci.lisp > /tmp/fib.c    # C (default)

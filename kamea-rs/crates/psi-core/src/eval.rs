@@ -1,4 +1,4 @@
-use crate::table::{self, Q, G_ENC, E, F_ENC, ETA, RHO, Y_COMB};
+use crate::table::{self, Q, G_ENC, E, F_ENC, ETA, RHO, Y_COMB, TABLE};
 use crate::term::{Arena, Term};
 
 /// Evaluation configuration.
@@ -78,15 +78,23 @@ pub struct Evaluator {
     /// The result register — holds intermediate values between frames.
     result: Option<u32>,
     steps: usize,
+    /// The Cayley table to use for dot operations.
+    table: &'static [[u8; 16]; 16],
 }
 
 impl Evaluator {
-    /// Create a new evaluator for the given term.
+    /// Create a new evaluator for the given term (uses default Ψ₁₆ᶠ table).
     pub fn new(term: u32) -> Self {
+        Self::with_table(term, &TABLE)
+    }
+
+    /// Create a new evaluator with a specific Cayley table.
+    pub fn with_table(term: u32, table: &'static [[u8; 16]; 16]) -> Self {
         Evaluator {
             stack: vec![Frame::Eval(term)],
             result: None,
             steps: 0,
+            table,
         }
     }
 
@@ -227,7 +235,7 @@ impl Evaluator {
                         StepResult::Continue { rule: "E-unwrap-Q", term: val }
                     }
                     Term::Atom(a) => {
-                        let result = arena.atom(table::dot(E, a));
+                        let result = arena.atom(table::dot_on(self.table,E, a));
                         self.result = Some(result);
                         StepResult::Continue { rule: "E-dot", term: result }
                     }
@@ -248,7 +256,7 @@ impl Evaluator {
                 } else {
                     match arena.get(val) {
                         Term::Atom(a) => {
-                            let result = arena.atom(table::dot(F_ENC, a));
+                            let result = arena.atom(table::dot_on(self.table,F_ENC, a));
                             self.result = Some(result);
                             StepResult::Continue { rule: "f-dot", term: result }
                         }
@@ -270,7 +278,7 @@ impl Evaluator {
                 } else {
                     match arena.get(val) {
                         Term::Atom(a) => {
-                            let result = arena.atom(table::dot(ETA, a));
+                            let result = arena.atom(table::dot_on(self.table,ETA, a));
                             self.result = Some(result);
                             StepResult::Continue { rule: "η-dot", term: result }
                         }
@@ -364,7 +372,7 @@ impl Evaluator {
 
                 match (arena.get(fn_val), arena.get(arg_val)) {
                     (Term::Atom(a), Term::Atom(b)) => {
-                        let result = arena.atom(table::dot(a, b));
+                        let result = arena.atom(table::dot_on(self.table,a, b));
                         self.result = Some(result);
                         StepResult::Continue { rule: "dot-lookup", term: result }
                     }
@@ -390,7 +398,7 @@ impl Evaluator {
 
                 match (arena.get(fn_val), arena.get(arg_val)) {
                     (Term::Atom(a), Term::Atom(b)) => {
-                        let result = arena.atom(table::dot(a, b));
+                        let result = arena.atom(table::dot_on(self.table,a, b));
                         self.result = Some(result);
                         StepResult::Continue { rule: "dot-lookup", term: result }
                     }
@@ -416,9 +424,15 @@ impl Evaluator {
     }
 }
 
-/// Convenience: evaluate a term to completion.
+/// Convenience: evaluate a term to completion (default Ψ₁₆ᶠ table).
 pub fn eval(arena: &mut Arena, term: u32, config: &EvalConfig) -> Result<u32, EvalError> {
     let mut evaluator = Evaluator::new(term);
+    evaluator.run(arena, config)
+}
+
+/// Evaluate a term to completion with a specific Cayley table.
+pub fn eval_with_table(arena: &mut Arena, term: u32, config: &EvalConfig, table: &'static [[u8; 16]; 16]) -> Result<u32, EvalError> {
+    let mut evaluator = Evaluator::with_table(term, table);
     evaluator.run(arena, config)
 }
 

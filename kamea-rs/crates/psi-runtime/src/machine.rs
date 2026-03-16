@@ -1,5 +1,5 @@
 use psi_core::eval::{self, EvalConfig, EvalError};
-use psi_core::table::{BOT, TOP, F_ENC, ETA, TABLE, NAMES};
+use psi_core::table::{BOT, TOP, F_ENC, ETA, TABLE, NAMES, TABLE_C, NAMES_C};
 use psi_core::term::{Arena, Term};
 use crate::io::IoChannel;
 use crate::lisp::{SExpr, Function, Env, parse_all};
@@ -30,10 +30,25 @@ pub struct Machine<I: IoChannel> {
     pub env: Env,
     symbol_table: HashMap<String, i64>,
     next_symbol_id: i64,
+    /// The Cayley table (Ψ₁₆ᶠ or Ψ₁₆ᶜ).
+    table: &'static [[u8; 16]; 16],
+    /// Element names matching the active table.
+    names: &'static [&'static str; 16],
 }
 
 impl<I: IoChannel> Machine<I> {
+    /// Create a new machine with the default Ψ₁₆ᶠ table.
     pub fn new(io: I) -> Self {
+        Self::with_table(io, &TABLE, &NAMES)
+    }
+
+    /// Create a new machine with the Ψ₁₆ᶜ table.
+    pub fn new_c(io: I) -> Self {
+        Self::with_table(io, &TABLE_C, &NAMES_C)
+    }
+
+    /// Create a new machine with a specific Cayley table and names.
+    pub fn with_table(io: I, table: &'static [[u8; 16]; 16], names: &'static [&'static str; 16]) -> Self {
         let mut m = Machine {
             arena: Arena::new(1_000_000),
             io,
@@ -41,6 +56,8 @@ impl<I: IoChannel> Machine<I> {
             env: Env::new(),
             symbol_table: HashMap::new(),
             next_symbol_id: 100,
+            table,
+            names,
         };
         m.register_builtins();
         m
@@ -48,7 +65,7 @@ impl<I: IoChannel> Machine<I> {
 
     fn register_builtins(&mut self) {
         let builtins = [
-            "+", "-", "*", "<", ">", "<=", ">=", "=", "eq", "equal",
+            "+", "-", "*", "/", "<", ">", "<=", ">=", "=", "eq", "equal",
             "cons", "car", "cdr", "null", "zerop", "atom", "numberp",
             "display", "print", "terpri", "list", "mod", "1+", "1-",
             "write-char", "write-string",
@@ -61,7 +78,7 @@ impl<I: IoChannel> Machine<I> {
 
     /// Evaluate a Ψ∗ term (psi_eval).
     pub fn psi_eval(&mut self, term: u32) -> Result<u32, EvalError> {
-        eval::eval(&mut self.arena, term, &self.eval_config)
+        eval::eval_with_table(&mut self.arena, term, &self.eval_config, self.table)
     }
 
     /// Encode integer (Mini-Lisp convention: n+1 Q layers).
@@ -560,6 +577,12 @@ impl<I: IoChannel> Machine<I> {
                 if b == 0 { return Err("mod by zero".to_string()); }
                 Ok(self.encode_int(a % b))
             }
+            "/" => {
+                let a = self.decode_int(args[0]).ok_or("/ requires numbers")?;
+                let b = self.decode_int(args[1]).ok_or("/ requires numbers")?;
+                if b == 0 { return Err("/ by zero".to_string()); }
+                Ok(self.encode_int(a / b))
+            }
             "1+" => {
                 let a = self.decode_int(args[0]).ok_or("1+ requires a number")?;
                 Ok(self.encode_int(a + 1))
@@ -611,14 +634,14 @@ impl<I: IoChannel> Machine<I> {
                 if !(0..=15).contains(&a) || !(0..=15).contains(&b) {
                     return Err(format!("dot: indices must be 0-15, got {} and {}", a, b));
                 }
-                Ok(self.encode_int(TABLE[a as usize][b as usize] as i64))
+                Ok(self.encode_int(self.table[a as usize][b as usize] as i64))
             }
             "atom-name" => {
                 let a = self.decode_int(args[0]).ok_or("atom-name requires index 0-15")?;
                 if !(0..=15).contains(&a) {
                     return Err(format!("atom-name requires index 0-15, got {}", a));
                 }
-                let name = NAMES[a as usize];
+                let name = self.names[a as usize];
                 let bot = self.arena.atom(BOT);
                 let mut result = bot;
                 for c in name.chars().rev() {
