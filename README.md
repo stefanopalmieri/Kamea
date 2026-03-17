@@ -392,7 +392,7 @@ If you use this work, please cite:
 ```bibtex
 @software{palmieri2025kamea,
   author = {Palmieri, Stefano},
-  title = {Kamea: Axiom-Driven Self-Describing Finite Algebras with Machine-Checked Proofs},
+  title = {Kamea: Forced Roles in Self-Describing Finite Algebras --- From Axioms to McCarthy's Primitives},
   year = {2025},
   url = {https://github.com/stefanopalmieri/Kamea}
 }
