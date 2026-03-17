@@ -1,3 +1,5 @@
+*Note: This document covers the SAT search methodology and axiom system as of March 8, 2026. For the current theoretical framework including the distinctness axiom, categorical foundation, Futamura projections, reflective tower, and extension profiles, see [`inevitability_summary.md`](inevitability_summary.md) and [`technical_overview.md`](technical_overview.md).*
+
 # Ψ Framework Summary
 
 *What is the simplest finite structure that can identify its own components through its own operation, and what does the existence of such a structure tell us about the relationship between self-knowledge, computation, and actuality?*
@@ -49,7 +51,7 @@ All axioms act on a finite magma (N-element set with binary operation `dot`).
 | 1 | ⊥ | absorber | bottom/false | — | — |
 | 2 | f | encoder | branch-if (f path) | — | PUT |
 | 3 | τ | tester | branch tester | — | — |
-| 4 | g | encoder | branch-else (g path) | — | GET |
+| 4 | g | inert | branch-else (g path) (g is classified as inert by its Cayley row behavior; in the term algebra it serves as the pair constructor CONS) | — | GET |
 | 5 | — | encoder | free encoder | — | — |
 | 6 | Q | encoder | quote | s4 | — |
 | 7 | E | encoder | eval | — | — |
@@ -239,7 +241,7 @@ The maximal extraction Ψ₁₆ᶠ adds four new operations on top of the full �
 | **INC2** | 7 (E) | 4-state sub-counter on {s0,s1,s2,s3} |
 | **SWAP** | 14 | Involution on core {2,3,4,5}: SWAP·(SWAP·x) = x |
 
-All constraints are simultaneously SAT (62 seconds). The resulting table has 83 machine-checked Lean theorems.
+All constraints are simultaneously SAT (62 seconds). The resulting table has 83 machine-checked Lean theorems in Psi16Full.lean (130+ total across 4 proof files).
 
 ### Multi-Duty Architecture (Ψ₁₆ᶠ)
 
@@ -533,7 +535,7 @@ Full theorem list: structural axioms (5) + role classification (6) + Kleene (1) 
 1. **Does the axiom system scale beyond N=12?** Yes — all axioms SAT at N=16, including IO and 8-state counter.
 2. **Is the selection axiom η·ρ = τ compatible with counter embedding?** Yes — when INC is a separate element (13), not η itself. The conflict arose from double-duty: η=INC forced η·ρ = INC·s4 = s5 ≠ τ.
 3. **Can arithmetic coexist with self-description?** Yes — the 8-state counter and IO roundtrip coexist with all structural axioms at N=16.
-4. **Lean verification feasible?** Yes — 83 theorems (Ψ₁₆ᶠ) all proved computationally in ~10 seconds.
+4. **Lean verification feasible?** Yes — 83 theorems in Psi16Full.lean (130+ total across 4 proof files), all proved computationally in ~10 seconds.
 5. **Can all operations coexist in a single table?** Yes — DEC, PAIR/FST/SND, INC2, and SWAP are all simultaneously satisfiable with the full axiom set. Ψ₁₆ᶠ is the proof: one table, every operation, 83 machine-checked theorems.
 
 ### Open
@@ -612,4 +614,4 @@ for v in range(N):
 
 ---
 
-*Generated March 2026. Updated March 8 2026 with Ψ₁₆ᶠ (full operations) results — 83 Lean theorems, all machine-checked. All SAT results produced by Z3 via Python z3-solver.*
+*Generated March 2026. Updated March 8 2026 with Ψ₁₆ᶠ (full operations) results — 83 Lean theorems in Psi16Full.lean (130+ total across 4 proof files), all machine-checked. All SAT results produced by Z3 via Python z3-solver.*

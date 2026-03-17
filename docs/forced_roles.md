@@ -169,4 +169,4 @@ uv run python -m ds_search.forced_roles_test --quick   # skip necessity analysis
 
 ## Further Reading
 
-This document presents the raw SAT data (Layer 1 of the argument). The complete three-layer argument — forced categories → universal rigidity → variational selection → McCarthy correspondence — is in [`forced_roles_theorem.md`](forced_roles_theorem.md).
+This document presents the raw SAT data (Layer 1 of the argument). The complete three-layer argument — forced categories → universal rigidity → distinctness axiom (with expressiveness justification) → McCarthy correspondence — is in [`forced_roles_theorem.md`](forced_roles_theorem.md).

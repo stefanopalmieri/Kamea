@@ -2,13 +2,13 @@
 
 ## Statement
 
-The Ψ axioms force five behavioral categories with hard walls between judgment, substrate, and computation. All instantiations — from maximally collapsed (5 role-bearing elements) to fully specialized (7+ role-bearing elements) — produce rigid, discoverable algebras. Among tested collapses, seven specialized roles maximize compositional expressiveness, and these seven correspond to McCarthy's 1960 Lisp primitives. Five categories are axiom-forced (theorem). Seven roles are empirically optimal (not yet proved necessary).
+The Ψ axioms force five behavioral categories with hard walls between judgment, substrate, and computation. All instantiations — from maximally collapsed (5 role-bearing elements) to fully specialized (7+ role-bearing elements) — produce rigid, discoverable algebras. A distinctness axiom (all named role-bearing elements pairwise distinct — standard algebraic practice) adds 13 requirements beyond the 32 already forced, yielding full specialization to seven roles. These seven correspond to McCarthy's 1960 Lisp primitives. Five categories are axiom-forced (theorem). Seven roles follow from the distinctness axiom, independently justified by compositional expressiveness analysis.
 
 The argument has three layers, each building on the previous:
 
 1. **Forced Categories.** The axioms partition 10 TC roles into 5 categories with hard walls between them. This is a theorem (SAT/UNSAT), not a design choice.
 2. **Universal Rigidity.** Every instantiation of these categories — from 5 to 7+ role-bearing elements — produces a rigid, discoverable algebra. Rigidity is a property of the axiom geometry, not of role specialization.
-3. **Variational Selection.** Among tested collapse levels, the fully specialized instantiation (7 distinct role elements) maximizes the number of distinct pairwise compositions among role-bearing elements. This selects the natural unfolding empirically; a formal proof of uniqueness remains open.
+3. **Distinctness and Expressiveness.** The distinctness axiom — Distinct(⊤, ⊥, τ, Q, E, f, g, ρ, η, Y) — requires all named role-bearing elements to be pairwise distinct. Of 45 pairwise requirements, 32 are already forced by the categorical axioms; the distinctness axiom adds 13. This is standard algebraic practice (as 0 ≠ 1 in a non-trivial ring). The expressiveness analysis independently justifies this choice: the fully specialized instantiation (7 distinct role elements) maximizes the number of distinct pairwise compositions (49 vs 16 1-step cells, monotone in role count). The distinctness axiom and the expressiveness principle select the same configuration.
 
 ---
 
@@ -140,11 +140,15 @@ Evidence: `ds_search/collapse_rigidity_test.py` — all 6 levels, full WL-1 + au
 
 ---
 
-## Layer 3: The Variational Principle
+## Layer 3: Distinctness and Expressiveness
 
-### Statement
+### The Distinctness Axiom
 
-Among all rigid models satisfying the Ψ axioms, the natural model is the one that maximizes the number of distinct pairwise compositions among role-bearing elements.
+The distinctness axiom requires all 10 named role-bearing elements to be pairwise distinct: Distinct(⊤, ⊥, τ, Q, E, f, g, ρ, η, Y). Of the 45 pairwise requirements, 32 are already forced by the categorical axioms. The distinctness axiom adds 13. This is standard algebraic practice — when axioms introduce named elements, those elements are assumed distinct (as 0 ≠ 1 in a non-trivial ring). Verified: SAT at N=12, compatible with both Ψ₁₆ᶠ and Ψ₁₆ᶜ (`ds_search/distinctness_test.py`).
+
+### Independent Justification: Compositional Expressiveness
+
+The distinctness axiom is independently justified by expressiveness analysis. Among all rigid models satisfying the Ψ axioms, the models with all roles distinct maximize the number of distinct pairwise compositions among role-bearing elements.
 
 ### Three Forms of Evidence
 
@@ -224,7 +228,7 @@ Four of seven rows are identical. The Q/E/f/ρ block collapses to a single repea
 
 ### Monotonicity
 
-Each additional distinct role element strictly increases the cell count: k physical elements give k² 1-step cells. The function k² is strictly increasing, so there are **no intermediate optima**. The maximum is always at full specialization. This makes the variational principle a clean selector — it does not depend on model-specific details.
+Each additional distinct role element strictly increases the cell count: k physical elements give k² 1-step cells. The function k² is strictly increasing, so there are **no intermediate optima**. The maximum is always at full specialization. This makes the distinctness axiom a clean choice — the expressiveness justification does not depend on model-specific details.
 
 ### The Maximum Entropy Analogy
 
@@ -238,14 +242,14 @@ Evidence: `ds_search/compositional_expressiveness.py` — cell counts, value cou
 
 ## The McCarthy Correspondence
 
-The seven roles selected by the variational principle correspond to McCarthy's 1960 Lisp primitives:
+The seven roles selected by the distinctness axiom correspond to McCarthy's 1960 Lisp primitives:
 
 | Ψ Role | McCarthy Primitive | Forced by | Specialized by |
 |--------|-------------------|-----------|---------------|
 | ⊤ | NIL | L0 (absorber) | axiom (Layer 1) |
 | Q | QUOTE | QE (constructor) | expressiveness (Layer 3) |
 | E | EVAL | QE (destructor) | expressiveness (Layer 3) |
-| g | CONS | 1-Inert + Branch | axiom (Layer 1) |
+| g | CONS | distinctness (Layer 2) | g-as-CONS forced by Branch + Compose |
 | f | CAR | Branch (first path) | expressiveness (Layer 3) |
 | η | CDR | Compose (second projection) | axiom (Layer 1) |
 | ρ | COND | Branch (conditional) | expressiveness (Layer 3) |
@@ -257,7 +261,7 @@ Four roles are forced by axioms alone — they occupy isolated categories:
 - **g** (CONS): the substrate element, forced by 1-Inert + Branch discrimination. No encoder can serve as inert substrate.
 - **η** (CDR): the composition element, forced by Selection + Compose interaction. Cannot merge with Q, E, or ρ.
 
-Three roles are forced by the variational principle — they are separated within the computation category:
+Three roles are forced by the distinctness axiom — they are separated within the computation category:
 
 - **Q ≠ E** (QUOTE ≠ EVAL): axioms allow Q=E (SAT), but separation doubles the independent compositions involving the constructor/destructor pair.
 - **f ≠ ρ** (CAR ≠ COND): axioms allow f=ρ (SAT), but separation gives Branch and first-projection independent rows.
@@ -283,7 +287,7 @@ This is the non-circular part of the result. The axioms specify structural prope
 
 ## What Is Not Proved
 
-- **Variational principle as formal theorem.** The maximal expressiveness principle is demonstrated empirically (monotone cell count, consistent value maximization, fastest reachability). A formal proof that expressiveness is uniquely maximized at full specialization — rather than at some intermediate level — remains open. The monotonicity of cell count (k²) makes this likely, but the interaction with value count is model-dependent.
+- **Distinctness as theorem vs axiom.** The distinctness requirement is formulated as an axiom. Of 45 pairwise requirements, 32 are already theorems. Whether the remaining 13 can be derived from stronger categorical conditions — or are genuinely independent — is open. The expressiveness analysis (monotone cell count, consistent value maximization, fastest reachability) provides empirical justification but not a proof.
 
 - **McCarthy correspondence as necessity.** The structural correspondence between Ψ roles and Lisp primitives is an observation. A proof that any finite self-describing algebra satisfying analogous axioms must converge on this role inventory does not exist. The correspondence might be a consequence of the shared design problem (self-manipulation from a minimal basis) rather than a deep mathematical necessity.
 
@@ -315,7 +319,7 @@ The argument proceeds in three steps:
 
 1. The axioms force five categories. This is a theorem. *(32/45 UNSAT, N=12)*
 2. All instantiations are rigid. This is an empirical universal. *(6/6 levels rigid, |Aut|=1)*
-3. Full specialization maximizes expressiveness. This is a variational selection. *(49 vs 16 cells, 11 vs 7 values, depth 2 vs 3)*
+3. Full specialization maximizes expressiveness. The distinctness axiom selects it; expressiveness independently justifies it. *(49 vs 16 cells, 11 vs 7 values, depth 2 vs 3)*
 
 The result: the axioms force the category structure (theorem); maximal expressiveness selects the specialization among tested collapses (empirical); the specialization matches McCarthy (structural observation). Five categories are proved necessary. Seven roles are the empirical optimum — a formal proof that no intermediate level achieves equal expressiveness remains open.
 
@@ -327,11 +331,11 @@ The forced roles theorem (5 categories, 3 walls, 7 roles under expressiveness) h
 
 The forced roles theorem as originally stated remains correct. It just now has a finer-grained explanation of why each part holds:
 
-**Layer 1 (categorical):** Three of five categories (absorbers, classifiers, transformers) and the Kleene wall are structurally universal — they emerge from standard finite category theory (retraction pairs, subobject classifiers, products, conditional copairing) without any self-description axioms. Rigidity and discoverability also emerge for free. Verified across five independent axiom systems: Ψ, information-theoretic, category-theoretic, game-theoretic, and categorical topos.
+**Layer 1 (categorical):** Three behavioral categories (absorbers, classifiers, transformers), the Kleene wall, rigidity, and discoverability are structurally universal — they emerge from standard finite category theory (retraction pairs, subobject classifiers, products, conditional copairing) without any self-description axioms. Verified across five independent axiom systems: Ψ, information-theoretic, category-theoretic, game-theoretic, and categorical topos.
 
-**Layer 2 (expressiveness):** Substrate existence is selected by the variational principle — inert=0 models are degenerate (1/10 discoverable), while inert ≥ 1 models are structurally sound (9/10 discoverable, higher 2-step expressiveness). Full role specialization to 7 elements maximizes compositional capacity (49 vs 16 cells). Substrate *uniqueness* is not selected — inert=1 and inert=2 tie on all metrics.
+**Layer 2 (distinctness):** The distinctness axiom forces all named roles apart (13 new requirements beyond 32 already forced), yielding 7 specialized roles. This is standard algebraic practice, independently justified by expressiveness (49 vs 16 cells). Substrate existence (g distinct from all encoders) is forced here. The g-as-CONS fusion is also forced at this layer by the interaction of Branch + Compose: composition is packaging-then-branching (η·x = ρ·(g·x)), which forces the packager g to hold without transforming — i.e., to be inert. This completes the McCarthy correspondence.
 
-**Layer 3 (Ψ-specific):** Substrate uniqueness (the 1-Inert axiom) and the g-as-CONS fusion (forced by Branch + Compose) are the irreducible contributions of the Ψ axiom system. The Compose axiom defines composition as packaging-then-branching (η·x = ρ·(g·x)), which forces the packager g to hold without transforming — i.e., to be inert. This is why CONS must live in the substrate, and it is the logical step that completes the McCarthy correspondence.
+**Layer 3 (1-Inert):** Substrate uniqueness — exactly one inert element, not two or more. Expressiveness does not distinguish inert=1 from inert=2 (both tie on all metrics). This is the irreducible philosophical commitment: "the ground is unique."
 
 **Redundant axioms:** InertProp (D), VV, and 1-Inert are implied by {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection} — eight independent axioms.
 

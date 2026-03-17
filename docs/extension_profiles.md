@@ -133,6 +133,7 @@ The base axioms guarantee structural properties. The extensions are optimized fo
 | File | Description |
 |------|-------------|
 | `ds_search/n16_c_interop.py` | Ψ₁₆ᶜ SAT search + freedom analysis |
+| `ds_search/n16c_expressiveness_search.py` | Ψ₁₆ᶜ table search (maximally expressive model) |
 | `ds_search/n16_freedom.py` | Ψ₁₆ᶠ SAT search + freedom analysis |
 | `psi_star.py` | Ψ∗ term algebra over Ψ₁₆ᶠ |
 | `psi_star_c.py` | Ψ∗ term algebra over Ψ₁₆ᶜ |

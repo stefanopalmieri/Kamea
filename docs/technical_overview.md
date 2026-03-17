@@ -450,7 +450,9 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 | Kleene wall: τ cannot merge with any encoder or inert role | universal | `[SAT]` | `forced_roles_test.py` — τ vs all 9 others UNSAT |
 | Inert wall: g cannot merge with any other role | universal | `[SAT]` | `forced_roles_test.py` — g vs all 9 others UNSAT |
 | Rigidity survives all collapse levels (5→7 role elements) | universal | `[SAT]` | `collapse_rigidity_test.py` — all 6 levels: |Aut|=1, WL-1 rigid |
-| Maximal expressiveness selects 7 roles (49 vs 16 cells) | structural | `[Empirical]` | `compositional_expressiveness.py` — monotone in role count |
+| Distinctness axiom adds 13 requirements (32/45 already forced) | universal | `[SAT]` | `ds_search/distinctness_test.py` |
+| Distinctness axiom compatible with both Ψ₁₆ᶠ and Ψ₁₆ᶜ | specific models | `[SAT]` | `ds_search/distinctness_test.py` |
+| Expressiveness independently justifies distinctness (49 vs 16 cells, monotone) | structural | `[Empirical]` | `ds_search/compositional_expressiveness.py` |
 | 1-bit logic (AND/OR/XOR) via curried dispatch | universal | `[SAT]` | SAT-verified at N=16 with all constraints; model stays WL-1 rigid |
 | Defunctionalized CPS evaluator (14 continuation types, zero lambdas) | specific model | `[Empirical]` | `psi_metacircular.lisp` + `psi_reflective_tower.lisp` |
 | Inspectable continuations: k-walk, k-depth, k-next, describe-continuation | specific model | `[Empirical]` | `psi_reflective_tower.lisp` — chain tags verified by comparison |

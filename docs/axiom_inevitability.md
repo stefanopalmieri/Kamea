@@ -24,7 +24,7 @@ Present in 3/4 systems. Requires computational structure (QE + Branch + Compose 
 - **Inert element** (substrate). A row that is neither tester nor encoder — it has non-boolean outputs but not enough diversity to qualify as an encoder.
 - **Substrate wall**: substrate cannot merge with any active element. The inert row profile is incompatible with both tester and encoder profiles.
 - **Five categories total** (absorber, tester, encoder, inert, plus the Composition sub-wall partially isolating η among encoders).
-- **Seven roles under maximal expressiveness** = McCarthy's primitives.
+- **Seven roles under the distinctness axiom** = McCarthy's primitives. The distinctness axiom (all named role-bearing elements pairwise distinct) adds 13 requirements beyond the 32 already forced. This is standard algebraic practice, independently justified by compositional expressiveness analysis (49 vs 16 1-step cells, monotone in role count). See `ds_search/distinctness_test.py`.
 
 ### Layer 3: Philosophically Contingent
 
@@ -182,7 +182,7 @@ All 14 encoder pairs that do not include both ρ and η can be associative. The 
 
 ## Expressiveness Selects Substrate Existence, Not Uniqueness
 
-Does the variational principle (maximal compositional expressiveness) select a specific inert count? The categorical axioms were tested with the inert count pinned to 0, 1, 2, 3, 4, and 5, with 10 models sampled at each level.
+Does the expressiveness analysis (which independently justifies the distinctness axiom) select a specific inert count? The categorical axioms were tested with the inert count pinned to 0, 1, 2, 3, 4, and 5, with 10 models sampled at each level.
 
 | Inert | Roles | 1-step vals | 2-step vals | Reach depth | Discoverable | Pair constructor in |
 |-------|-------|------------|------------|-------------|-------------|-------------------|
@@ -201,7 +201,7 @@ Does the variational principle (maximal compositional expressiveness) select a s
 
 3. **The pair constructor migrates.** At inert=0, the pair constructor is shoehorned into the tester (9/10 models) — a degenerate arrangement that damages discoverability. At inert=1, it lives in an encoder. At inert=2+, it migrates to an inert element.
 
-4. **Inert=1 does NOT uniquely win.** Inert=2 ties on 2-step expressiveness and discoverability. The variational principle selects "at least one substrate element" but does not distinguish between 1 and 2.
+4. **Inert=1 does NOT uniquely win.** Inert=2 ties on 2-step expressiveness and discoverability. The expressiveness analysis selects "at least one substrate element" but does not distinguish between 1 and 2. The distinctness axiom forces substrate existence (g distinct from all encoders) but not substrate uniqueness.
 
 **The g-as-CONS dual role does NOT emerge at inert=1.** In all 10 models with exactly 1 inert element, the pair constructor lives in an encoder, not in the inert element. The Ψ system's dual-role assignment (g is both substrate AND pair constructor) is a property of the full Ψ axioms (Branch + Compose force g into both roles), not a consequence of the categorical axioms plus inert count.
 

@@ -95,11 +95,9 @@ The transpiler handles computational programs (arithmetic, recursion, branching,
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
 
-The role structure has three independent sources of support. First, standard categorical structure (retraction pairs, subobject classifiers, products) in finite endomorphism monoids forces three of five behavioral categories and the Kleene wall — verified across four independent axiom systems. Second, a variational principle of maximal expressiveness selects substrate existence and full role specialization from the space of rigid models. Third, the Ψ-specific interaction of Branch and Compose forces the substrate element into double duty as the pair constructor — the element that holds data without transforming it is necessarily the element that builds pairs. This fusion is what completes the McCarthy correspondence: CONS lives in the substrate because composition is packaging-then-branching, and packaging requires holding without transforming.
+The role structure rests on three foundations: standard categorical structure forces three of five categories and the Kleene wall; a distinctness axiom (all named role-bearing elements are different — standard algebraic practice, independently justified by expressiveness analysis) forces the remaining specialization including substrate existence and g-as-CONS; and one philosophical commitment (the ground is unique) forces substrate uniqueness and actuality irreducibility. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
-Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
-
-The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations — from 5 role-bearing elements to 7+ — produce rigid discoverable algebras. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells). Four roles are forced by axioms alone; three are selected by the expressiveness principle. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
+The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations produce rigid discoverable algebras. The distinctness axiom — Distinct(⊤, ⊥, τ, Q, E, f, g, ρ, η, Y) — adds 13 requirements beyond the 32 already forced, yielding 7+ distinct role-bearing elements. This is standard algebraic practice (as 0 ≠ 1 in a non-trivial ring), independently justified by compositional expressiveness (49 vs 16 1-step cells, monotone in role count). Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 ## Why It Matters
 
@@ -212,7 +210,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
-- **Categorical formalization.** The three-layer inevitability argument (categorical → expressiveness → Ψ-specific) is currently supported by SAT analysis across four axiom systems. Lean formalization of the categorical layer — defining finite endomorphism monoids with retraction pairs and subobject classifiers in Mathlib's category theory library, and proving the Kleene wall and forced categories as theorems — remains the primary formalization goal. The existing Lean proofs cover the specific model Ψ₁₆ᶠ and some universal bounds, but not the categorical foundation. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Distinctness as theorem vs axiom.** The distinctness requirement (all role-bearing elements pairwise distinct) is formulated as an axiom. Of 45 pairwise requirements, 32 are already theorems of the categorical axioms. Whether the remaining 13 can be derived from stronger categorical conditions — or whether they are genuinely independent — is open. The expressiveness analysis provides empirical justification but not a proof that distinctness is forced. See `ds_search/distinctness_test.py`.
+- **Categorical formalization.** The three-layer inevitability argument (categorical → distinctness → Ψ-specific) is currently supported by SAT analysis across four axiom systems. Lean formalization of the categorical layer — defining finite endomorphism monoids with retraction pairs and subobject classifiers in Mathlib's category theory library, and proving the Kleene wall and forced categories as theorems — remains the primary formalization goal. The existing Lean proofs cover the specific model Ψ₁₆ᶠ and some universal bounds, but not the categorical foundation. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -246,7 +245,8 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── Psi16ActualityIrreducibility.lean  # Twin-model actuality irreducibility
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
-│   └── PsiCountermodels.lean            # Tight 4-element countermodel
+│   ├── PsiCountermodels.lean            # Tight 4-element countermodel
+│   └── legacy/                          # Historical Δ₁/Δ₂/Δ₃ proofs (superseded by Ψ₁₆)
 ├── kamea-rs/                             # Rust emulator + WASM browser debugger
 │   ├── crates/
 │   │   ├── psi-core/                     # The algebra — #![no_std], zero deps
@@ -305,12 +305,15 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── n16_c_interop.py              # Ψ₁₆ᶜ SAT search + freedom analysis
 │   ├── forced_roles_test.py           # Layer 1: 45 pairwise role-aliasing tests (forced categories)
 │   ├── collapse_rigidity_test.py     # Layer 2: rigidity at 6 collapse levels (universal rigidity)
-│   ├── compositional_expressiveness.py # Layer 3: compositional cell/value counts (variational selection)
+│   ├── distinctness_test.py            # Distinctness axiom: 32 forced + 13 added, SAT at N=12/16
+│   ├── compositional_expressiveness.py # Expressiveness justification for distinctness (monotone)
 │   ├── collapse_model_count.py       # Model diversity at maximal collapse (20+ models, all rigid)
 │   ├── axiom_archaeology.py          # Axiom removal + new axiom candidates (Direction 1 & 3)
 │   ├── axiom_archaeology_deep.py     # Composition wall detail, redundancy, max removable set
 │   ├── alternative_axioms.py         # Alternative axiom systems (Direction 2)
 │   ├── categorical_topos.py          # Genuine categorical endomorphism monoid axioms
+│   ├── inert_expressiveness.py       # Substrate expressiveness analysis (inert count vs discoverability)
+│   ├── n16c_expressiveness_search.py # Ψ₁₆ᶜ table search (maximally expressive model)
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── rigid_census.py               # Small rigid magma census

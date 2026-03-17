@@ -46,9 +46,13 @@ This file is the canonical status registry for claims made in this repository.
 | Inert wall: g cannot merge with any other role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
 | Rigidity survives all collapse levels: 6/6 levels WL-1 rigid, |Aut|=1, 1-probe discoverable | Empirical | `ds_search/collapse_rigidity_test.py` | `uv run python -m ds_search.collapse_rigidity_test` |
 | Model diversity at maximal collapse: 20+ distinct rigid models, 116/144 cells free | Empirical | `ds_search/collapse_model_count.py` | `uv run python -m ds_search.collapse_model_count` |
-| Maximal expressiveness selects 7-role specialization (49 vs 16 1-step cells, monotone in k) | Empirical | `ds_search/compositional_expressiveness.py`; `docs/forced_roles_theorem.md` | `uv run python -m ds_search.compositional_expressiveness` |
+| Expressiveness independently justifies distinctness axiom (49 vs 16 1-step cells, monotone in k) | Empirical | `ds_search/compositional_expressiveness.py`; `docs/forced_roles_theorem.md` | `uv run python -m ds_search.compositional_expressiveness` |
 | Emergent pair structure from Branch + 1-Inert (g as CONS not axiomatized) | Empirical | Structural analysis in `docs/forced_roles_theorem.md` | N/A |
+| Distinctness axiom: 32 forced + 13 added, SAT at N=12 and N=16, compatible with both Ψ₁₆ᶠ and Ψ₁₆ᶜ | Empirical | `ds_search/distinctness_test.py` | `uv run python -m ds_search.distinctness_test` |
 | Futamura projection 1: supercompile(interpreter, program) = supercompile(program) for all 10 test cases | Empirical | `examples/psi_futamura.psi` | `python3 psi_supercompile.py --table=c examples/psi_futamura.psi` |
+| Futamura projection 2: specializer on tagged-pair IR eliminates interpreter | Empirical | `examples/psi_specialize.lisp` | `python3 psi_lisp.py --table=c examples/psi_specialize.lisp` |
+| Futamura projection 3: self-hosted transpiler fixed point (compiled = interpreted output) | Empirical | `examples/psi_transpile.lisp` + `psi_transpile.py` | `python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp` |
+| Self-hosted transpiler: Ψ-Lisp → Rust (6 expression types, INC/INV/DEC specialization) | Empirical | `examples/psi_transpile.lisp` + `psi_runtime.rs` | See `docs/technical_overview.md` §6 |
 | Psi16C satisfies all listed operations (table, roles, QE, branch, INC/DEC/INV) | Lean-proved | `DistinctionStructures/Psi16C.lean` | `lake build` |
 | Psi16C cancellation laws (INC∘DEC, DEC∘INC, INV∘INV on core) | Lean-proved | `DistinctionStructures/Psi16C.lean` | `lake build` |
 | Psi16C rigidity (fingerprint uniqueness, row injectivity) | Lean-proved | `DistinctionStructures/Psi16C.lean` | `lake build` |
@@ -65,7 +69,7 @@ This file is the canonical status registry for claims made in this repository.
 | g=CONS forced by Branch+Compose (100% of 1-inert Ψ models; 0% of categorical-only models) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
 | 3 redundant axioms identified (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
-| Variational principle as formal theorem (cell count monotonicity → uniqueness) | Conjecture/Open | Empirically demonstrated; formal proof open | N/A |
+| Distinctness as theorem vs axiom: 32/45 pairwise requirements are theorems; whether the remaining 13 can be derived from stronger categorical conditions is open | Conjecture/Open | `ds_search/distinctness_test.py` — 13 pairs SAT without axiom, all 45 SAT with it | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 
