@@ -321,14 +321,18 @@ The result: the axioms force the category structure (theorem); maximal expressiv
 
 ---
 
-## Scope: What Is Universal and What Is Contingent
+## Relationship to Categorical Foundation
 
-The three-layer theorem (forced categories → universal rigidity → variational selection) stands, but its foundation has been refined by axiom archaeology. See [`axiom_inevitability.md`](axiom_inevitability.md) for the full analysis.
+The forced roles theorem (5 categories, 3 walls, 7 roles under expressiveness) has been decomposed into three layers with different sources of support. See [`inevitability_summary.md`](inevitability_summary.md) for the full analysis.
 
-**Layers 1 and 2 are robust across axiom systems.** Four independent axiom systems were tested — phenomenological (Ψ), information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories (absorbers, testers, encoders) and the Kleene wall (judgment ≠ computation) emerged from all four. The Substrate wall (inert ≠ active) emerged from the three systems that include a substrate commitment. Rigidity is a property of the axiom geometry (Layer 2), not of the specific axiom vocabulary.
+The forced roles theorem as originally stated remains correct. It just now has a finer-grained explanation of why each part holds:
 
-**Layer 3 (expressiveness selecting seven roles) depends on all five categories being present.** The variational principle selects among instantiations of the five-category structure. Without the inert category, the computation category absorbs its slot, and the pair-constructor role (g/CONS) has no natural home. The seven-role McCarthy correspondence requires the substrate axiom.
+**Layer 1 (categorical):** Three of five categories (absorbers, classifiers, transformers) and the Kleene wall are structurally universal — they emerge from standard finite category theory (retraction pairs, subobject classifiers, products, conditional copairing) without any self-description axioms. Rigidity and discoverability also emerge for free. Verified across five independent axiom systems: Ψ, information-theoretic, category-theoretic, game-theoretic, and categorical topos.
 
-**Three axioms are redundant.** InertProp (D), VV, and 1-Inert are implied by the remaining eight independent axioms {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}. This strengthens the non-circularity argument — fewer axioms means less opportunity for indirect encoding.
+**Layer 2 (expressiveness):** Substrate existence is selected by the variational principle — inert=0 models are degenerate (1/10 discoverable), while inert ≥ 1 models are structurally sound (9/10 discoverable, higher 2-step expressiveness). Full role specialization to 7 elements maximizes compositional capacity (49 vs 16 cells). Substrate *uniqueness* is not selected — inert=1 and inert=2 tie on all metrics.
 
-**The Composition wall has two independent sub-walls.** η vs Q/E is defended by QE + Compose. η vs ρ is defended by Kleene + PA + Selection. The Composition wall is the only wall that genuinely depends on behavioral axioms; the Kleene and Substrate walls follow from row-profile typing alone.
+**Layer 3 (Ψ-specific):** Substrate uniqueness (the 1-Inert axiom) and the g-as-CONS fusion (forced by Branch + Compose) are the irreducible contributions of the Ψ axiom system. The Compose axiom defines composition as packaging-then-branching (η·x = ρ·(g·x)), which forces the packager g to hold without transforming — i.e., to be inert. This is why CONS must live in the substrate, and it is the logical step that completes the McCarthy correspondence.
+
+**Redundant axioms:** InertProp (D), VV, and 1-Inert are implied by {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection} — eight independent axioms.
+
+**Composition wall:** Two independent sub-walls (η vs Q/E defended by QE + Compose; η vs ρ defended by Kleene + PA + Selection). Requires ≥ 5 axioms in concert — a genuinely emergent multi-axiom interaction.

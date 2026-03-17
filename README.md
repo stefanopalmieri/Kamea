@@ -95,9 +95,9 @@ The transpiler handles computational programs (arithmetic, recursion, branching,
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
 
-The axioms do not encode Lisp. They encode self-description. The axiom vocabulary is: boundaries (absorbers), judgment (tester + Kleene barrier), substrate (inert element), representation (QE inverse pair), conditional action (Branch), and composition (Compose). No axiom references list processing, symbolic manipulation, or any programming language concept. The seven roles emerge from constraints on self-description — a structure that can identify its own components through its own operation. That these roles match the primitives McCarthy identified for self-manipulation is evidence that self-description and self-manipulation have the same algebraic structure. This convergence from independent starting points — phenomenological self-description vs. engineering self-manipulation — is the central observation of the project. It is not a proof of necessity.
+The role structure has three independent sources of support. First, standard categorical structure (retraction pairs, subobject classifiers, products) in finite endomorphism monoids forces three of five behavioral categories and the Kleene wall — verified across four independent axiom systems. Second, a variational principle of maximal expressiveness selects substrate existence and full role specialization from the space of rigid models. Third, the Ψ-specific interaction of Branch and Compose forces the substrate element into double duty as the pair constructor — the element that holds data without transforming it is necessarily the element that builds pairs. This fusion is what completes the McCarthy correspondence: CONS lives in the substrate because composition is packaging-then-branching, and packaging requires holding without transforming.
 
-Axiom archaeology confirms this separation. Four independent axiom systems were tested — phenomenological (Ψ), information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories (absorbers, testers, encoders) and the Kleene wall (judgment ≠ computation) emerged from all four. The fourth category (inert/substrate) emerged from three of four — the information-theoretic system, which has no vocabulary for "ground" or "substrate," produced no inert element. The substrate is the one philosophically contingent part of the framework: the claim that self-description must encounter something outside its own descriptive machinery. Full analysis: [`docs/axiom_inevitability.md`](docs/axiom_inevitability.md).
+Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations — from 5 role-bearing elements to 7+ — produce rigid discoverable algebras. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells). Four roles are forced by axioms alone; three are selected by the expressiveness principle. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
@@ -212,7 +212,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
-- **Scope of the McCarthy convergence.** Three of five Ψ categories (absorbers, testers, encoders) and the Kleene wall are structurally universal — they emerged from all four tested axiom systems. The fourth category (inert/substrate) is contingent on a substrate axiom that has phenomenological motivation but is not forced by information theory. The McCarthy correspondence requires all five categories; without the inert element, the pair-constructor role (CONS) has no natural home. Whether the substrate axiom is the unique formalization of "self-description encounters actuality" or one of several possible formalizations remains open. See [`docs/axiom_inevitability.md`](docs/axiom_inevitability.md).
+- **Categorical formalization.** The three-layer inevitability argument (categorical → expressiveness → Ψ-specific) is currently supported by SAT analysis across four axiom systems. Lean formalization of the categorical layer — defining finite endomorphism monoids with retraction pairs and subobject classifiers in Mathlib's category theory library, and proving the Kleene wall and forced categories as theorems — remains the primary formalization goal. The existing Lean proofs cover the specific model Ψ₁₆ᶠ and some universal bounds, but not the categorical foundation. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -318,7 +318,8 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 ├── docs/
 │   ├── technical_overview.md          # Full technical details (moved from README)
 │   ├── forced_roles_theorem.md        # The Forced Roles Theorem (core theoretical result)
-│   ├── axiom_inevitability.md        # What is universal vs contingent (axiom archaeology)
+│   ├── inevitability_summary.md      # Three-layer inevitability argument (definitive synthesis)
+│   ├── axiom_inevitability.md        # Detailed evidence for inevitability layers
 │   ├── axiom_archaeology_results.md  # Raw axiom removal/alternative system data
 │   ├── forced_roles.md               # Forced categories: raw SAT data + necessity analysis
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
@@ -342,6 +343,8 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 ```
 
 ## Building
+
+The Lean proofs verify specific model properties (Psi16\*.lean) and universal bounds (PsiUniversalBounds.lean). Lean formalization of the categorical foundation (three-layer inevitability argument) is planned but not yet implemented. The categorical results are currently supported by SAT analysis.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)

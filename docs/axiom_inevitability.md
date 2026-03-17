@@ -1,8 +1,8 @@
 # Axiom Inevitability
 
-*Companion to [`forced_roles_theorem.md`](forced_roles_theorem.md). The forced roles theorem says **what** the axioms force. This document says **why** — which parts are structurally universal and which are choices.*
+*Detailed evidence for the three-layer inevitability argument. For the synthesis, see [`inevitability_summary.md`](inevitability_summary.md). For the forced roles theorem itself, see [`forced_roles_theorem.md`](forced_roles_theorem.md).*
 
-Evidence: `ds_search/axiom_archaeology.py`, `ds_search/alternative_axioms.py`, `ds_search/axiom_archaeology_deep.py`. Raw data: [`axiom_archaeology_results.md`](axiom_archaeology_results.md).
+Evidence: `ds_search/axiom_archaeology.py`, `ds_search/alternative_axioms.py`, `ds_search/axiom_archaeology_deep.py`, `ds_search/categorical_topos.py`, `ds_search/inert_expressiveness.py`. Raw data: [`axiom_archaeology_results.md`](axiom_archaeology_results.md).
 
 ---
 

@@ -56,12 +56,15 @@ This file is the canonical status registry for claims made in this repository.
 | Cancellation rule soundness: INC/DEC/QE restricted to verified element domain (exhaustive 16-element check) | Empirical | `psi_supercompile.py` — counterexample: INC(DEC(12))=13≠12 | N/A |
 | Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on fibonacci + recursion | Empirical | `psi_transpile.py --target c\|rust` | `python3 psi_transpile.py --target rust examples/psi_fibonacci.lisp > /tmp/fib.rs && cp psi_runtime.rs /tmp/ && rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib` |
 | MMTk GC stress test: 10M cons cells in 4MB heap (MarkSweep + shadow stack roots) | Empirical | `kamea-rs/crates/wispy-gc/` + `wispy-stress/` | `cd kamea-rs && HEAP_MB=4 cargo run -p wispy-stress --release` |
-| 3/5 categories universal (absorbers, testers, encoders emerge from all 4 axiom systems) | Empirical | `ds_search/alternative_axioms.py` | `uv run python -m ds_search.alternative_axioms` |
-| Kleene wall universal (judgment ≠ computation in all 4 systems) | Empirical | `ds_search/alternative_axioms.py` | `uv run python -m ds_search.alternative_axioms` |
-| Substrate category contingent (absent in info-theoretic system) | Empirical | `ds_search/alternative_axioms.py` — Approach A produces 2-1-9-0 | `uv run python -m ds_search.alternative_axioms` |
-| 3 redundant axioms (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
+| 3 categories universal (absorbers, classifiers, transformers from all 4+ axiom systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.alternative_axioms` |
+| Kleene wall universal (classifiers ≠ transformers in all systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
+| Rigidity emerges from categorical axioms (50/50 models, no rigidity axiom) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
+| Discoverability emerges from categorical axioms (49/50 models) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
+| Substrate existence selected by expressiveness (inert=0 degenerate: 1/10 discoverable) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
+| Substrate uniqueness NOT selected by expressiveness (inert=1 ties inert=2) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
+| g=CONS forced by Branch+Compose (100% of 1-inert Ψ models; 0% of categorical-only models) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
+| 3 redundant axioms identified (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
-| Categorical topos axioms: inert permitted not forced, rigidity/discoverability emerge | Empirical | `ds_search/categorical_topos.py`; 50 models, 100% rigid, 98% discoverable | `uv run python -m ds_search.categorical_topos` |
 | Variational principle as formal theorem (cell count monotonicity → uniqueness) | Conjecture/Open | Empirically demonstrated; formal proof open | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
