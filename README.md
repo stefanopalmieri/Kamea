@@ -109,13 +109,33 @@ The answer is yes, and it fits in a 16×16 table.
 
 ## Key Results
 
+### Universal Theorems (Categorical Foundation)
+
+Proved for ALL finite endomorphism monoids satisfying the axioms — not just one table. Pure algebraic proofs, no `decide`. [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean)
+
+- Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
+- Kleene wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
+- No right identity in any model `[Lean, universal]`
+- Card ≥ 4 from the axioms `[Lean, universal]`
+- Retraction pair members are non-classifiers `[Lean, universal]`
+- Minimal witness: N=5 (N=4 is UNSAT) `[Lean, constructive]`
+- 19 universal theorems total, zero `decide`, zero `sorry`
+
+### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
+
+Proved for the specific 16-element table by `decide`/`native_decide`.
+
 - Rigidity: every injective endomorphism is the identity `[Lean]`
 - Discoverability: 4 probes identify all 16 elements `[Lean]`
-- Actuality irreducibility: twin models agree on structure, disagree on tester assignment `[Lean]`
-- No right identity in any model; card ≥ 4 from role axioms (tight) `[Lean]`
-- Kleene wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) [SAT]
-- Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) [SAT]
-- Turing completeness: 7 axiom-forced elements (forced by self-description, not computation) simulate 2CM `[Empirical]`
+- Actuality irreducibility: twin models agree on structure, disagree on classifier assignment `[Lean]`
+- 32/45 role pairs forced distinct by behavioral axioms `[Lean]`
+- 83 operational theorems on the 16×16 table `[Lean]`
+
+### SAT and Empirical Results
+
+- Kleene wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
+- Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) `[SAT]`
+- Turing completeness: 7 axiom-forced elements simulate 2CM `[Empirical]`
 - Reflective tower: 3 levels, branch swap, grounded continuations `[Empirical]`
 - Compilation: within 4x of native Rust via supercompile → C/Rust `[Empirical]`
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
@@ -171,6 +191,8 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
+The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 19 universal algebraic theorems) and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). Both use only standard algebraic concepts — no Ψ-specific vocabulary.
+
 Results fall into four tiers:
 
 - **Universal results** — properties proved for *every* model satisfying the axiom class. Tagged `[Lean]` or `[SAT]`.
@@ -191,16 +213,17 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 7. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 8. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
 9. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-10. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-11. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
-12. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
-13. [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
-14. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
-15. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
-16. [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
-17. [`examples/psi_specialize.lisp`](examples/psi_specialize.lisp) — Ψ-Lisp specializer: Futamura projections 1 & 2 on tagged-pair IR
-18. [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
-19. [`psi_runtime.rs`](psi_runtime.rs) — Rust runtime: Cayley table + Arena bump allocator
+10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: minimal structure, 5-element witness, 19 universal algebraic theorems
+11. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+12. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
+13. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+14. [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
+15. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
+16. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
+17. [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
+18. [`examples/psi_specialize.lisp`](examples/psi_specialize.lisp) — Ψ-Lisp specializer: Futamura projections 1 & 2 on tagged-pair IR
+19. [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
+20. [`psi_runtime.rs`](psi_runtime.rs) — Rust runtime: Cayley table + Arena bump allocator
 
 ---
 
@@ -212,7 +235,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness as theorem vs axiom.** The distinctness requirement (all role-bearing elements pairwise distinct) is formulated as an axiom. Of 45 pairwise requirements, 32 are already theorems of the categorical axioms. Whether the remaining 13 can be derived from stronger categorical conditions — or whether they are genuinely independent — is open. The expressiveness analysis provides empirical justification but not a proof that distinctness is forced. See `ds_search/distinctness_test.py`.
-- **Categorical formalization.** The three-layer inevitability argument (categorical → distinctness → Ψ-specific) is currently supported by SAT analysis across four axiom systems. Lean formalization of the categorical layer — defining finite endomorphism monoids with retraction pairs and subobject classifiers in Mathlib's category theory library, and proving the Kleene wall and forced categories as theorems — remains the primary formalization goal. The existing Lean proofs cover the specific model Ψ₁₆ᶠ and some universal bounds, but not the categorical foundation. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMonoid` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 19 universal theorems purely algebraically. The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -247,6 +270,14 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
+│   ├── CategoricalFoundation.lean       # CatEndoMonoid: categorical vocabulary for full N=16
+│   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
+│   ├── CatKleeneWallMinimal.lean        # KleeneMonoid: minimal N=5 witness + 19 universal theorems
+│   ├── CatWitness.lean                  # N=16 witness as CatEndoMonoid (satisfiability)
+│   ├── CatForcedDistinctness.lean       # 32 forced-distinct pairs on N=16 witness
+│   ├── CatRigidity.lean                 # Rigidity of N=16 categorical witness
+│   ├── CatDiscoverable.lean             # 4-probe discoverability of N=16 witness
+│   ├── CatActualityIrreducibility.lean  # Twin-model actuality irreducibility
 │   └── legacy/                          # Historical Δ₁/Δ₂/Δ₃ proofs (superseded by Ψ₁₆)
 ├── kamea-rs/                             # Rust emulator + WASM browser debugger
 │   ├── crates/
@@ -348,7 +379,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 
 ## Building
 
-The Lean proofs verify specific model properties (Psi16\*.lean) and universal bounds (PsiUniversalBounds.lean). Lean formalization of the categorical foundation (three-layer inevitability argument) is planned but not yet implemented. The categorical results are currently supported by SAT analysis.
+`lake build` compiles all Lean files — both the categorical foundation (19 universal algebraic theorems in `CatKleeneWallMinimal.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)
@@ -389,7 +420,7 @@ python3 -m http.server 8080 --directory www                    # serve debugger 
 # → open http://localhost:8080
 ```
 
-All Lean theorems are checked by `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero sorry.
+Lean proofs use two techniques: universal theorems (`CatKleeneWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning — no `decide`, no `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
 
 All Mini-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
 
