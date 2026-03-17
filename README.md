@@ -2,7 +2,7 @@
 
 **Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
 
-*Judgment cannot merge with computation. Substrate cannot merge with anything active. Among all rigid algebras satisfying these walls, maximal expressiveness selects seven roles — the same seven McCarthy needed for Lisp.*
+*Judgment cannot merge with computation. Substrate cannot merge with anything active. A distinctness axiom — standard algebraic practice — specializes five forced categories into seven roles: the same seven McCarthy needed for Lisp.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -47,7 +47,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose five role categories are axiom-forced, whose seven specialized roles maximize compositional expressiveness among tested collapses, and whose term algebra is Turing complete.
+A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose five role categories are axiom-forced, whose seven specialized roles are forced by a distinctness axiom independently justified by compositional expressiveness, and whose term algebra is Turing complete.
 
 Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
 
