@@ -95,6 +95,8 @@ The transpiler handles computational programs (arithmetic, recursion, branching,
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
 
+The axioms do not encode Lisp. They encode self-description. The axiom vocabulary is: boundaries (absorbers), judgment (tester + Kleene barrier), substrate (inert element), representation (QE inverse pair), conditional action (Branch), and composition (Compose). No axiom references list processing, symbolic manipulation, or any programming language concept. The seven roles emerge from constraints on self-description — a structure that can identify its own components through its own operation. That these roles match the primitives McCarthy identified for self-manipulation is evidence that self-description and self-manipulation have the same algebraic structure. This convergence from independent starting points — phenomenological self-description vs. engineering self-manipulation — is the central observation of the project. It is not a proof of necessity.
+
 The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations — from 5 role-bearing elements to 7+ — produce rigid discoverable algebras. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells). Four roles are forced by axioms alone; three are selected by the expressiveness principle. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 ## Why It Matters
@@ -112,7 +114,7 @@ The answer is yes, and it fits in a 16×16 table.
 - Actuality irreducibility: twin models agree on structure, disagree on tester assignment `[Lean]`
 - No right identity in any model; card ≥ 4 from role axioms (tight) `[Lean]`
 - Kleene wall: judgment cannot merge with computation (32/45 role pairs UNSAT) `[SAT]`
-- Turing completeness: 7 axiom-forced elements simulate 2CM `[Empirical]`
+- Turing completeness: 7 axiom-forced elements (forced by self-description, not computation) simulate 2CM `[Empirical]`
 - Reflective tower: 3 levels, branch swap, grounded continuations `[Empirical]`
 - Compilation: within 4x of native Rust via supercompile → C/Rust `[Empirical]`
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
@@ -208,6 +210,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
+- **Scope of the McCarthy convergence.** The seven roles match McCarthy's primitives structurally (same role inventory), not semantically (the domains differ). The axioms force self-description, not computation — the term algebra's Turing completeness is a consequence, not a goal. Whether non-self-describing axiom systems with similar computational power produce the same role structure is untested. The convergence evidence is: 500+ non-isomorphic models across N=12 and N=16, both extension profiles (Ψ₁₆ᶠ and Ψ₁₆ᶜ), all collapse levels — seven roles appear in every case.
 
 ---
 
