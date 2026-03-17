@@ -114,6 +114,7 @@ The answer is yes, and it fits in a 16×16 table.
 - Actuality irreducibility: twin models agree on structure, disagree on tester assignment `[Lean]`
 - No right identity in any model; card ≥ 4 from role axioms (tight) `[Lean]`
 - Kleene wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) [SAT]
+- Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) [SAT]
 - Turing completeness: 7 axiom-forced elements (forced by self-description, not computation) simulate 2CM `[Empirical]`
 - Reflective tower: 3 levels, branch swap, grounded continuations `[Empirical]`
 - Compilation: within 4x of native Rust via supercompile → C/Rust `[Empirical]`
