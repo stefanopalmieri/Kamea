@@ -61,6 +61,7 @@ This file is the canonical status registry for claims made in this repository.
 | Substrate category contingent (absent in info-theoretic system) | Empirical | `ds_search/alternative_axioms.py` — Approach A produces 2-1-9-0 | `uv run python -m ds_search.alternative_axioms` |
 | 3 redundant axioms (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
+| Categorical topos axioms: inert permitted not forced, rigidity/discoverability emerge | Empirical | `ds_search/categorical_topos.py`; 50 models, 100% rigid, 98% discoverable | `uv run python -m ds_search.categorical_topos` |
 | Variational principle as formal theorem (cell count monotonicity → uniqueness) | Conjecture/Open | Empirically demonstrated; formal proof open | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |

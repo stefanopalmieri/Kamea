@@ -310,6 +310,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── axiom_archaeology.py          # Axiom removal + new axiom candidates (Direction 1 & 3)
 │   ├── axiom_archaeology_deep.py     # Composition wall detail, redundancy, max removable set
 │   ├── alternative_axioms.py         # Alternative axiom systems (Direction 2)
+│   ├── categorical_topos.py          # Genuine categorical endomorphism monoid axioms
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── rigid_census.py               # Small rigid magma census
