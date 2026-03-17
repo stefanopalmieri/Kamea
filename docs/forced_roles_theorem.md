@@ -318,3 +318,17 @@ The argument proceeds in three steps:
 3. Full specialization maximizes expressiveness. This is a variational selection. *(49 vs 16 cells, 11 vs 7 values, depth 2 vs 3)*
 
 The result: the axioms force the category structure (theorem); maximal expressiveness selects the specialization among tested collapses (empirical); the specialization matches McCarthy (structural observation). Five categories are proved necessary. Seven roles are the empirical optimum — a formal proof that no intermediate level achieves equal expressiveness remains open.
+
+---
+
+## Scope: What Is Universal and What Is Contingent
+
+The three-layer theorem (forced categories → universal rigidity → variational selection) stands, but its foundation has been refined by axiom archaeology. See [`axiom_inevitability.md`](axiom_inevitability.md) for the full analysis.
+
+**Layers 1 and 2 are robust across axiom systems.** Four independent axiom systems were tested — phenomenological (Ψ), information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories (absorbers, testers, encoders) and the Kleene wall (judgment ≠ computation) emerged from all four. The Substrate wall (inert ≠ active) emerged from the three systems that include a substrate commitment. Rigidity is a property of the axiom geometry (Layer 2), not of the specific axiom vocabulary.
+
+**Layer 3 (expressiveness selecting seven roles) depends on all five categories being present.** The variational principle selects among instantiations of the five-category structure. Without the inert category, the computation category absorbs its slot, and the pair-constructor role (g/CONS) has no natural home. The seven-role McCarthy correspondence requires the substrate axiom.
+
+**Three axioms are redundant.** InertProp (D), VV, and 1-Inert are implied by the remaining eight independent axioms {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}. This strengthens the non-circularity argument — fewer axioms means less opportunity for indirect encoding.
+
+**The Composition wall has two independent sub-walls.** η vs Q/E is defended by QE + Compose. η vs ρ is defended by Kleene + PA + Selection. The Composition wall is the only wall that genuinely depends on behavioral axioms; the Kleene and Substrate walls follow from row-profile typing alone.

@@ -97,6 +97,8 @@ The correspondence is structural (same role inventory) rather than semantic (the
 
 The axioms do not encode Lisp. They encode self-description. The axiom vocabulary is: boundaries (absorbers), judgment (tester + Kleene barrier), substrate (inert element), representation (QE inverse pair), conditional action (Branch), and composition (Compose). No axiom references list processing, symbolic manipulation, or any programming language concept. The seven roles emerge from constraints on self-description — a structure that can identify its own components through its own operation. That these roles match the primitives McCarthy identified for self-manipulation is evidence that self-description and self-manipulation have the same algebraic structure. This convergence from independent starting points — phenomenological self-description vs. engineering self-manipulation — is the central observation of the project. It is not a proof of necessity.
 
+Axiom archaeology confirms this separation. Four independent axiom systems were tested — phenomenological (Ψ), information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories (absorbers, testers, encoders) and the Kleene wall (judgment ≠ computation) emerged from all four. The fourth category (inert/substrate) emerged from three of four — the information-theoretic system, which has no vocabulary for "ground" or "substrate," produced no inert element. The substrate is the one philosophically contingent part of the framework: the claim that self-description must encounter something outside its own descriptive machinery. Full analysis: [`docs/axiom_inevitability.md`](docs/axiom_inevitability.md).
+
 The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations — from 5 role-bearing elements to 7+ — produce rigid discoverable algebras. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells). Four roles are forced by axioms alone; three are selected by the expressiveness principle. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 ## Why It Matters
@@ -210,7 +212,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
-- **Scope of the McCarthy convergence.** The seven roles match McCarthy's primitives structurally (same role inventory), not semantically (the domains differ). The axioms force self-description, not computation — the term algebra's Turing completeness is a consequence, not a goal. Whether non-self-describing axiom systems with similar computational power produce the same role structure is untested. The convergence evidence is: 500+ non-isomorphic models across N=12 and N=16, both extension profiles (Ψ₁₆ᶠ and Ψ₁₆ᶜ), all collapse levels — seven roles appear in every case.
+- **Scope of the McCarthy convergence.** Three of five Ψ categories (absorbers, testers, encoders) and the Kleene wall are structurally universal — they emerged from all four tested axiom systems. The fourth category (inert/substrate) is contingent on a substrate axiom that has phenomenological motivation but is not forced by information theory. The McCarthy correspondence requires all five categories; without the inert element, the pair-constructor role (CONS) has no natural home. Whether the substrate axiom is the unique formalization of "self-description encounters actuality" or one of several possible formalizations remains open. See [`docs/axiom_inevitability.md`](docs/axiom_inevitability.md).
 
 ---
 
@@ -305,6 +307,9 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── collapse_rigidity_test.py     # Layer 2: rigidity at 6 collapse levels (universal rigidity)
 │   ├── compositional_expressiveness.py # Layer 3: compositional cell/value counts (variational selection)
 │   ├── collapse_model_count.py       # Model diversity at maximal collapse (20+ models, all rigid)
+│   ├── axiom_archaeology.py          # Axiom removal + new axiom candidates (Direction 1 & 3)
+│   ├── axiom_archaeology_deep.py     # Composition wall detail, redundancy, max removable set
+│   ├── alternative_axioms.py         # Alternative axiom systems (Direction 2)
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── rigid_census.py               # Small rigid magma census
@@ -312,6 +317,8 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 ├── docs/
 │   ├── technical_overview.md          # Full technical details (moved from README)
 │   ├── forced_roles_theorem.md        # The Forced Roles Theorem (core theoretical result)
+│   ├── axiom_inevitability.md        # What is universal vs contingent (axiom archaeology)
+│   ├── axiom_archaeology_results.md  # Raw axiom removal/alternative system data
 │   ├── forced_roles.md               # Forced categories: raw SAT data + necessity analysis
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture

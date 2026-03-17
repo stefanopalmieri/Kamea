@@ -1,5 +1,7 @@
 # Forced Roles Theorem — Honest Characterization
 
+*See also: [`axiom_inevitability.md`](axiom_inevitability.md) for which parts of the forced-roles result are structurally universal and which are axiom-contingent.*
+
 ## Summary
 
 The axioms force **partial** distinctness among TC roles, not total. Of the C(10,2) = 45 pairwise role-aliasing tests at N=12, **32 are UNSAT** (forced distinct) and **13 are SAT** (can share one element). The minimum number of distinct elements required by the axioms is **5**, not 7 or 10.
