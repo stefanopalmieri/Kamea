@@ -128,6 +128,17 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Rigidity: every injective endomorphism is the identity `[Lean]`
 - Discoverability: 4 probes identify all 16 elements `[Lean]`
 - Actuality irreducibility: twin models agree on structure, disagree on classifier assignment `[Lean]`
+
+  **What actuality irreducibility means.** Two Cayley tables can agree on every cell except the classifier's response to one element. Both satisfy all structural axioms. Both are valid models. But they disagree on judgment — one classifies a given element as "true," the other classifies it as "false."
+
+  The theorem says: structure does not determine classification. Three ways to read this:
+
+  - *Philosophically*: the table's structure is phenomenal; the classifier assignment is noumenal. What counts as "actual" is not recoverable from observed structure.
+  - *Computationally*: a well-typed program can produce different runtime behavior depending on which twin model it runs on. The type system underdetermines execution.
+  - *Informationally*: the table is a channel; the classifier is a message. The channel doesn't determine the message. Additional information is irreducible.
+
+  The classifier isn't arbitrary — both twins satisfy the axioms. It's *independent*: not derivable from anything else in the structure.
+
 - 35/45 role pairs forced distinct: 32 by categorical axioms + 3 by TC `[Lean + Empirical]`
 - 83 operational theorems on the 16×16 table `[Lean]`
 
@@ -234,7 +245,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
-- **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
+- **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic.** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Kleene wall, substrate wall, zero distinctness — verified by SAT at N=12, Lean-proved on the 16-element witness) and 3 from Turing completeness (Q≠E and Q≠f: lazy/eager semantic conflict; f≠η: projection uniqueness — no evaluator can serve both roles). The remaining 10 pairs (⊤=⊥, Q=ρ, Q=Y, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y, and E=f which survives via smart dispatch on structurally disjoint term shapes) are genuinely independent — not forced by categories or TC, only justified by expressiveness. These 10 are the irreducible axiomatic content of the distinctness assumption. See `ds_search/tc_distinctness_test.py`, `ds_search/tc_distinctness_deep.py`.
 - **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMonoid` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 19 universal theorems purely algebraically. The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
