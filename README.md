@@ -97,7 +97,7 @@ The correspondence is structural (same role inventory) rather than semantic (the
 
 The role structure rests on three foundations: standard categorical structure forces three of five categories and the Kleene wall; a distinctness axiom (all named role-bearing elements are different — standard algebraic practice, independently justified by expressiveness analysis) forces the remaining specialization including substrate existence and g-as-CONS; and one philosophical commitment (the ground is unique) forces substrate uniqueness and actuality irreducibility. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
-The Ψ axioms force five behavioral categories with hard walls between them (32/45 role pairs UNSAT at N=12). All instantiations produce rigid discoverable algebras. The distinctness axiom — Distinct(⊤, ⊥, τ, Q, E, f, g, ρ, η, Y) — adds 13 requirements beyond the 32 already forced, yielding 7+ distinct role-bearing elements. This is standard algebraic practice (as 0 ≠ 1 in a non-trivial ring), independently justified by compositional expressiveness (49 vs 16 1-step cells, monotone in role count). Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
+Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **32 are theorems** of the categorical axioms (Kleene wall, substrate wall, zero distinctness), **3 are theorems** of Turing completeness (Q≠E: lazy/eager incompatibility; Q≠f: same; f≠η: projection uniqueness), and **10 are standard algebraic practice** independently justified by compositional expressiveness (49 vs 16 1-step cells, monotone in role count). The 35 derived requirements leave 10 as the irreducible axiomatic content of the distinctness assumption — comparable to requiring 0 ≠ 1 in a nontrivial ring. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). TC analysis: `ds_search/tc_distinctness_test.py`.
 
 ## Why It Matters
 
@@ -128,13 +128,15 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Rigidity: every injective endomorphism is the identity `[Lean]`
 - Discoverability: 4 probes identify all 16 elements `[Lean]`
 - Actuality irreducibility: twin models agree on structure, disagree on classifier assignment `[Lean]`
-- 32/45 role pairs forced distinct by behavioral axioms `[Lean]`
+- 35/45 role pairs forced distinct: 32 by categorical axioms + 3 by TC `[Lean + Empirical]`
 - 83 operational theorems on the 16×16 table `[Lean]`
 
 ### SAT and Empirical Results
 
 - Kleene wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
 - Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) `[SAT]`
+- TC forces 3 additional distinctions: Q≠E (lazy/eager), Q≠f (lazy/eager), f≠η (projection uniqueness) `[Empirical]`
+- Remaining 10/45 distinctness pairs: standard algebraic practice, justified by expressiveness `[Empirical]`
 - Turing completeness: 7 axiom-forced elements simulate 2CM `[Empirical]`
 - Reflective tower: 3 levels, branch swap, grounded continuations `[Empirical]`
 - Compilation: within 4x of native Rust via supercompile → C/Rust `[Empirical]`
@@ -234,7 +236,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Necessity of self-modeling.** Empirical evidence (`ds_search/counterexample_search.py`) strongly suggests self-modeling is not required for efficient scramble-resilience — nearly all structureless rigid magmas are WL-1 discriminable. Self-modeling provides interpretability, not computational necessity.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
-- **Distinctness as theorem vs axiom.** The distinctness requirement (all role-bearing elements pairwise distinct) is formulated as an axiom. Of 45 pairwise requirements, 32 are already theorems of the categorical axioms. Whether the remaining 13 can be derived from stronger categorical conditions — or whether they are genuinely independent — is open. The expressiveness analysis provides empirical justification but not a proof that distinctness is forced. See `ds_search/distinctness_test.py`.
+- **Distinctness: 78% derived, 22% axiomatic.** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Kleene wall, substrate wall, zero distinctness — verified by SAT at N=12, Lean-proved on the 16-element witness) and 3 from Turing completeness (Q≠E and Q≠f: lazy/eager semantic conflict; f≠η: projection uniqueness — no evaluator can serve both roles). The remaining 10 pairs (⊤=⊥, Q=ρ, Q=Y, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y, and E=f which survives via smart dispatch on structurally disjoint term shapes) are genuinely independent — not forced by categories or TC, only justified by expressiveness. These 10 are the irreducible axiomatic content of the distinctness assumption. See `ds_search/tc_distinctness_test.py`, `ds_search/tc_distinctness_deep.py`.
 - **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMonoid` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 19 universal theorems purely algebraically. The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---

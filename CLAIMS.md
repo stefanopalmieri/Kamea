@@ -69,7 +69,17 @@ This file is the canonical status registry for claims made in this repository.
 | g=CONS forced by Branch+Compose (100% of 1-inert Ψ models; 0% of categorical-only models) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
 | 3 redundant axioms identified (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
-| Distinctness as theorem vs axiom: 32/45 pairwise requirements are theorems; whether the remaining 13 can be derived from stronger categorical conditions is open | Conjecture/Open | `ds_search/distinctness_test.py` — 13 pairs SAT without axiom, all 45 SAT with it | N/A |
+| Distinctness decomposition: 32/45 pairs forced by categorical axioms, 3/45 forced by TC (lazy/eager + projection uniqueness), 10/45 are standard algebraic practice | Empirical | `ds_search/forced_roles_test.py` (32 categorical), `ds_search/tc_distinctness_test.py` (3 TC), `ds_search/tc_distinctness_deep.py` (E=f artifact) | `uv run python -m ds_search.tc_distinctness_test && uv run python -m ds_search.tc_distinctness_deep` |
+| Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Kleene wall: classifier ∩ non-classifier = ∅ | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| No right identity (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Card ≥ 4 (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Minimal KleeneMonoid witness: N=5 (N=4 UNSAT) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witness by `decide` | `lake build` |
+| 32/45 role pairs forced distinct (16-element witness) | Lean-proved | `DistinctionStructures/CatForcedDistinctness.lean` — `native_decide` | `lake build` |
+| Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
+| Discoverability of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatDiscoverable.lean` — `native_decide` | `lake build` |
+| Actuality irreducibility (categorical twin-model) | Lean-proved | `DistinctionStructures/CatActualityIrreducibility.lean` — `native_decide` | `lake build` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 | Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 
