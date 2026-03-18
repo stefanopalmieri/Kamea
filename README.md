@@ -212,6 +212,8 @@ The axiom stack admits models of size 12 supporting quote/eval, branching, and f
 
 The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
+The axioms were not designed to produce Lisp. They were tested against four independent formalizations of self-description — phenomenological, information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories and the Kleene wall emerged from all four. The fourth category (substrate) is selected by expressiveness. The fifth requirement (substrate uniqueness) is the single philosophical commitment. Everything else is forced or standard practice. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+
 Results fall into four tiers:
 
 - **Universal results** — properties proved for *every* model satisfying the axiom class. Tagged `[Lean]` or `[SAT]`.
