@@ -275,7 +275,17 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 | **Compiled Ψ-Lisp** (both profiles, gcc -O2) | ~2.4 ms (startup) | 0.01 µs | 200,000,000x |
 | **Native Rust** (LLVM -O) | ~1 ms (startup) | 0.003 µs | ~700,000,000x |
 
-The compiled output is within **4x of hand-written Rust compiled with LLVM** — and faster than native Python. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
+On a real program — N-Queens(8), 92 solutions via backtracking with cons-cell lists:
+
+| Implementation | nqueens(8) | vs Native Rust |
+|----------------|-----------|---------------|
+| **Native Rust** (LLVM -O) | 47 µs | 1x |
+| **Compiled Ψ-Lisp** (gcc -O2) | 86 µs | **1.8x** |
+| **Native Python** | 5.9 ms | 125x |
+| **Ψ-Lisp (Rust interpreter)** | 4.1 s | 87,000x |
+| **Ψ-Lisp (Python interpreter)** | 301 s | 6,400,000x |
+
+The compiled Ψ-Lisp is within **2x of native Rust** on a program that uses recursion, list operations, and backtracking search — and **70x faster than native Python**. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
 
 ---
 
