@@ -309,10 +309,14 @@ class Compiler:
         for name, init in self.globals:
             lines.extend(self.emit_rust_assign(rust_ident(name), init, indent=1))
         for stmt in self.main_stmts:
+            is_io = (isinstance(stmt, list) and len(stmt) >= 1 and
+                     isinstance(stmt[0], str) and stmt[0] in
+                     ('print', 'display', 'terpri', 'write-string', 'write-char'))
             tmp = self.fresh()
             lines.append(f'    let {tmp}: PsiVal;')
             lines.extend(self.emit_rust_assign(tmp, stmt, indent=1))
-            lines.append(f'    psi_println(&arena, {tmp});')
+            if not is_io:
+                lines.append(f'    psi_println(&arena, {tmp});')
         lines.append('}')
         return '\n'.join(lines) + '\n'
 
@@ -656,11 +660,11 @@ class Compiler:
                 result = f'arena.cons({self.emit_rust_expr(item)}, {result})'
             return result
 
-        # IO
+        # IO — evaluate into temp to avoid arena borrow conflicts
         if head == 'print' and len(sexpr) == 2:
-            return f'{{ psi_println(&arena, {self.emit_rust_expr(sexpr[1])}); PSI_NIL }}'
+            return f'{{ let _pv = {self.emit_rust_expr(sexpr[1])}; psi_println(&arena, _pv); PSI_NIL }}'
         if head == 'display' and len(sexpr) == 2:
-            return f'{{ psi_print_val(&arena, {self.emit_rust_expr(sexpr[1])}); PSI_NIL }}'
+            return f'{{ let _pv = {self.emit_rust_expr(sexpr[1])}; psi_print_val(&arena, _pv); PSI_NIL }}'
         if head == 'terpri':
             return '{ println!(); PSI_NIL }'
         if head == 'write-string' and len(sexpr) == 2:
@@ -712,12 +716,12 @@ class Compiler:
         if head == 'quote' and len(sexpr) == 2:
             return self.emit_rust_datum(sexpr[1])
 
-        # If as expression
+        # If as expression (parens needed so it can appear in +, * etc.)
         if head == 'if' and len(sexpr) >= 3:
             test = self.emit_rust_expr(sexpr[1])
             then_e = self.emit_rust_expr(sexpr[2])
             else_e = self.emit_rust_expr(sexpr[3]) if len(sexpr) >= 4 else 'PSI_NIL'
-            return f'if is_true({test}) {{ {then_e} }} else {{ {else_e} }}'
+            return f'(if is_true({test}) {{ {then_e} }} else {{ {else_e} }})'
 
         # Direct lambda application
         if isinstance(head, list) and len(head) >= 3 and head[0] == 'lambda':
@@ -731,9 +735,20 @@ class Compiler:
             rname = rust_ident(head)
             cname = c_ident(head)
             needs_arena = self._fn_needs_arena.get(cname, False)
-            # If call needs arena AND any arg uses arena, we must use temporaries
-            # to avoid multiple mutable borrows. This is handled by emit_rust_assign
-            # which calls us — for simple expr emission, emit directly.
+            # If call needs arena AND any arg uses arena, pull into temps
+            # to avoid multiple mutable borrows of arena.
+            if needs_arena and any(uses_arena(a) or self._calls_arena_fn(a) for a in sexpr[1:]):
+                temps = []
+                lets = []
+                for a in sexpr[1:]:
+                    if uses_arena(a) or self._calls_arena_fn(a):
+                        tmp = self.fresh()
+                        lets.append(f'let {tmp} = {self.emit_rust_expr(a)};')
+                        temps.append(tmp)
+                    else:
+                        temps.append(self.emit_rust_expr(a))
+                args = [self._rust_arena_ref] + temps
+                return '{ ' + ' '.join(lets) + f' {rname}({", ".join(args)})' + ' }'
             args = []
             if needs_arena:
                 args.append(self._rust_arena_ref)

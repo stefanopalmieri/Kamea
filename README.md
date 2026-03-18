@@ -280,12 +280,13 @@ On a real program — N-Queens(8), 92 solutions via backtracking with cons-cell 
 | Implementation | nqueens(8) | vs Native Rust |
 |----------------|-----------|---------------|
 | **Native Rust** (LLVM -O) | 47 µs | 1x |
-| **Compiled Ψ-Lisp** (gcc -O2) | 86 µs | **1.8x** |
+| **Compiled Ψ-Lisp → C** (gcc -O2) | 86 µs | **1.8x** |
+| **Compiled Ψ-Lisp → Rust** (LLVM -O) | 114 µs | **2.4x** |
 | **Native Python** | 5.9 ms | 125x |
 | **Ψ-Lisp (Rust interpreter)** | 4.1 s | 87,000x |
 | **Ψ-Lisp (Python interpreter)** | 301 s | 6,400,000x |
 
-The compiled Ψ-Lisp is within **2x of native Rust** on a program that uses recursion, list operations, and backtracking search — and **70x faster than native Python**. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
+The compiled Ψ-Lisp is within **2x of native Rust** (C backend) or **2.4x** (Rust backend) on a real program with recursion, cons-cell lists, and backtracking search — and **70x faster than native Python**. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
 
 ---
 
