@@ -148,7 +148,11 @@ class Compiler:
     def process_defun(self, form, prefix):
         name = form[1]
         params = form[2] if isinstance(form[2], list) else [form[2]]
-        body = form[3] if len(form) == 4 else ['progn'] + form[3:]
+        # Skip docstring if present (string literal as first body form)
+        body_forms = form[3:]
+        if len(body_forms) > 1 and isinstance(body_forms[0], str) and body_forms[0].startswith('"'):
+            body_forms = body_forms[1:]
+        body = body_forms[0] if len(body_forms) == 1 else ['progn'] + body_forms
 
         full_name = f'{prefix}{name}' if prefix else name
         self.known_fns.add(full_name)
@@ -228,10 +232,14 @@ class Compiler:
         for name, init in self.globals:
             lines.extend(self.emit_assign(c_ident(name), init, indent=1))
         for stmt in self.main_stmts:
+            is_io = (isinstance(stmt, list) and len(stmt) >= 1 and
+                     isinstance(stmt[0], str) and stmt[0] in
+                     ('print', 'display', 'terpri', 'write-string', 'write-char'))
             tmp = self.fresh()
             lines.append(f'    psi_val {tmp};')
             lines.extend(self.emit_assign(tmp, stmt, indent=1))
-            lines.append(f'    psi_println({tmp});')
+            if not is_io:
+                lines.append(f'    psi_println({tmp});')
         lines.append('    return 0;')
         lines.append('}')
         return '\n'.join(lines) + '\n'
