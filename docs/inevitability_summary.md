@@ -138,6 +138,28 @@ The difference between "a finite algebra with classification and transformation"
 
 ---
 
+## Composition Closure (Negative Result)
+
+Requiring the 10 role-bearing elements to form a sub-magma (closed under dot) is compatible with the axioms (SAT at N=12, category distribution 2-1-8-1) but kills 0/10 expressiveness-only pairs. Every tighter variant — 6-element computational core {Q,E,f,g,ρ,η}, 8-element non-zeros {τ,Q,E,f,g,ρ,η,Y}, one-sided closure (core applied to anything lands in roles) — is UNSAT. The 2 infrastructure elements serve as necessary escape valves for compositions that spill outside the role set.
+
+This confirms the 10 expressiveness-only pairs are genuinely independent: no natural algebraic closure condition forces them. They are the nontriviality axiom of self-describing algebras — analogous to 0 ≠ 1 in ring theory, which is not derived from the ring axioms but accepted as the content of "nontrivial."
+
+**Evidence**: `ds_search/composition_closure_test.py`.
+
+---
+
+## Asymmetry Theorem
+
+No commutative magma can have two distinct left-absorbers. The proof is three lines:
+
+1. `dot(zero₁, zero₂) = zero₁` (zero₁ absorbs)
+2. `dot(zero₂, zero₁) = zero₂` (zero₂ absorbs)
+3. Commutativity gives `zero₁ = zero₂`, contradicting distinctness.
+
+This is proved in Lean (`NoCommutativity.lean`) with zero `sorry`, zero `decide`. It requires only the absorber axioms — no Kleene wall, retraction pair, or extensionality. Self-description requires asymmetry at the most fundamental level: the existence of two distinct boundaries forces non-commutativity.
+
+---
+
 ## Formalization Status
 
 | Layer | Current evidence | Formalization goal |
@@ -147,5 +169,6 @@ The difference between "a finite algebra with classification and transformation"
 | Layer 3 (Ψ-specific) | SAT analysis of Branch + Compose forcing | Lean: g-as-inert from Compose axiom |
 | Specific model Ψ₁₆ᶠ | 83 in Psi16Full.lean; 130+ total across 4 proof files | Complete |
 | Universal bounds | No right identity, card ≥ 4 | Complete |
+| Asymmetry | No commutativity with 2 absorbers | Complete (`NoCommutativity.lean`) |
 
 The existing Lean proofs verify specific model properties and some universal bounds. Lean formalization of the categorical foundation (three-layer inevitability argument) is the primary formalization goal. Adding `Distinct` constraints to `PsiStructure.lean` is straightforward.

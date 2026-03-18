@@ -95,6 +95,8 @@ The transpiler handles computational programs (arithmetic, recursion, branching,
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
 
+The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)). Self-description requires that the order of composition matters.
+
 The role structure rests on three foundations: standard categorical structure forces three of five categories and the Kleene wall; a distinctness axiom (all named role-bearing elements are different — standard algebraic practice, independently justified by expressiveness analysis) forces the remaining specialization including substrate existence and g-as-CONS; and one philosophical commitment (the ground is unique) forces substrate uniqueness and actuality irreducibility. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **32 are theorems** of the categorical axioms (Kleene wall, substrate wall, zero distinctness), **3 are theorems** of Turing completeness (Q≠E: lazy/eager incompatibility; Q≠f: same; f≠η: projection uniqueness), and **10 are standard algebraic practice** independently justified by compositional expressiveness (49 vs 16 1-step cells, monotone in role count). The 35 derived requirements leave 10 as the irreducible axiomatic content of the distinctness assumption — comparable to requiring 0 ≠ 1 in a nontrivial ring. Full argument: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). TC analysis: `ds_search/tc_distinctness_test.py`.
@@ -120,7 +122,8 @@ Proved for ALL finite endomorphism magmas satisfying the axioms — not just one
 - Retraction pair members are non-classifiers `[Lean, universal]`
 - Card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
 - Minimal witnesses: N=4 (sec = ret), N=5 (sec ≠ ret) `[Lean, constructive]`
-- 16 universal theorems total, zero `decide`, zero `sorry`
+- Asymmetry theorem: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
+- 19 universal theorems total, zero `decide`, zero `sorry`
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -156,7 +159,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
 
-Full claim matrix with 43 entries and reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
+Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
 ---
 
@@ -205,7 +208,7 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
-The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 19 universal algebraic theorems) and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). Both use only standard algebraic concepts — no Ψ-specific vocabulary.
+The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
 Results fall into four tiers:
 
@@ -227,7 +230,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 7. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 8. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
 9. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 16 universal algebraic theorems
+10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal algebraic theorems (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
 11. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 12. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
 13. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
@@ -245,11 +248,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 - **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
-- **Symmetric impossibility.** The symmetric synthesis barrier is demonstrated by construction but not proved as a general impossibility theorem.
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
-- **Distinctness: 78% derived, 22% axiomatic.** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Kleene wall, substrate wall, zero distinctness — verified by SAT at N=12, Lean-proved on the 16-element witness) and 3 from Turing completeness (Q≠E and Q≠f: lazy/eager semantic conflict; f≠η: projection uniqueness — no evaluator can serve both roles). The remaining 10 pairs (⊤=⊥, Q=ρ, Q=Y, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y, and E=f which survives via smart dispatch on structurally disjoint term shapes) are genuinely independent — not forced by categories or TC, only justified by expressiveness. These 10 are the irreducible axiomatic content of the distinctness assumption. See `ds_search/tc_distinctness_test.py`, `ds_search/tc_distinctness_deep.py`.
-- **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMagma` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 19 universal theorems purely algebraically. The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Distinctness: 78% derived, 22% axiomatic.** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Kleene wall, substrate wall, zero distinctness — verified by SAT at N=12, Lean-proved on the 16-element witness) and 3 from Turing completeness (Q≠E and Q≠f: lazy/eager semantic conflict; f≠η: projection uniqueness — no evaluator can serve both roles). The remaining 10 pairs are genuinely independent — composition closure (requiring role-bearing elements to form a sub-magma) was tested and kills none of them, confirming that no natural algebraic closure condition forces them. These 10 are the irreducible nontriviality content of the distinctness assumption, analogous to requiring 0 ≠ 1 in a nontrivial ring. See `ds_search/tc_distinctness_test.py`, `ds_search/composition_closure_test.py`.
+- **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMagma` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 16 universal theorems purely algebraically; `NoCommutativity.lean` adds 3 more (asymmetry). The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership, asymmetry) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -287,6 +289,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── CategoricalFoundation.lean       # CatEndoMagma: categorical vocabulary for full N=16
 │   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
 │   ├── CatKleeneWallMinimal.lean        # FaithfulRetractMagma + KleeneMagma: N=4/5 witnesses + 16 universal theorems
+│   ├── NoCommutativity.lean             # Asymmetry: two left-absorbers ⇒ non-commutative (3-line proof)
 │   ├── CatWitness.lean                  # N=16 witness as CatEndoMagma (satisfiability)
 │   ├── CatForcedDistinctness.lean       # 32 forced-distinct pairs on N=16 witness
 │   ├── CatRigidity.lean                 # Rigidity of N=16 categorical witness
@@ -362,6 +365,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── n16c_expressiveness_search.py # Ψ₁₆ᶜ table search (maximally expressive model)
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
 │   ├── counterexample_search.py      # WL-1 discrimination tests
+│   ├── composition_closure_test.py    # Composition closure: compatible but kills 0/10 pairs
 │   ├── rigid_census.py               # Small rigid magma census
 │   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
@@ -393,7 +397,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 
 ## Building
 
-`lake build` compiles all Lean files — both the categorical foundation (16 universal algebraic theorems in `CatKleeneWallMinimal.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
+`lake build` compiles all Lean files — both the categorical foundation (19 universal algebraic theorems in `CatKleeneWallMinimal.lean` + `NoCommutativity.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)

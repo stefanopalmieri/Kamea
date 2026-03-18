@@ -287,7 +287,7 @@ This is the non-circular part of the result. The axioms specify structural prope
 
 ## What Is Not Proved
 
-- **Distinctness as theorem vs axiom.** The distinctness requirement is formulated as an axiom. Of 45 pairwise requirements, 32 are already theorems. Whether the remaining 13 can be derived from stronger categorical conditions — or are genuinely independent — is open. The expressiveness analysis (monotone cell count, consistent value maximization, fastest reachability) provides empirical justification but not a proof.
+- **Distinctness as theorem vs axiom.** The distinctness requirement is formulated as an axiom. Of 45 pairwise requirements, 35 are already theorems (32 categorical + 3 TC). The remaining 10 appear genuinely independent: composition closure (requiring role-bearing elements to form a sub-magma) was tested and kills none of them, confirming that no natural algebraic closure condition forces them. These 10 are the nontriviality content of the distinctness assumption — analogous to 0 ≠ 1 in ring theory. The expressiveness analysis (monotone cell count, consistent value maximization, fastest reachability) provides independent justification.
 
 - **McCarthy correspondence as necessity.** The structural correspondence between Ψ roles and Lisp primitives is an observation. A proof that any finite self-describing algebra satisfying analogous axioms must converge on this role inventory does not exist. The correspondence might be a consequence of the shared design problem (self-manipulation from a minimal basis) rather than a deep mathematical necessity.
 

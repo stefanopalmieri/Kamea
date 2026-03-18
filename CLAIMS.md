@@ -81,8 +81,11 @@ This file is the canonical status registry for claims made in this repository.
 | Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
 | Discoverability of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatDiscoverable.lean` — `native_decide` | `lake build` |
 | Actuality irreducibility (categorical twin-model) | Lean-proved | `DistinctionStructures/CatActualityIrreducibility.lean` — `native_decide` | `lake build` |
+| No commutative magma admits two distinct left-absorbers (asymmetry theorem) | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — 3-line algebraic proof, no `decide` | `lake build` |
+| Asymmetry extends to FaithfulRetractMagma and KleeneMagma | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — immediate corollaries | `lake build` |
+| Composition closure (10 roles form sub-magma) compatible but kills 0/10 expressiveness pairs | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
+| Tighter closure variants (6-element computational core, 8-element non-zeros, one-sided) all UNSAT | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
-| Symmetric discoverability impossibility (fully general theorem) | Conjecture/Open | Demonstrated for constructions, not fully formalized | N/A |
 
 ## Scope Notes
 
