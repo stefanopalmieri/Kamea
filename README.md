@@ -118,8 +118,9 @@ Proved for ALL finite endomorphism monoids satisfying the axioms — not just on
 - No right identity in any model `[Lean, universal]`
 - Card ≥ 4 from the axioms `[Lean, universal]`
 - Retraction pair members are non-classifiers `[Lean, universal]`
-- Minimal witness: N=5 (N=4 is UNSAT) `[Lean, constructive]`
-- 19 universal theorems total, zero `decide`, zero `sorry`
+- Card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
+- Minimal witnesses: N=4 (sec = ret), N=5 (sec ≠ ret) `[Lean, constructive]`
+- 16 universal theorems total, zero `decide`, zero `sorry`
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -226,7 +227,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 7. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 8. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
 9. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: minimal structure, 5-element witness, 19 universal algebraic theorems
+10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMonoid, 4- and 5-element witnesses, 16 universal algebraic theorems
 11. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 12. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
 13. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
@@ -285,7 +286,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
 │   ├── CategoricalFoundation.lean       # CatEndoMonoid: categorical vocabulary for full N=16
 │   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
-│   ├── CatKleeneWallMinimal.lean        # KleeneMonoid: minimal N=5 witness + 19 universal theorems
+│   ├── CatKleeneWallMinimal.lean        # FaithfulRetractMagma + KleeneMonoid: N=4/5 witnesses + 16 universal theorems
 │   ├── CatWitness.lean                  # N=16 witness as CatEndoMonoid (satisfiability)
 │   ├── CatForcedDistinctness.lean       # 32 forced-distinct pairs on N=16 witness
 │   ├── CatRigidity.lean                 # Rigidity of N=16 categorical witness
@@ -392,7 +393,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 
 ## Building
 
-`lake build` compiles all Lean files — both the categorical foundation (19 universal algebraic theorems in `CatKleeneWallMinimal.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
+`lake build` compiles all Lean files — both the categorical foundation (16 universal algebraic theorems in `CatKleeneWallMinimal.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)

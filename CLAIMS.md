@@ -75,7 +75,8 @@ This file is the canonical status registry for claims made in this repository.
 | No right identity (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Card ≥ 4 (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Minimal KleeneMonoid witness: N=5 (N=4 UNSAT) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witness by `decide` | `lake build` |
+| Minimal KleeneMonoid witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
+| Card ≥ 5 when sec ≠ ret (tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof | `lake build` |
 | 32/45 role pairs forced distinct (16-element witness) | Lean-proved | `DistinctionStructures/CatForcedDistinctness.lean` — `native_decide` | `lake build` |
 | Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
 | Discoverability of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatDiscoverable.lean` — `native_decide` | `lake build` |

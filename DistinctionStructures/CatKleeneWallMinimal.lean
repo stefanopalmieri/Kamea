@@ -1,33 +1,47 @@
-/- # CatKleeneWallMinimal — The Kleene Wall: Definitions, Witness, and Universal Proofs
+/- # CatKleeneWallMinimal — The Kleene Wall
 
-   This file is self-contained. It defines the minimal algebraic structure
-   needed for the Kleene wall theorem, constructs the smallest possible
-   witness (5 elements), and proves six universal consequences purely
-   algebraically — no `decide`, no `native_decide`.
+   ## Summary
 
-   ## What is the Kleene wall?
+   We study a property — the **Kleene dichotomy** — of a standard algebraic
+   object: a finite faithful extensional magma on a 2-pointed set with
+   a retraction pair. All ingredients are textbook:
 
-   In a finite endomorphism monoid with zero morphisms and a retraction pair,
-   the **Kleene dichotomy** holds: every non-zero morphism either maps all
-   non-zero inputs to boolean values {zero₁, zero₂} (a "classifier") or maps
-   all non-zero inputs to non-boolean values (a "computational" morphism).
-   No mixing. This clean separation between judgment and computation is
-   called the **Kleene wall**.
+   - **Extensional magma on a 2-pointed set (S, B):** a set S with a
+     binary operation and a distinguished 2-element subset B = {zero₁, zero₂}
+     whose elements are left-zeros (absorbers under the operation).
+     The magma is extensional (all rows in the Cayley table are distinct) and
+     B contains the only left-zeros.
+   - **Retraction pair:** two transformations (sec, ret) that are mutual
+     inverses on the core S \ B, with ret preserving zero₁. Standard
+     categorical concept (cf. `CategoryTheory.RetractOf`).
+
+   The **Kleene dichotomy** is the one new property: every non-constant
+   transformation either maps the core entirely into B (a "classifier") or
+   maps the core entirely into S \ B (a "non-classifier"). No mixing.
+
+   This clean separation between classification and computation is the
+   **Kleene wall**.
+
+   ## Results
+
+   In any finite faithful extensional magma on (S, B) with a retraction
+   pair satisfying the Kleene dichotomy:
+
+   1. The carrier decomposes into three disjoint classes (Z, C, N).
+   2. No right identity exists.
+   3. The retraction pair belongs to the non-classifier class N.
+   4. |S| ≥ 4, tight (`kleene4`, with sec = ret).
+   5. |S| ≥ 5 if sec ≠ ret, tight (`kleene5`).
+
+   All proofs are purely algebraic — no `decide`, no `native_decide`.
 
    ## Structure of this file
 
-   **Part 1:** `KleeneMonoid` — the minimal structure (6 elements, 14 axioms).
-   **Part 2:** The 5-element witness — the smallest `KleeneMonoid`.
-              N = 4 is unsatisfiable (verified by Z3 exhaustive search).
-   **Part 3:** Six universal theorems, all proved purely algebraically.
-
-   ## Relation to standard algebra
-
-   - Zero morphisms: cf. `CategoryTheory.Limits.HasZeroMorphisms`
-   - Retraction pair: cf. `CategoryTheory.RetractOf`
-   - Subobject classifier: cf. `CategoryTheory.Subobject.classifier` (topos theory)
-   - The Kleene dichotomy is an endomorphism-monoid analogue of the
-     separation between logical and computational types in type theory.
+   **Part 1a:** `FaithfulRetractMagma` — the standard setup.
+   **Part 1b:** `KleeneMonoid` — extends the setup with the Kleene dichotomy.
+   **Part 2a:** The 4-element witness (minimum, sec = ret).
+   **Part 2b:** The 5-element witness (minimum with sec ≠ ret).
+   **Part 3:** Universal theorems.
 -/
 
 import Mathlib.Data.Fintype.Basic
@@ -39,90 +53,171 @@ set_option autoImplicit false
 namespace KleeneWall
 
 -- ══════════════════════════════════════════════════════════════════════
--- Part 1: The KleeneMonoid Structure
+-- Part 1a: The Standard Setup
 -- ══════════════════════════════════════════════════════════════════════
 
-/-- A finite endomorphism monoid with zero morphisms, a retraction pair,
-    a subobject classifier, and the Kleene dichotomy.
+/-- A finite faithful extensional magma on a 2-pointed set (S, B)
+    with a retraction pair.
 
-    This is the minimal structure needed for the Kleene wall theorem.
-    No products, copairing, fixed points, composition, or selection.
-
-    The bound N ≥ 5 is tight (N = 4 is unsatisfiable, verified by Z3). -/
-structure KleeneMonoid (n : Nat) where
-  /-- Binary operation (composition of endomorphisms). -/
+    This is standard algebra:
+    - S is the carrier, B = {zero₁, zero₂} ⊆ S is the distinguished pair.
+    - B elements are left-zeros: they absorb on the left.
+    - Faithfulness: all rows in the Cayley table are distinct.
+    - The retraction pair (sec, ret) are mutual inverses on the core S \ B,
+      with ret preserving zero₁ (anchoring the retraction to the
+      zero structure). -/
+structure FaithfulRetractMagma (n : Nat) where
+  /-- Binary operation (composition of transformations). -/
   dot : Fin n → Fin n → Fin n
 
-  /-- First left-zero morphism. -/
+  /-- First element of the distinguished pair B. -/
   zero₁ : Fin n
-  /-- Second left-zero morphism. -/
+  /-- Second element of the distinguished pair B. -/
   zero₂ : Fin n
   /-- Section of the retraction pair. -/
   sec : Fin n
-  /-- Retraction (left-inverse of section on non-zeros). -/
+  /-- Retraction (left-inverse of section on the core). -/
   ret : Fin n
-  /-- Subobject classifier (boolean-valued row). -/
-  cls : Fin n
 
-  -- === Zero morphisms (4 axioms) ===
+  -- === 2-pointed set: B = {zero₁, zero₂} are left-zeros ===
 
   /-- zero₁ absorbs on the left. -/
   zero₁_left : ∀ x : Fin n, dot zero₁ x = zero₁
   /-- zero₂ absorbs on the left. -/
   zero₂_left : ∀ x : Fin n, dot zero₂ x = zero₂
-  /-- The two zero morphisms are distinct. -/
+  /-- B has exactly two elements. -/
   zeros_distinct : zero₁ ≠ zero₂
-  /-- No other element is a left-zero morphism. -/
+  /-- B contains all left-zeros (no others). -/
   no_other_zeros : ∀ y : Fin n, (∀ x : Fin n, dot y x = y) → y = zero₁ ∨ y = zero₂
 
-  -- === Extensionality (1 axiom) ===
+  -- === Faithfulness ===
 
-  /-- Row extensionality: elements with identical rows are equal. -/
+  /-- Row extensionality: elements with identical rows are equal.
+      Equivalently, the left regular representation is faithful. -/
   extensional : ∀ a b : Fin n, (∀ x : Fin n, dot a x = dot b x) → a = b
 
-  -- === Retraction pair (3 axioms) ===
+  -- === Retraction pair with zero-preservation ===
 
-  /-- `ret ∘ sec = id` on non-zero elements. -/
+  /-- `ret ∘ sec = id` on the core. -/
   ret_sec : ∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot ret (dot sec x) = x
-  /-- `sec ∘ ret = id` on non-zero elements. -/
+  /-- `sec ∘ ret = id` on the core. -/
   sec_ret : ∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot sec (dot ret x) = x
-  /-- The retraction preserves zero₁. This is a transparency condition
-      ensuring the retraction is anchored to the zero structure. -/
+  /-- The retraction preserves zero₁, anchoring the pair to the
+      zero structure. -/
   ret_zero₁ : dot ret zero₁ = zero₁
 
-  -- === Classifier (3 axioms) ===
+-- ══════════════════════════════════════════════════════════════════════
+-- Part 1b: The Kleene Dichotomy
+-- ══════════════════════════════════════════════════════════════════════
 
-  /-- The classifier's row is boolean-valued on ALL inputs. -/
+/-- A faithful retract magma satisfying the **Kleene dichotomy**: every
+    non-constant transformation either maps the core entirely into B
+    (a "classifier") or maps the core entirely into S \ B (a
+    "non-classifier"). No mixing.
+
+    The setup (`FaithfulRetractMagma`) is standard. The Kleene dichotomy
+    is the one new property. The classifier and non-degeneracy conditions
+    ensure both sides of the dichotomy are inhabited.
+
+    Minimum carrier size: N ≥ 4 (tight, `kleene4`).
+    With sec ≠ ret: N ≥ 5 (tight, `kleene5`). -/
+structure KleeneMonoid (n : Nat) extends FaithfulRetractMagma n where
+  /-- A classifier: a non-constant transformation whose row is
+      entirely in B. -/
+  cls : Fin n
+  /-- The classifier maps all inputs into B. -/
   cls_boolean : ∀ x : Fin n, dot cls x = zero₁ ∨ dot cls x = zero₂
-  /-- The classifier is not zero₁. -/
+  /-- The classifier is not zero₁ (non-degeneracy). -/
   cls_ne_zero₁ : cls ≠ zero₁
-  /-- The classifier is not zero₂. -/
+  /-- The classifier is not zero₂ (non-degeneracy). -/
   cls_ne_zero₂ : cls ≠ zero₂
 
-  -- === Kleene dichotomy (2 axioms) ===
+  -- === The Kleene dichotomy ===
 
-  /-- Every non-zero element is either all-boolean or all-non-boolean
-      on non-zero inputs. No mixing. -/
+  /-- Every non-constant transformation is either all-B or all-non-B
+      on the core. This is the single new property. -/
   kleene : ∀ y : Fin n, y ≠ zero₁ → y ≠ zero₂ →
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ →
       dot y x = zero₁ ∨ dot y x = zero₂) ∨
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ →
       dot y x ≠ zero₁ ∧ dot y x ≠ zero₂)
 
-  /-- A non-zero element with non-boolean output on a non-zero input exists.
-      This guarantees the non-classifier class is inhabited. -/
+  /-- The non-classifier class is inhabited (non-degeneracy). -/
   has_non_classifier : ∃ y : Fin n, y ≠ zero₁ ∧ y ≠ zero₂ ∧
     ∃ x : Fin n, x ≠ zero₁ ∧ x ≠ zero₂ ∧ dot y x ≠ zero₁ ∧ dot y x ≠ zero₂
 
 
 -- ══════════════════════════════════════════════════════════════════════
--- Part 2: The 5-Element Witness
+-- Part 2a: The 4-Element Witness (minimum, sec = ret)
 -- ══════════════════════════════════════════════════════════════════════
 
-/-! ### The minimal witness
+/-! ### The minimal witness (sec = ret)
 
-    The smallest `KleeneMonoid` has **5 elements**. N = 4 is unsatisfiable
-    (verified by Z3).
+    The smallest `KleeneMonoid` has **4 elements**, achieved when sec = ret.
+
+    ```
+    Element assignments:
+      0 = zero₁    1 = zero₂    2 = cls    3 = sec = ret
+
+    Cayley table:
+         0  1  2  3
+      0 [0, 0, 0, 0]   ← zero₁ (left-absorber)
+      1 [1, 1, 1, 1]   ← zero₂ (left-absorber)
+      2 [0, 1, 0, 1]   ← cls (classifier: outputs {0,1} on non-zeros)
+      3 [0, 0, 2, 3]   ← sec = ret (non-classifier: outputs {2,3} on non-zeros)
+
+    Category distribution:
+      Zeros (2):           {0, 1}
+      Classifiers (1):     {2}
+      Non-classifiers (1): {3}
+    ```
+-/
+
+/-- The raw 4×4 Cayley table. -/
+private def rawK4 : Nat → Nat → Nat
+  | 0, _ => 0
+  | 1, _ => 1
+  | 2, 0 => 0 | 2, 1 => 1 | 2, 2 => 0 | 2, 3 => 1
+  | 3, 0 => 0 | 3, 1 => 0 | 3, 2 => 2 | 3, 3 => 3
+  | _, _ => 0
+
+private theorem rawK4_bound (a b : Fin 4) : rawK4 a.val b.val < 4 := by
+  revert a b; decide
+
+/-- The binary operation of the 4-element witness. -/
+def dotK4 (a b : Fin 4) : Fin 4 := ⟨rawK4 a.val b.val, rawK4_bound a b⟩
+
+/-- **The minimal 4-element Kleene-dichotomic magma.** The smallest possible,
+    achieved with sec = ret. -/
+def kleene4 : KleeneMonoid 4 where
+  dot := dotK4
+  zero₁ := 0
+  zero₂ := 1
+  sec := 3
+  ret := 3
+  cls := 2
+  zero₁_left := by decide
+  zero₂_left := by decide
+  zeros_distinct := by decide
+  no_other_zeros := by decide
+  extensional := by decide
+  ret_sec := by decide
+  sec_ret := by decide
+  ret_zero₁ := by decide
+  cls_boolean := by decide
+  cls_ne_zero₁ := by decide
+  cls_ne_zero₂ := by decide
+  kleene := by decide
+  has_non_classifier := by decide
+
+-- ══════════════════════════════════════════════════════════════════════
+-- Part 2b: The 5-Element Witness (minimum with sec ≠ ret)
+-- ══════════════════════════════════════════════════════════════════════
+
+/-! ### The minimal witness with sec ≠ ret
+
+    The smallest `KleeneMonoid` with sec ≠ ret has **5 elements**.
+    N = 4 with sec ≠ ret is unsatisfiable (verified by Z3).
 
     ```
     Element assignments:
@@ -160,7 +255,8 @@ private theorem rawK5_bound (a b : Fin 5) : rawK5 a.val b.val < 5 := by
 /-- The binary operation of the 5-element witness. -/
 def dotK5 (a b : Fin 5) : Fin 5 := ⟨rawK5 a.val b.val, rawK5_bound a b⟩
 
-/-- **The minimal 5-element Kleene monoid.** N = 4 is unsatisfiable. -/
+/-- **The minimal 5-element Kleene-dichotomic magma with sec ≠ ret.**
+    N = 4 with sec ≠ ret is unsatisfiable. -/
 def kleene5 : KleeneMonoid 5 where
   dot := dotK5
   zero₁ := 0
@@ -187,7 +283,7 @@ def kleene5 : KleeneMonoid 5 where
 -- Part 3: Universal Theorems
 --
 -- All proofs are purely algebraic. No `decide` or `native_decide`.
--- Every theorem holds for ALL KleeneMonoid instances.
+-- Every theorem holds for ALL Kleene-dichotomic magma instances.
 -- ══════════════════════════════════════════════════════════════════════
 
 section UniversalTheorems
@@ -266,7 +362,7 @@ theorem classifier_not_non_classifier (a : Fin n)
 -- Theorem 4: No right identity
 -- ─────────────────────────────────────────────────────────────────────
 
-/-- **No right identity** exists in any KleeneMonoid.
+/-- **No right identity** exists in any Kleene-dichotomic magma.
 
     Proof: if `e` is right identity, `dot cls e = cls`. But `cls_boolean`
     forces `dot cls e ∈ {zero₁, zero₂}`, so `cls ∈ {zero₁, zero₂}`.
@@ -304,11 +400,10 @@ private theorem nc_ne_cls_aux (y : Fin n)
 
 end UniversalTheorems
 
-/-- **Minimum cardinality**: every KleeneMonoid has at least 4 elements.
+/-- **Minimum cardinality**: every Kleene-dichotomic magma has at least 4 elements.
 
     Proof: {zero₁, zero₂, cls, nc} are 4 pairwise-distinct elements.
-    The bound is NOT tight for this structure: the actual minimum is N = 5
-    (N = 4 is unsatisfiable due to the retraction pair). -/
+    The bound is tight: `kleene4` achieves it with sec = ret. -/
 theorem card_ge_four {n : Nat} (M : KleeneMonoid n) : 4 ≤ Fintype.card (Fin n) := by
   obtain ⟨nc, _, _, wit⟩ := M.has_non_classifier
   have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
@@ -478,5 +573,35 @@ theorem sec_is_non_classifier : IsNonClassifier M M.sec := by
   · exact hcomp
 
 end UniversalTheorems2
+
+-- ─────────────────────────────────────────────────────────────────────
+-- Theorem: Minimum cardinality ≥ 5 when sec ≠ ret
+-- ─────────────────────────────────────────────────────────────────────
+
+/-- **Minimum cardinality with sec ≠ ret**: if sec ≠ ret, there are at least
+    5 elements.
+
+    Proof: {zero₁, zero₂, cls, sec, ret} are 5 pairwise-distinct elements.
+    sec and ret are each distinct from zero₁, zero₂, and cls by the universal
+    theorems, and distinct from each other by hypothesis.
+    The bound is tight: `kleene5` achieves it. -/
+theorem card_ge_five_of_sec_ne_ret {n : Nat} (M : KleeneMonoid n)
+    (h_sr : M.sec ≠ M.ret) : 5 ≤ Fintype.card (Fin n) := by
+  have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
+  have h1c : M.zero₁ ≠ M.cls := fun h => M.cls_ne_zero₁ h.symm
+  have h1s : M.zero₁ ≠ M.sec := fun h => (sec_ne_zero₁ M) h.symm
+  have h1r : M.zero₁ ≠ M.ret := fun h => (ret_ne_zero₁ M) h.symm
+  have h2c : M.zero₂ ≠ M.cls := fun h => M.cls_ne_zero₂ h.symm
+  have h2s : M.zero₂ ≠ M.sec := fun h => (sec_ne_zero₂ M) h.symm
+  have h2r : M.zero₂ ≠ M.ret := fun h => (ret_ne_zero₂ M) h.symm
+  have hcs : M.cls ≠ M.sec := fun h => (sec_ne_cls M) h.symm
+  have hcr : M.cls ≠ M.ret := fun h => (ret_ne_cls M) h.symm
+  have hcard : ({M.zero₁, M.zero₂, M.cls, M.sec, M.ret} : Finset (Fin n)).card = 5 := by
+    simp [h12, h1c, h1s, h1r, h2c, h2s, h2r, hcs, hcr, h_sr]
+  have hsub : ({M.zero₁, M.zero₂, M.cls, M.sec, M.ret} : Finset (Fin n)) ⊆ Finset.univ :=
+    fun _ _ => Finset.mem_univ _
+  calc 5 = ({M.zero₁, M.zero₂, M.cls, M.sec, M.ret} : Finset (Fin n)).card := hcard.symm
+    _ ≤ Finset.univ.card := Finset.card_le_card hsub
+    _ = Fintype.card (Fin n) := Finset.card_univ
 
 end KleeneWall
