@@ -1,5 +1,7 @@
 # Kamea
 
+A self-describing finite algebra that recovers McCarthy's Lisp primitives from axioms, with machine-checked proofs.
+
 **Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
 
 *Judgment cannot merge with computation. Substrate cannot merge with anything active. A distinctness axiom — standard algebraic practice — specializes five forced categories into seven roles: the same seven McCarthy needed for Lisp.*
@@ -47,7 +49,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A program that can inspect its own continuation, where the continuation is data built from algebraically verified atoms, running on a table whose rigidity, discoverability, and actuality irreducibility are Lean-proved, implementing a Lisp whose five role categories are axiom-forced, whose seven specialized roles are forced by a distinctness axiom independently justified by compositional expressiveness, and whose term algebra is Turing complete.
+A program that can inspect its own continuation — where the continuation is data built from algebraically verified atoms. The table it runs on has Lean-proved rigidity, discoverability, and actuality irreducibility. The Lisp it implements has five axiom-forced role categories, seven specialized roles justified by compositional expressiveness, and a Turing-complete term algebra.
 
 Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
 
@@ -103,7 +105,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ## Why It Matters
 
-Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete.
+Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete. This matters for runtime verification (can you trust the reflective layer?), trustworthy metaprogramming (does the meta-level faithfully represent the object level?), and foundations of self-modifying code (what algebraic structure must a self-describing system have?).
 
 The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can the language that emerges from this table interpret itself — can a program written in it verify the table, capture its own continuation, and modify its own future, all within the same algebra?
 
@@ -221,26 +223,30 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ### How to Read This Repo
 
-1. [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
-2. [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator with inspectable continuations
-3. [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap
-4. [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp (the "spell" cast by the wizard)
-5. [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another using the spell
-6. [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-7. [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
-8. [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
-9. [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-10. [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal algebraic theorems (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
-11. [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-12. [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
-13. [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
-14. [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
-15. [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C transpiler
-16. [`psi_runtime.h`](psi_runtime.h) — C runtime: 256-byte Cayley table + inline dot function
-17. [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
-18. [`examples/psi_specialize.lisp`](examples/psi_specialize.lisp) — Ψ-Lisp specializer: Futamura projections 1 & 2 on tagged-pair IR
-19. [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
-20. [`psi_runtime.rs`](psi_runtime.rs) — Rust runtime: Cayley table + Arena bump allocator
+**Start here**
+- [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
+- [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap
+- [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another
+- [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+
+**The proofs**
+- [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal algebraic theorems (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
+- [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+- [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+- [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
+
+**The language**
+- [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+- [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator with inspectable continuations
+- [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
+- [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp
+
+**Compilation and performance**
+- [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
+- [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C/Rust transpiler
+- [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
+- [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
+- [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
 
 ---
 
@@ -257,7 +263,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ## Performance
 
-| Implementation | Single invocation | Amortized/iter | vs Ψ-Lisp Python |
+| Implementation | Single invocation | Amortized/iter | Speedup vs Python interpreter |
 |----------------|------------------|---------------|-----------------|
 | **Ψ-Lisp (Python interpreter)** | ~2,000 ms | — | 1x |
 | **Ψ-Lisp (Rust interpreter)** | ~200 ms | — | 10x |
