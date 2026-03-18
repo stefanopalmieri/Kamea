@@ -87,6 +87,10 @@ This file is the canonical status registry for claims made in this repository.
 | Tighter closure variants (6-element computational core, 8-element non-zeros, one-sided) all UNSAT | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Reflection distinctness: 0/10 nontriviality pairs killed by full reflective tower | Empirical | `ds_search/reflection_distinctness_test.py` | `uv run python -m ds_search.reflection_distinctness_test` |
 | 10 nontriviality pairs exhaustively characterized (categorical + TC + closure + reflection all tested) | Empirical | `ds_search/tc_distinctness_test.py`, `reflection_distinctness_test.py`, `composition_closure_test.py` | See individual scripts |
+| 112 non-isomorphic KleeneMagmas at N=4 (minimal model not unique) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
+| 0 homomorphisms from N=4/5 Lean witnesses to Ψ₁₆ᶠ (weak or strict) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
+| Three-class decomposition (Z, C, N) is functorial invariant of all KleeneMagma models | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — `three_categories` | `lake build` |
+| No initial object in category KleeneMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 
 ## Scope Notes
