@@ -11,6 +11,8 @@ A self-describing finite algebra that recovers McCarthy's Lisp primitives from a
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
+Lambda calculus gave functions a foundation. Turing machines gave computation a foundation. Kamea asks whether reflective computation — programs that inspect and modify their own execution — has a finite algebraic foundation. The answer is a 16×16 Cayley table.
+
 ## Quick Start
 
 ```bash
