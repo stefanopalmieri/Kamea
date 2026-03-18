@@ -1,7 +1,7 @@
 /- # CatForcedDistinctness — The 32 Axiom-Forced Distinct Pairs
 
    Of the 45 pairwise distinctness requirements among the 10 named elements
-   of a `CatEndoMonoid`, **32 are forced by the behavioral axioms alone** —
+   of a `CatEndoMagma`, **32 are forced by the behavioral axioms alone** —
    no separate distinctness axiom is needed for these pairs.
 
    The 32 UNSAT pairs decompose into four structural walls:
@@ -47,14 +47,14 @@ namespace CatForcedDistinctness
 
 open CatFoundation CatWitness
 
-/-! ## Abstract proofs (valid for all CatEndoMonoid instances)
+/-! ## Abstract proofs (valid for all CatEndoMagma instances)
 
     These proofs derive distinctness from the behavioral axioms alone,
     without reference to any specific witness. -/
 
 section AbstractProofs
 
-variable {n : Nat} (M : CatEndoMonoid n)
+variable {n : Nat} (M : CatEndoMagma n)
 
 /-- zero₁ ≠ zero₂: given directly by the axioms. -/
 theorem zero₁_ne_zero₂ : M.zero₁ ≠ M.zero₂ :=

@@ -1,7 +1,7 @@
 /- # CatWitness — The 16-Element Canonical Witness
 
    Constructs the specific 16×16 Cayley table Ψ₁₆ᶠ as an instance of
-   `CatEndoMonoid 16`, proving that the axiom system is satisfiable.
+   `CatEndoMagma 16`, proving that the axiom system is satisfiable.
 
    The table is identical to the one in `Psi16Full.lean`; only the vocabulary
    changes from Ψ-specific (absorber, tester, encoder, inert, branch) to
@@ -89,10 +89,10 @@ def dot16 (a b : Fin 16) : Fin 16 := ⟨rawDot a.val b.val, rawDot_bound a b⟩
 /-- **The canonical 16-element witness**, presented in categorical language.
 
     This is the same algebra as Ψ₁₆ᶠ (Psi16Full.psi), wrapped in the
-    `CatEndoMonoid` structure with standard categorical names.
+    `CatEndoMagma` structure with standard categorical names.
 
-    Proves satisfiability: `CatEndoMonoid 16` is inhabited. -/
-def psi16_cat : CatEndoMonoid 16 where
+    Proves satisfiability: `CatEndoMagma 16` is inhabited. -/
+def psi16_cat : CatEndoMagma 16 where
   dot := dot16
   zero₁ := 0     -- ⊤
   zero₂ := 1     -- ⊥
@@ -137,7 +137,7 @@ def psi16_cat : CatEndoMonoid 16 where
             ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
             ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> decide
 
-/-- The witness inhabits CatEndoMonoid 16. -/
-instance : Inhabited (CatEndoMonoid 16) := ⟨psi16_cat⟩
+/-- The witness inhabits CatEndoMagma 16. -/
+instance : Inhabited (CatEndoMagma 16) := ⟨psi16_cat⟩
 
 end CatWitness

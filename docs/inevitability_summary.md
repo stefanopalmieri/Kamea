@@ -142,7 +142,7 @@ The difference between "a finite algebra with classification and transformation"
 
 | Layer | Current evidence | Formalization goal |
 |-------|-----------------|-------------------|
-| Layer 1 (categorical) | SAT analysis, 5 axiom systems | Lean: finite endomorphism monoids in Mathlib |
+| Layer 1 (categorical) | SAT analysis, 5 axiom systems | Lean: finite endomorphism magmas in Mathlib |
 | Layer 2 (distinctness) | SAT verification at N=12, N=16 | Lean: add Distinct constraints to PsiStructure.lean |
 | Layer 3 (Ψ-specific) | SAT analysis of Branch + Compose forcing | Lean: g-as-inert from Compose axiom |
 | Specific model Ψ₁₆ᶠ | 83 in Psi16Full.lean; 130+ total across 4 proof files | Complete |

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Categorical Topos-like Axioms — Genuine finite endomorphism monoid.
+Categorical Topos-like Axioms — Genuine finite endomorphism magma.
 
 NOT a transliteration of Ψ axioms into categorical language.
 Start from standard categorical concepts and see what they force.
@@ -301,7 +301,7 @@ def check_discoverability(table):
 def run_categorical_search(num_models=20):
     """Run the categorical axiom search and analyze results."""
     print("=" * 70)
-    print("CATEGORICAL TOPOS-LIKE AXIOMS — Finite Endomorphism Monoid")
+    print("CATEGORICAL TOPOS-LIKE AXIOMS — Finite Endomorphism Magma")
     print(f"N={N}, core={{{CORE_LO}..{CORE_HI-1}}}")
     print("=" * 70)
     print()

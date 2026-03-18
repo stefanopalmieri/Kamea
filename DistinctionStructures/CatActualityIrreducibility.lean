@@ -16,7 +16,7 @@
 
    **Mathematical significance:** In topos theory, the subobject classifier
    Ω has a fixed structure (it classifies subobjects). But in a finite
-   endomorphism monoid, the classifier's specific row values are free —
+   endomorphism magma, the classifier's specific row values are free —
    there is no canonical "true" and "false" beyond the structural role.
 
    All proofs are computational: `native_decide`.

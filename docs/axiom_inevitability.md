@@ -43,7 +43,7 @@ Specific to axiom systems that include a substrate commitment.
 | Info-theoretic (A) | information flow | 2-1-9-0 | YES | NO (no inert) |
 | Category-theoretic (B) | retractions + products | 2-1-8-1 | YES | YES |
 | Game-theoretic (C) | strategic diversity | 2-1-8-1 | YES | YES |
-| **Categorical topos** | **endomorphism monoid** | **free (0-5+ inert)** | **YES** | **when inert present** |
+| **Categorical topos** | **endomorphism magma** | **free (0-5+ inert)** | **YES** | **when inert present** |
 
 ### Ψ — Phenomenological
 
@@ -73,7 +73,7 @@ Result: 2 absorbers, 1 tester, 8 encoders, 1 inert. Both walls hold. All non-abs
 
 ## The Categorical Topos Experiment
 
-The strongest test: formulate axioms as a genuine finite endomorphism monoid using standard categorical concepts — zero morphisms, extensionality, retraction pair, unique subobject classifier, binary product with non-commuting projections, and conditional copairing — with **no inert axiom**. Does the inert element emerge?
+The strongest test: formulate axioms as a genuine finite endomorphism magma using standard categorical concepts — zero morphisms, extensionality, retraction pair, unique subobject classifier, binary product with non-commuting projections, and conditional copairing — with **no inert axiom**. Does the inert element emerge?
 
 **Result**: The inert element is **permitted but not forced**.
 

@@ -2,7 +2,7 @@
 
    The Kleene wall (called the "Kleene barrier" or "separation of judgment
    and computation" in the Ψ framework) states that the boolean and
-   non-boolean strata of the endomorphism monoid are cleanly separated.
+   non-boolean strata of the endomorphism magma are cleanly separated.
 
    In categorical terms: an endomorphism either always maps non-zero inputs
    to boolean values {zero₁, zero₂} (a "classifier-type" morphism) or
@@ -10,7 +10,7 @@
    belongs to the first stratum; the section, retraction, projections,
    copairing, and fixed-point combinator belong to the second.
 
-   This separation is the `kleene` axiom in `CatEndoMonoid`. Here we
+   This separation is the `kleene` axiom in `CatEndoMagma`. Here we
    derive its main consequence: the classifier is distinct from any
    element that has a non-boolean output on a non-zero input.
 -/
@@ -34,7 +34,7 @@ open CatFoundation
 
     Proof: cls has all-boolean row (by cls_boolean). If y has a non-boolean
     output, then y ≠ cls (since cls's row is all-boolean). -/
-theorem kleene_wall {n : Nat} (M : CatEndoMonoid n) (y : Fin n)
+theorem kleene_wall {n : Nat} (M : CatEndoMagma n) (y : Fin n)
     (x : Fin n) (hx : M.dot y x ≠ M.zero₁ ∧ M.dot y x ≠ M.zero₂) :
     y ≠ M.cls := by
   intro heq
@@ -43,14 +43,14 @@ theorem kleene_wall {n : Nat} (M : CatEndoMonoid n) (y : Fin n)
   · exact hx.2 (heq ▸ h)
 
 /-- Contrapositive: if y = cls, then all outputs are boolean. -/
-theorem cls_all_boolean {n : Nat} (M : CatEndoMonoid n) (x : Fin n) :
+theorem cls_all_boolean {n : Nat} (M : CatEndoMagma n) (x : Fin n) :
     M.dot M.cls x = M.zero₁ ∨ M.dot M.cls x = M.zero₂ :=
   M.cls_boolean x
 
 /-- **Kleene dichotomy consequence**: a non-zero element with any
     non-boolean output on a non-zero input has ALL non-boolean
     outputs on non-zero inputs. -/
-theorem computational_all_nonboolean {n : Nat} (M : CatEndoMonoid n)
+theorem computational_all_nonboolean {n : Nat} (M : CatEndoMagma n)
     (a : Fin n) (ha1 : a ≠ M.zero₁) (ha2 : a ≠ M.zero₂)
     (x₀ : Fin n) (hx₀1 : x₀ ≠ M.zero₁) (hx₀2 : x₀ ≠ M.zero₂)
     (hnonbool : M.dot a x₀ ≠ M.zero₁ ∧ M.dot a x₀ ≠ M.zero₂) :

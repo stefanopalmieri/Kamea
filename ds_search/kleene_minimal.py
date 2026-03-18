@@ -16,7 +16,7 @@ from z3 import (
 import time
 
 
-def test_kleene_monoid(N):
+def test_kleene_magma(N):
     """Test if a KleeneMagma of size N is satisfiable."""
     print(f"\n{'='*60}")
     print(f"Testing N={N}")
@@ -211,7 +211,7 @@ def test_kleene_monoid(N):
 
 def main():
     for n in [4, 5, 6, 7, 8]:
-        result = test_kleene_monoid(n)
+        result = test_kleene_magma(n)
         if result is not None:
             print(f"\n{'='*60}")
             print(f"MINIMAL WITNESS FOUND AT N={len(result)}")

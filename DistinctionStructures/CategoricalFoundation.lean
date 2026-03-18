@@ -1,12 +1,12 @@
-/- # CategoricalFoundation — Finite Endomorphism Monoids with Categorical Structure
+/- # CategoricalFoundation — Finite Endomorphism Magmas with Categorical Structure
 
    Standard categorical vocabulary for the forced-roles theorem.
    Every concept here is standard algebra/category theory:
    zero morphisms, retraction pairs, subobject classifiers,
    products with projections, conditional copairing, fixed-point combinators.
 
-   This file defines `CatEndoMonoid n`, a structure capturing these concepts
-   in the setting of finite endomorphism monoids (magmas on `Fin n`).
+   This file defines `CatEndoMagma n`, a structure capturing these concepts
+   in the setting of finite endomorphism magmas (magmas on `Fin n`).
 
    **Relation to standard references:**
    - Zero morphisms: cf. `CategoryTheory.Limits.HasZeroMorphisms`
@@ -26,7 +26,7 @@ set_option autoImplicit false
 
 namespace CatFoundation
 
-/-- Predicate identifying the "core" of the monoid: elements at indices 2, 3, 4, 5.
+/-- Predicate identifying the "core" of the magma: elements at indices 2, 3, 4, 5.
     These are the elements on which the retraction pair acts as an isomorphism
     and on which the copairing dispatch is defined. In categorical terms,
     these are the representable objects of the internal category. -/
@@ -35,7 +35,7 @@ def in_core {n : Nat} (x : Fin n) : Prop := x.val = 2 ∨ x.val = 3 ∨ x.val = 
 instance {n : Nat} : DecidablePred (@in_core n) := fun x =>
   inferInstanceAs (Decidable (x.val = 2 ∨ x.val = 3 ∨ x.val = 4 ∨ x.val = 5))
 
-/-- A finite endomorphism monoid with categorical structure.
+/-- A finite endomorphism magma with categorical structure.
 
     All concepts are standard: zero morphisms, retraction pairs,
     subobject classifiers, products with projections, conditional copairing,
@@ -46,7 +46,7 @@ instance {n : Nat} : DecidablePred (@in_core n) := fun x =>
 
     **Design note:** The `n ≥ 10` constraint is not stated explicitly —
     it follows from `distinct_all` (10 pairwise-distinct elements exist). -/
-structure CatEndoMonoid (n : Nat) where
+structure CatEndoMagma (n : Nat) where
   /-- The binary operation (composition of endomorphisms). -/
   dot : Fin n → Fin n → Fin n
 
@@ -55,7 +55,7 @@ structure CatEndoMonoid (n : Nat) where
   /-- Second left-zero morphism: `∀ x, dot zero₂ x = zero₂`. -/
   zero₂ : Fin n
 
-  /-- Section of the retraction pair (embeds the core into the monoid).
+  /-- Section of the retraction pair (embeds the core into the magma).
       Corresponds to Q in the Ψ framework. -/
   sec : Fin n
   /-- Retraction of the retraction pair (left-inverse of section on core).
@@ -123,7 +123,7 @@ structure CatEndoMonoid (n : Nat) where
       (all outputs on non-zero inputs are non-boolean). No mixing.
 
       In categorical terms: the boolean and non-boolean strata of the
-      endomorphism monoid are cleanly separated. An endomorphism either
+      endomorphism magma are cleanly separated. An endomorphism either
       always factors through the subobject classifier's image {zero₁, zero₂}
       or never does (on non-zero inputs).
 

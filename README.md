@@ -111,7 +111,7 @@ The answer is yes, and it fits in a 16×16 table.
 
 ### Universal Theorems (Categorical Foundation)
 
-Proved for ALL finite endomorphism monoids satisfying the axioms — not just one table. Pure algebraic proofs, no `decide`. [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean)
+Proved for ALL finite endomorphism magmas satisfying the axioms — not just one table. Pure algebraic proofs, no `decide`. [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean)
 
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
 - Kleene wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
@@ -284,10 +284,10 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
-│   ├── CategoricalFoundation.lean       # CatEndoMonoid: categorical vocabulary for full N=16
+│   ├── CategoricalFoundation.lean       # CatEndoMagma: categorical vocabulary for full N=16
 │   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
 │   ├── CatKleeneWallMinimal.lean        # FaithfulRetractMagma + KleeneMagma: N=4/5 witnesses + 16 universal theorems
-│   ├── CatWitness.lean                  # N=16 witness as CatEndoMonoid (satisfiability)
+│   ├── CatWitness.lean                  # N=16 witness as CatEndoMagma (satisfiability)
 │   ├── CatForcedDistinctness.lean       # 32 forced-distinct pairs on N=16 witness
 │   ├── CatRigidity.lean                 # Rigidity of N=16 categorical witness
 │   ├── CatDiscoverable.lean             # 4-probe discoverability of N=16 witness
@@ -357,7 +357,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 │   ├── axiom_archaeology.py          # Axiom removal + new axiom candidates (Direction 1 & 3)
 │   ├── axiom_archaeology_deep.py     # Composition wall detail, redundancy, max removable set
 │   ├── alternative_axioms.py         # Alternative axiom systems (Direction 2)
-│   ├── categorical_topos.py          # Genuine categorical endomorphism monoid axioms
+│   ├── categorical_topos.py          # Genuine categorical endomorphism magma axioms
 │   ├── inert_expressiveness.py       # Substrate expressiveness analysis (inert count vs discoverability)
 │   ├── n16c_expressiveness_search.py # Ψ₁₆ᶜ table search (maximally expressive model)
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
