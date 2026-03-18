@@ -65,6 +65,18 @@ cd kamea-rs && cargo run --release -- run \                  # Rust reflective t
   examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
+### Compiled Reflective Tower
+
+```bash
+python3 psi_transpile.py --target rust \
+  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs
+cp psi_runtime_f.rs /tmp/
+rustc -O -o /tmp/tower /tmp/tower.rs
+/tmp/tower    # 2.2 ms — same output, 20,000x faster
+```
+
+The entire reflective tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. Smith's tower had no ground, so it could never be compiled — each level depended on the level below. This one has a ground, so the compiler can bottom out.
+
 ### Compile to Native
 
 ```bash
@@ -79,9 +91,15 @@ python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp | sed '1d;$d' > /
 # or: kamea-rs/target/release/kamea run examples/psi_transpile_test.lisp | sed '1d;$d' > /tmp/out.rs
 cp psi_runtime.rs /tmp/
 rustc -O -o /tmp/out /tmp/out.rs && /tmp/out               # 3 42 99 3 5 5
+
+# Compile the reflective tower to native (meta-circular evaluator as compiled Rust)
+python3 psi_transpile.py --target rust \
+  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs
+cp psi_runtime_f.rs /tmp/
+rustc -O -o /tmp/tower /tmp/tower.rs && /tmp/tower
 ```
 
-The transpiler handles computational programs (arithmetic, recursion, branching, list operations). It does not yet handle metaprograms — programs that construct and manipulate source code as data. The reflective tower is exactly such a program: a meta-circular evaluator that builds S-expressions as cons-cell data structures using quoted symbols. Extending the transpiler to handle quoted symbol encoding would enable compiling the reflective tower to native code, producing a compiled interpreter with native-speed dispatch and MMTk-managed continuations. This is architecturally straightforward (a symbol-to-integer table at transpile time) but not yet implemented. See [`docs/transpiler_gaps.md`](docs/transpiler_gaps.md) for the full gap analysis.
+The transpiler handles both computational programs (arithmetic, recursion, branching, list operations) and metaprograms (programs that construct and manipulate source code as data). The reflective tower — a meta-circular evaluator that builds S-expressions, reifies continuations, and modifies its own control flow — compiles to a single native binary via `psi_transpile.py --target rust`. The compiled tower produces identical output to the interpreted tower in 2.2 ms (vs ~43 s interpreted), a ~20,000x speedup. The 256-byte Cayley table is embedded in the binary and verified at runtime. A compile-time symbol table maps each quoted symbol to a stable integer constant, matching the interpreter's `_symbol_to_term` encoding. See [`docs/transpiler_gaps.md`](docs/transpiler_gaps.md) for the implementation details.
 
 ---
 
@@ -160,7 +178,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - 10/45 distinctness pairs are irreducible nontriviality axiom, exhaustively characterized `[Empirical]`
 - Turing completeness: 7 axiom-forced elements simulate 2CM `[Empirical]`
 - Reflective tower: 3 levels, branch swap, grounded continuations `[Empirical]`
-- Compilation: within 4x of native Rust via supercompile → C/Rust `[Empirical]`
+- Compilation: within 4x of native Rust via supercompile → C/Rust; compiled reflective tower in 2.2 ms (20,000x over interpreted) `[Empirical]`
+- Compiled reflective tower: meta-circular evaluator + continuation reification + branch swap in a single native binary `[Empirical]`
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
@@ -231,7 +250,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 **Start here**
 - [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
-- [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap
+- [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap. Runs interpreted (~43 s) or compiled to native (~2.2 ms)
 - [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
@@ -250,7 +269,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 **Compilation and performance**
 - [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining
 - [`psi_transpile.py`](psi_transpile.py) — Supercompiled Ψ∗ → C/Rust transpiler
-- [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases)
+- [`examples/psi_futamura.psi`](examples/psi_futamura.psi) — Futamura projection demo: interpreter specialization = direct compilation (10 test cases). All 3 projections demonstrated; projection 3 fixed point verified. The compiled reflective tower is projection 1 applied to the meta-circular evaluator
 - [`examples/psi_transpile.lisp`](examples/psi_transpile.lisp) — Self-hosted transpiler: Ψ-Lisp → Rust (Futamura projection 3 fixed point)
 - [`psi_blackbox.py`](psi_blackbox.py) — Black-box recovery (3 methods, 100% on 1M seeds)
 
@@ -294,6 +313,15 @@ Two benchmarks: counter arithmetic (fib + fact + power + gcd, all inputs known a
 | **Ψ-Lisp (Python interpreter)** | 301 s | 6,400,000x |
 
 Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within **2x on nqueens(8)** — faster than native Python in both cases. The nqueens gap is smaller because the cons-cell arena (bump allocator, no GC) is competitive with Rust's `Vec` push/pop. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
+
+**Reflective tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
+
+| Implementation | Time | vs Compiled |
+|----------------|------|-------------|
+| **Compiled tower** (rustc -O) | 2.2 ms | 1x |
+| **Ψ-Lisp (Python interpreter)** | ~43 s | ~20,000x |
+
+The compiled tower is not about benchmark speed — it's about having the meta-circular evaluator as compiled Rust with continuations as data, the Cayley table verified at runtime, and branch swap via continuation modification, all in a single native binary.
 
 ---
 
@@ -407,7 +435,7 @@ Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within *
 │   ├── forced_roles.md               # Forced categories: raw SAT data + necessity analysis
 │   ├── psi_framework_summary.md      # Comprehensive Ψ framework reference
 │   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture
-│   ├── transpiler_gaps.md            # Transpiler gap analysis for reflective tower compilation
+│   ├── transpiler_gaps.md            # Transpiler implementation: symbol encoding, arena threading, compiled tower
 │   ├── categorical_canonicity.md      # Canonicity analysis: no canonical object, canonical theory
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
@@ -419,6 +447,7 @@ Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within *
 ├── psi_runtime.h                     # C runtime for Ψ₁₆ᶠ: 256-byte table + inline dot
 ├── psi_runtime_c.h                   # C runtime for Ψ₁₆ᶜ: table + arithmetic helpers
 ├── psi_runtime.rs                    # Rust runtime for Ψ₁₆ᶜ: table + Arena (bump allocator)
+├── psi_runtime_f.rs                  # Rust runtime for Ψ₁₆ᶠ: table + Arena (default for transpiler)
 ├── bench_c_interop.py                # Benchmark: Ψ₁₆ᶜ vs Ψ₁₆ᶠ comparison
 ├── psi_blackbox.py                   # Ψ₁₆ᶠ black-box recovery (3 methods)
 ├── psi_repl.py                       # Interactive Ψ-Lisp REPL

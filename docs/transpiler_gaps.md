@@ -1,81 +1,71 @@
 # Transpiler Gaps: Reflective Tower Compilation
 
-Status: **identified, not yet fixed**
+Status: **symbol encoding fixed, tower compiles and runs**
 
-The Python transpiler (`psi_transpile.py --target rust`) successfully compiles arithmetic programs, the specializer, and the self-hosted transpiler. It fails on the reflective tower (`psi_metacircular.lisp` + `psi_reflective_tower.lisp`) — 504 lines of Rust generated, 180 compile errors.
+The Python transpiler (`psi_transpile.py --target rust`) now successfully compiles the reflective tower (`psi_metacircular.lisp` + `psi_reflective_tower.lisp`). The compiled binary produces output matching the interpreter.
 
-## The Fundamental Gap: Quoted Symbol Encoding
+## What Was Fixed
 
-The reflective tower is a meta-circular evaluator. It builds Lisp programs as cons-cell data structures:
+### Quoted Symbol Encoding (fundamental gap — resolved)
 
-```lisp
-(cons 'defun (cons 'fib (cons (list 'n) (cons body NIL))))
+The transpiler now performs a symbol table pass before code generation:
+
+1. **Symbol collection**: walks all `(quote ...)` forms (including nested data within quoted lists) and assigns each unique symbol a stable integer ID starting at 100.
+
+2. **Constant emission**: emits `const SYM_DEFUN: PsiVal = 101;` etc. at module level.
+
+3. **Datum emission**: `emit_rust_datum` uses symbol constants for symbols and builds cons-list data using temporaries to avoid Rust borrow conflicts.
+
+4. **Operator symbols**: `+` → `SYM__PLUS`, `*` → `SYM__STAR`, etc. — properly mangled and mapped to integer IDs.
+
+### Global `setq` Variables (resolved)
+
+Integer-valued `setq` (e.g., `(setq TOP 0)`, `(setq QQ 6)`) now emit as `const` at module level, making them visible to all functions. Complex-valued globals remain `let mut` in `main()`.
+
+### Arena Threading (resolved)
+
+- `uses_arena` now detects: `atom-name`, `numberp`, `atom`, `write-string` with variable arguments, `quote` with list data, and string literals as PsiVal.
+- All `cons` calls use temporaries to prevent nested mutable borrow conflicts.
+- `car`/`cdr` with arena-using arguments use temporaries.
+- `list` emission evaluates all items into temps before building the cons chain.
+
+### Missing Builtins (resolved)
+
+- `numberp`: `!is_nil(x) && !is_cons(x)`
+- `atom`: `!is_cons(x)`
+- `atom-name`: new `psi_atom_name` runtime function returns cons-list of char codes
+- `write-string` with variable args: new `psi_write_string` runtime function
+- String literals as PsiVal: compiled to cons-lists of ASCII char codes
+
+### Other Fixes
+
+- Multiple input files supported (e.g., `psi_transpile.py file1.lisp file2.lisp`)
+- `--table f|c` flag: selects Ψ₁₆ᶠ (default) or Ψ₁₆ᶜ runtime
+- `_` identifier handled (emitted as temp variable)
+- Top-level IO statements no longer auto-print NIL return values
+
+## What Remains
+
+The transpiler handles the full reflective tower. Remaining limitations:
+
+- **Closures as values**: `lambda` as a stored value (not directly applied) is not supported. The tower doesn't need this — closures are represented as tagged lists within the meta-circular evaluator.
+- **Higher-order functions**: passing functions as arguments requires a closure representation. Not needed by the tower.
+- **C backend for tower**: only the Rust backend has been tested with the tower. The C backend would need similar symbol encoding (straightforward).
+
+## Usage
+
+```bash
+# Compile the reflective tower (default table: Ψ₁₆ᶠ)
+python3 psi_transpile.py --target rust \
+  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs
+cp psi_runtime_f.rs /tmp/
+rustc -O -o /tmp/tower /tmp/tower.rs
+/tmp/tower
+
+# With Ψ₁₆ᶜ table
+python3 psi_transpile.py --target rust --table=c \
+  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower_c.rs
+cp psi_runtime.rs /tmp/
+rustc -O -o /tmp/tower_c /tmp/tower_c.rs
+/tmp/tower_c
 ```
-
-The transpiler has no mechanism to encode quoted symbols (`'defun`, `'if`, `'lambda`, `'car`, etc.) as integer values. It emits them as bare Rust identifiers:
-
-```rust
-arena.cons(defun, arena.cons(fib, ...))  // ERROR: `defun` not in scope
-```
-
-In `psi_lisp.py`, quoted symbols go through `_symbol_to_term`, which assigns each unique symbol a stable integer ID (starting at 100) and encodes it as a Q-chain. The transpiler would need an equivalent: a compile-time symbol table that maps each quoted symbol to a unique `PsiVal` constant.
-
-This affects every quoted symbol in the tower: `defun`, `if`, `cond`, `lambda`, `let`, `progn`, `quote`, `car`, `cdr`, `cons`, `null`, `+`, `*`, `<`, `=`, `and`, `or`, `not`, `list`, `setq`, `reify`, `reflect`, `fib`, `fact`, `n`, `x`, etc.
-
-Operator symbols are further mangled: `+` → `_plus`, `*` → `_star`, `<` → `_lt`, `=` → `_eq` — then used as variable names that don't exist.
-
-## Secondary Gaps
-
-### Arena threading for display functions
-
-Functions that call `psi_print_val` or `atom_name` need `arena: &mut Arena` but the transpiler's `uses_arena` check only looks for `cons`/`car`/`cdr`/`list`/`print`/`display`. Functions calling other arena-needing user functions are detected (via `_calls_arena_fn`), but builtins like `psi_print_val` used in `write-string` output are not.
-
-### Global `setq` variables
-
-The tower defines globals via `setq`:
-
-```lisp
-(setq TOP 0)
-(setq BOT 1)
-(setq QQ 6)
-(setq EE 7)
-```
-
-The transpiler emits these as `let mut` declarations in `main()`, but references to them from within compiled functions see bare identifiers (`TOP`, `BOT`, `QQ`, `EE`) that are not in scope. These need to be either function parameters, global statics, or inlined constants.
-
-### `_` as expression
-
-`(setq _ (some-side-effect))` emits `_ = ...` in Rust. The identifier `_` is not valid in expression position in Rust — only on the left-hand side of `let _ = ...`.
-
-### Mismatched types from `cond` fallthrough
-
-Some `cond` clauses in the metacircular evaluator have complex nesting that produces Rust type mismatches — the `if/else if/else` chain doesn't always resolve to the same type in all branches.
-
-## What Would Fix It
-
-The quoted-symbol encoding requires:
-
-1. **Symbol table pass**: walk all `(quote sym)` forms before code generation, assign each unique symbol a stable integer ID.
-
-2. **Emit symbol constants**: at the top of the generated Rust, emit `const SYM_DEFUN: PsiVal = 101; const SYM_IF: PsiVal = 102;` etc.
-
-3. **Encode as Q-chains at runtime**: symbols are Q-chain integers in psi_lisp.py (`encode_int(id)`). The transpiler would need to either:
-   - Emit the Q-chain construction at startup (call `arena.encode_int(id)` for each symbol), or
-   - Use raw integer IDs directly (faster, but changes the representation)
-
-4. **Handle operator symbols**: `+`, `*`, `<`, `=` as quoted data must map to symbol IDs, not be name-mangled.
-
-The secondary gaps (arena threading, globals, `_`) are straightforward once the symbol encoding is in place.
-
-## Performance Expectation
-
-If compiled, the reflective tower would run at roughly:
-
-| Mode | fib(8) | Notes |
-|------|--------|-------|
-| Python interpreting Lisp-in-Lisp | ~44,000 ms | triple interpretation |
-| Rust interpreter (kamea) running tower | ~4,000 ms | compiled interpreter, interpreted meta-evaluator |
-| **Compiled tower (estimated)** | **~400–800 ms** | compiled meta-evaluator, interpreted fib |
-| Directly compiled fib | ~0.06 ms | no interpretation overhead |
-
-The compiled tower is not about speed — it's about having the meta-circular evaluator as compiled Rust that can switch between native execution and reflective interpretation via `(reify)`/`(reflect)`, with continuations as MMTk-managed cons cells in a single binary.

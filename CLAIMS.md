@@ -91,6 +91,8 @@ This file is the canonical status registry for claims made in this repository.
 | 0 homomorphisms from N=4/5 Lean witnesses to Ψ₁₆ᶠ (weak or strict) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
 | Three-class decomposition (Z, C, N) is functorial invariant of all KleeneMagma models | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — `three_categories` | `lake build` |
 | No initial object in category KleeneMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
+| Compiled reflective tower: 2.2 ms native, ~20,000x over interpreted (meta-circular evaluator + continuation reification + branch swap in single binary) | Empirical | `psi_transpile.py --target rust` on metacircular + tower | `python3 psi_transpile.py --target rust examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs && cp psi_runtime_f.rs /tmp/ && rustc -O -o /tmp/tower /tmp/tower.rs && /tmp/tower` |
+| Transpiler handles metaprograms: quoted symbol encoding, cons-cell data construction, arena threading | Empirical | Compiled tower produces identical output to interpreted tower | `diff <(python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp 2>/dev/null) <(/tmp/tower)` |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 
 ## Scope Notes
