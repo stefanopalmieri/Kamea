@@ -72,10 +72,10 @@ This file is the canonical status registry for claims made in this repository.
 | Distinctness decomposition: 32/45 pairs forced by categorical axioms, 3/45 forced by TC (lazy/eager + projection uniqueness), 10/45 are standard algebraic practice | Empirical | `ds_search/forced_roles_test.py` (32 categorical), `ds_search/tc_distinctness_test.py` (3 TC), `ds_search/tc_distinctness_deep.py` (E=f artifact) | `uv run python -m ds_search.tc_distinctness_test && uv run python -m ds_search.tc_distinctness_deep` |
 | Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Kleene wall: classifier ∩ non-classifier = ∅ | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| No right identity (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Card ≥ 4 (any KleeneMonoid) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| No right identity (any KleeneMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Card ≥ 4 (any KleeneMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Minimal KleeneMonoid witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
+| Minimal KleeneMagma witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
 | Card ≥ 5 when sec ≠ ret (tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof | `lake build` |
 | 32/45 role pairs forced distinct (16-element witness) | Lean-proved | `DistinctionStructures/CatForcedDistinctness.lean` — `native_decide` | `lake build` |
 | Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
