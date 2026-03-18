@@ -85,6 +85,8 @@ This file is the canonical status registry for claims made in this repository.
 | Asymmetry extends to FaithfulRetractMagma and KleeneMagma | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — immediate corollaries | `lake build` |
 | Composition closure (10 roles form sub-magma) compatible but kills 0/10 expressiveness pairs | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Tighter closure variants (6-element computational core, 8-element non-zeros, one-sided) all UNSAT | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
+| Reflection distinctness: 0/10 nontriviality pairs killed by full reflective tower | Empirical | `ds_search/reflection_distinctness_test.py` | `uv run python -m ds_search.reflection_distinctness_test` |
+| 10 nontriviality pairs exhaustively characterized (categorical + TC + closure + reflection all tested) | Empirical | `ds_search/tc_distinctness_test.py`, `reflection_distinctness_test.py`, `composition_closure_test.py` | See individual scripts |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 
 ## Scope Notes
