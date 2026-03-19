@@ -53,7 +53,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
 
 A program that can inspect its own continuation — where the continuation is data built from algebraically verified atoms. The table it runs on has Lean-proved rigidity, discoverability, and actuality irreducibility. The Lisp it implements has five axiom-forced role categories, seven specialized roles justified by compositional expressiveness, and a Turing-complete term algebra.
 
-Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Here, the tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
+Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Boba's Tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
 
 The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpreting itself with inspectable continuations — computes fibonacci, verifies the Cayley table it runs on, then reifies its own continuation as walkable data, navigates to a pending `k-if` frame, swaps the then/else branches, reflects, and takes the opposite branch from what the source code says. The program rewrites its own future. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
 
@@ -65,7 +65,7 @@ cd kamea-rs && cargo run --release -- run \                  # Rust reflective t
   examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
 ```
 
-### Compiled Reflective Tower
+### Compiled Boba's Tower
 
 ```bash
 python3 psi_transpile.py --target rust \
@@ -75,7 +75,7 @@ rustc -O -o /tmp/tower /tmp/tower.rs
 /tmp/tower    # 2.2 ms — same output, 20,000x faster
 ```
 
-The entire reflective tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. Smith's tower had no ground, so it could never be compiled — each level depended on the level below. This one has a ground, so the compiler can bottom out.
+Boba's Tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. Smith's tower had no ground, so it could never be compiled — each level depended on the level below. This one has a ground, so the compiler can bottom out.
 
 ### Compile to Native
 
@@ -287,6 +287,27 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ---
 
+## Related Work
+
+Boba's Tower sits at one end of an architectural fork in reflective language design.
+
+Smith's 3-Lisp (1984) introduced the reflective tower — an infinite chain of meta-interpreters, each interpreting the one below. Subsequent implementations (Black, Brown, Blond) added live meta-modification: `(set! base-eval ...)` changes how the running interpreter works. Amin and Rompf (POPL 2018) showed how to compile user programs *through* the tower via stage polymorphism, collapsing multiple interpretation levels into efficient generated code.
+
+All of these systems use higher-order continuations — opaque closures that can be invoked and composed but not inspected. Boba's Tower uses defunctionalized continuations — tagged data structures that can be walked, inspected frame by frame, and modified field by field. This is the architectural fork, and it is forced by whether the tower terminates.
+
+An infinite tower cannot be defunctionalized — there are infinitely many continuation types. A grounded tower must be — there is no closure to hide behind; the bottom is data. Therefore: grounded → finite continuation types → defunctionalization → transparency → the branch swap. And symmetrically: infinite → closures → opacity → live meta-modification. The transparency of our continuations and the opacity of theirs are consequences of the same design choice.
+
+| System | Tower | Continuations | Headline result |
+|--------|-------|---------------|-----------------|
+| Smith (1984) | Infinite | — | Reflective tower concept |
+| Black/Brown/Blond | Infinite | Opaque closures | Live `set! base-eval` |
+| Amin & Rompf (POPL 2018) | Collapsible | Opaque closures | Compile through the tower |
+| **Boba's Tower (Kamea)** | **Grounded (256 bytes)** | **Tagged data** | **Compile the tower itself** |
+
+What they have that we don't: live meta-interpreter modification (`set! base-eval`), infinite tower levels, compilation under modified semantics. What we have that none of them do: walkable continuations (the branch swap), a compiled tower (2.2 ms native), formal verification (102 Lean theorems, zero `sorry`), and runtime substrate verification. See [`docs/related_work.md`](docs/related_work.md) for the full comparison.
+
+---
+
 ## Performance
 
 Two benchmarks: counter arithmetic (fib + fact + power + gcd, all inputs known at call time) and N-Queens(8) (backtracking search with cons-cell lists, 92 solutions). Counter arithmetic is pure compute; nqueens stresses allocation and recursion.
@@ -314,7 +335,7 @@ Two benchmarks: counter arithmetic (fib + fact + power + gcd, all inputs known a
 
 Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within **2x on nqueens(8)** — faster than native Python in both cases. The nqueens gap is smaller because the cons-cell arena (bump allocator, no GC) is competitive with Rust's `Vec` push/pop. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
 
-**Reflective tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
+**Boba's Tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
 
 | Implementation | Time | vs Compiled |
 |----------------|------|-------------|
@@ -437,6 +458,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture
 │   ├── transpiler_gaps.md            # Transpiler implementation: symbol encoding, arena threading, compiled tower
 │   ├── categorical_canonicity.md      # Canonicity analysis: no canonical object, canonical theory
+│   ├── related_work.md               # Boba's Tower vs Smith/Black/Blond/LMS-Black: the architectural fork
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
