@@ -119,9 +119,9 @@ The correspondence is structural (same role inventory) rather than semantic (the
 
 The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)). Self-description requires that the order of composition matters.
 
-The role structure rests on three foundations: standard categorical structure forces three of five categories and the Kleene wall; a distinctness axiom (all named role-bearing elements are different — standard algebraic practice, independently justified by expressiveness analysis) forces the remaining specialization including substrate existence and g-as-CONS; and one philosophical commitment (the ground is unique) forces substrate uniqueness and actuality irreducibility. The canonicity of this structure lies not in any particular model but in the theory: every finite magma satisfying the Kleene axioms decomposes into the same three classes with the same hard walls, regardless of model size or specific table entries (112 non-isomorphic models at N=4 all share the decomposition). The Ψ axioms give the space between the walls computational meaning. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Canonicity analysis: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
+The role structure rests on four foundations: self-simulation derives the instruction set (discrimination, branching, recursion); standard categorical structure forces three categories and the Kleene wall; machine internalization (compose, inert) grounds the reflective tower; and a distinctness axiom forces full role specialization. The canonicity lies in the theory, not any model: every finite Kleene magma decomposes into the same three classes with the same hard walls (112 non-isomorphic models at N=4 all share the decomposition). The Ψ axioms give the space between the walls computational meaning. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Canonicity analysis: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
-Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **35 are derived theorems**: 32 from categorical axioms (Kleene wall, substrate wall, zero distinctness) and 3 from Turing completeness (Q≠E and Q≠f: lazy/eager semantic conflict; f≠η: projection uniqueness). The remaining **10 are the nontriviality axiom** — requiring that role-bearing elements use distinct names for distinct concepts, as 0 ≠ 1 in a nontrivial ring. These 10 pairs have been tested against every available oracle: categorical axioms, Turing completeness, composition closure (roles as sub-magma), and the full reflective tower (continuation reification, frame walking, branch swap). All 10 survive all tests. They are genuinely independent of every known structural, computational, and reflective property — the irreducible axiomatic content of the distinctness assumption. Their effect is not computational but expressive: merged-role algebras still compute and reflect, but with fewer one-step compositions (16 vs 49), requiring more steps to achieve the same compositional range. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md), `ds_search/reflection_distinctness_test.py`.
+Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **35 are derived theorems** (32 from categorical axioms + 3 from Turing completeness). The remaining **10 are the nontriviality axiom** — as 0 ≠ 1 in a nontrivial ring. These 10 survive every available test: categorical axioms, Turing completeness, composition closure, and the full reflective tower. They are the irreducible axiomatic content. Their effect is expressive, not computational: merged-role algebras still compute and reflect, but with 16 vs 49 one-step compositions. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
 
 ## Why It Matters
 
@@ -129,26 +129,31 @@ Any system that can inspect and modify its own components needs a representation
 
 The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can the language that emerges from this table interpret itself — can a program written in it verify the table, capture its own continuation, and modify its own future, all within the same algebra?
 
-The answer is yes, and it fits in a 16×16 table.
-
-Self-simulation provides a non-circular characterization of self-description: a retraction-equipped magma is self-describing if its term algebra can compute its own Cayley table via a single recursive program. This definition — one program, all inputs — derives three axioms as necessary conditions: discrimination (a classifier must exist to decode inputs), conditional dispatch (a branch element must exist to handle different cases), and recursion (a fixed-point combinator must exist to process unbounded encodings). Two further axioms — composition and substrate — are not required for self-simulation but for self-*hosting*: running the simulation within the algebra itself rather than on external infrastructure. This is the Ψ system's distinctive contribution — internalizing the machine that terminates Smith's infinite tower of interpreters. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+The answer is yes, and it fits in a 16×16 table. Self-simulation provides a non-circular characterization: a retraction-equipped magma is self-describing if its term algebra can compute its own Cayley table via a single recursive program. This definition derives three axioms as necessary conditions (discrimination, branching, recursion) and identifies two more (composition, substrate) as independent of self-simulation but necessary for self-*hosting* — running the simulation within the algebra rather than on an external evaluator. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
 
 ## Key Results
 
-### Universal Theorems (Categorical Foundation)
+### Universal Theorems
 
-Proved for ALL finite endomorphism magmas satisfying the axioms — not just one table. Pure algebraic proofs, no `decide`. [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean)
+Proved for ALL finite magmas satisfying the relevant axioms — not just one table. Pure algebraic proofs, no `decide`, no `sorry`. Two independent sources:
+
+**From axioms** ([`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)) — assume Kleene axioms, derive consequences:
 
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
 - Kleene wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
 - No right identity in any model `[Lean, universal]`
-- Card ≥ 4 from the axioms `[Lean, universal]`
+- Card ≥ 4, tight; card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
 - Retraction pair members are non-classifiers `[Lean, universal]`
-- Card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
-- Minimal witnesses: N=4 (sec = ret), N=5 (sec ≠ ret) `[Lean, constructive]`
-- Asymmetry theorem: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
-- Self-simulation: partial application must be injective; encoding must be injective `[Lean, universal]`
-- 23 universal theorems total, zero `decide`, zero `sorry`
+- Asymmetry: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
+
+**From definition** ([`SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean)) — assume self-simulation, derive structural requirements:
+
+- Partial application injectivity: the map a ↦ eval(App(t, rep(a))) must be injective — the self-simulator cannot compress the encoding `[Lean, universal]`
+- Partial application distinctness: distinct elements produce distinct intermediate terms `[Lean, universal]`
+- Encoding injectivity: self-simulation forces Q-depth encoding to be injective `[Lean, universal]`
+- Row determination: equal partial applications imply identical rows `[Lean, universal]`
+
+23 universal theorems across 3 proof files, zero `decide`, zero `sorry`.
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -186,9 +191,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
-- Self-simulation: partial application injectivity — self-simulator can't compress the encoding `[Lean, universal]`
-- Self-simulation: brute-force (256 cells) and role-aware (60/256 algebraic) self-simulators verified `[Empirical]`
-- Machine boundary: instruction set (classifier, branch, Y) derived from self-simulation; machine (compose, inert) independent `[Empirical + Argument]`
+- Self-simulation: brute-force (256/256 cells) and role-aware (60/256 from algebraic rules) self-simulators verified `[Empirical]`
+- Machine boundary: self-simulation derives the instruction set (classifier, branch, Y); composition and substrate are independent — SAT counterexamples exist `[Empirical + Argument]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
@@ -199,8 +203,6 @@ Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full tec
 What is the simplest finite structure that can identify its own components through its own operation?
 
 The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing.
-
-The axioms decompose into two groups with different justifications. The **instruction set** (retraction pair, classifier, branch, Y-combinator) is derived from self-simulation — any retraction-equipped magma whose term algebra can compute its own Cayley table must have these. The **machine** (compose, inert) internalizes sequencing and storage into the algebra, enabling self-hosted simulation. The instruction set is structurally inevitable; the machine is the engineering choice that grounds the reflective tower. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
 
 **Structural Ladder (L0–L8)** — forces the basic role architecture:
 
@@ -241,9 +243,11 @@ The axioms decompose into two groups with different justifications. The **instru
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
+These axioms decompose into two groups with different justifications. The **instruction set** (QE retraction, classifier, branch, Y-combinator) is derived from self-simulation — any retraction-equipped magma whose term algebra can compute its own Cayley table must have these (`SelfSimulation.lean`). The **machine** (compose, inert) internalizes sequencing and storage into the algebra, enabling self-hosted simulation. The instruction set is structurally inevitable; the machine is the engineering choice that grounds the reflective tower. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+
 The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
-The axioms were not designed to produce Lisp. They were tested against four independent formalizations of self-description — phenomenological, information-theoretic, category-theoretic, and game-theoretic. Three of five behavioral categories and the Kleene wall emerged from all four. The fourth category (substrate) is selected by expressiveness. The fifth requirement (substrate uniqueness) is the single philosophical commitment. Everything else is forced or standard practice. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+The axioms were not designed to produce Lisp. They were tested against four independent formalizations of self-description — phenomenological, information-theoretic, category-theoretic, and game-theoretic — and separately against the self-simulation requirement. Three of five behavioral categories and the Kleene wall emerge from all four formalizations. The instruction set emerges from self-simulation. The fourth category (substrate) is selected by expressiveness. Everything else is forced or standard practice. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 Results fall into four tiers:
 
@@ -263,7 +267,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 **The proofs**
-- [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal algebraic theorems (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
+- [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
 - [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 - [`DistinctionStructures/SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
@@ -314,7 +318,7 @@ An infinite tower cannot be defunctionalized — there are infinitely many conti
 | Amin & Rompf (POPL 2018) | Collapsible | Opaque closures | Compile through the tower |
 | **Boba's Tower (Kamea)** | **Grounded (256 bytes)** | **Tagged data** | **Compile the tower itself** |
 
-What they have that we don't: live meta-interpreter modification (`set! base-eval`), infinite tower levels, compilation under modified semantics. What we have that none of them do: walkable continuations (the branch swap), a compiled tower (2.2 ms native), formal verification (102 Lean theorems, zero `sorry`), and runtime substrate verification. See [`docs/related_work.md`](docs/related_work.md) for the full comparison.
+What they have that we don't: live meta-interpreter modification (`set! base-eval`), infinite tower levels, compilation under modified semantics. What we have that none of them do: walkable continuations (the branch swap), a compiled tower (2.2 ms native), formal verification (106+ Lean theorems, zero `sorry`), and runtime substrate verification. See [`docs/related_work.md`](docs/related_work.md) for the full comparison.
 
 ---
 
@@ -493,7 +497,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 
 ## Building
 
-`lake build` compiles all Lean files — both the categorical foundation (19 universal algebraic theorems in `CatKleeneWallMinimal.lean` + `NoCommutativity.lean`, zero `decide`) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `sorry` across all files.
+`lake build` compiles all Lean files — the categorical foundation (19 universal theorems from axioms in `CatKleeneWallMinimal.lean` + `NoCommutativity.lean`), the self-simulation foundation (4 universal theorems from definition in `SelfSimulation.lean`), and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)
