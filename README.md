@@ -4,7 +4,7 @@ A self-describing finite algebra that recovers McCarthy's Lisp primitives from a
 
 **Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
 
-*Judgment cannot merge with computation. Substrate cannot merge with anything active. A distinctness axiom — standard algebraic practice — specializes five forced categories into seven roles: the same seven McCarthy needed for Lisp.*
+*Self-simulation in a retraction-equipped magma derives discrimination, branching, and recursion. Internalizing the machine adds composition and substrate — grounding Smith's infinite tower at 256 bytes. A distinctness axiom yields seven roles: McCarthy's Lisp primitives.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
