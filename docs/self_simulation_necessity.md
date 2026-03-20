@@ -242,8 +242,24 @@ The Ψ axiom system's unique contribution is not in deriving ALL axioms from sel
 
 ---
 
+## Lean Formalization
+
+[`DistinctionStructures/SelfSimulation.lean`](../DistinctionStructures/SelfSimulation.lean) formalizes the core of Layer 0. Four universal theorems, purely algebraic — no `decide`, no `native_decide`, no `sorry`:
+
+1. **`partial_app_injective`**: if a magma self-simulates, then `a ↦ eval(App(t, rep(a)))` is injective.
+2. **`partial_app_distinct`**: distinct elements produce distinct intermediate terms (contrapositive).
+3. **`rep_injective_of_self_sim`**: self-simulation forces the Q-depth encoding itself to be injective.
+4. **`row_eq_of_partial_eq`**: equal partial applications imply identical rows.
+
+The formalization introduces `SelfSimMagma` (extensional magma with compositional evaluation) and `SelfSimulates` (one term computes the full table). The proofs require only two axioms beyond the magma operation: extensionality (faithful left regular representation) and compositionality (eval is congruent in the function position).
+
+These are the first Lean theorems connecting self-simulation to algebraic structure.
+
+---
+
 ## Artifacts
 
+- `DistinctionStructures/SelfSimulation.lean` — Lean formalization (4 universal theorems, zero `sorry`)
 - `self_simulation_investigation.py` — Full investigation script (all 4 phases)
 - `examples/psi_self_simulator.lisp` — Ψ-Lisp self-simulators (brute-force and role-aware)
 - Both self-simulators verified: 256/256 cells correct
@@ -251,6 +267,7 @@ The Ψ axiom system's unique contribution is not in deriving ALL axioms from sel
 ## Reproduction
 
 ```bash
-python3 self_simulation_investigation.py
+lake build DistinctionStructures.SelfSimulation  # Lean proof
+python3 self_simulation_investigation.py          # empirical investigation
 python3 psi_lisp.py examples/psi_self_simulator.lisp
 ```

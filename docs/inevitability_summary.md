@@ -240,7 +240,7 @@ This is proved in Lean (`NoCommutativity.lean`) with zero `sorry`, zero `decide`
 
 | Layer | Current evidence | Formalization goal |
 |-------|-----------------|-------------------|
-| Layer 0 (self-simulation) | SAT counterexamples + theoretical argument | Lean: self-simulation implies classifier existence |
+| Layer 0 (self-simulation) | Lean: injectivity (`SelfSimulation.lean`, 4 theorems); SAT + argument for classifier/branch/Y | Lean: self-simulation implies classifier existence (open) |
 | Layer 1 (categorical) | SAT analysis, 5 axiom systems | Lean: finite endomorphism magmas in Mathlib |
 | Layer 2 (machine) | SAT independence (Tests D, E) | Lean: Compose/Inert independence proof |
 | Layer 3 (distinctness) | SAT verification at N=12, N=16 | Lean: add Distinct constraints to PsiStructure.lean |

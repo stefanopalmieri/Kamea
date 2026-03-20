@@ -147,7 +147,8 @@ Proved for ALL finite endomorphism magmas satisfying the axioms — not just one
 - Card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
 - Minimal witnesses: N=4 (sec = ret), N=5 (sec ≠ ret) `[Lean, constructive]`
 - Asymmetry theorem: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
-- 19 universal theorems total, zero `decide`, zero `sorry`
+- Self-simulation: partial application must be injective; encoding must be injective `[Lean, universal]`
+- 23 universal theorems total, zero `decide`, zero `sorry`
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -185,6 +186,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
+- Self-simulation: partial application injectivity — self-simulator can't compress the encoding `[Lean, universal]`
 - Self-simulation: brute-force (256 cells) and role-aware (60/256 algebraic) self-simulators verified `[Empirical]`
 - Machine boundary: instruction set (classifier, branch, Y) derived from self-simulation; machine (compose, inert) independent `[Empirical + Argument]`
 
@@ -263,6 +265,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 **The proofs**
 - [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + KleeneMagma, 4- and 5-element witnesses, 19 universal algebraic theorems (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
 - [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+- [`DistinctionStructures/SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
 - [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
 
@@ -370,6 +373,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── PsiStructure.lean               # Abstract Ψ role axioms (L0–L3)
 │   ├── PsiUniversalBounds.lean          # No right identity + card ≥ 4 (algebraic)
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
+│   ├── SelfSimulation.lean              # Self-simulation: partial application injectivity (4 universal theorems)
 │   ├── CategoricalFoundation.lean       # CatEndoMagma: categorical vocabulary for full N=16
 │   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
 │   ├── CatKleeneWallMinimal.lean        # FaithfulRetractMagma + KleeneMagma: N=4/5 witnesses + 16 universal theorems
