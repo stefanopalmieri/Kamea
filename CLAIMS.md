@@ -93,6 +93,14 @@ This file is the canonical status registry for claims made in this repository.
 | No initial object in category KleeneMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
 | Compiled reflective tower: 2.2 ms native, ~20,000x over interpreted (meta-circular evaluator + continuation reification + branch swap in single binary) | Empirical | `psi_transpile.py --target rust` on metacircular + tower | `python3 psi_transpile.py --target rust examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs && cp psi_runtime_f.rs /tmp/ && rustc -O -o /tmp/tower /tmp/tower.rs && /tmp/tower` |
 | Transpiler handles metaprograms: quoted symbol encoding, cons-cell data construction, arena threading | Empirical | Compiled tower produces identical output to interpreted tower | `diff <(python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp 2>/dev/null) <(/tmp/tower)` |
+| Self-simulation possible: brute-force simulator computes all 256 cells | Empirical | `examples/psi_self_simulator.lisp`, `self_simulation_investigation.py` | `python3 self_simulation_investigation.py` |
+| Role-aware simulator: 60/256 cells (23.4%) from algebraic rules, all 7 TC elements referenced | Empirical | `examples/psi_self_simulator.lisp`, `self_simulation_investigation.py` | `python3 self_simulation_investigation.py` |
+| Discrimination derived from self-simulation (Q-depth decoding requires binary test) | Empirical + Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 1 | `python3 self_simulation_investigation.py` |
+| Branching derived from self-simulation (dispatch requires conditionals) | Empirical + Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 2 | `python3 self_simulation_investigation.py` |
+| Y-combinator derived from universal self-simulation (unbounded Q-depth requires recursion) | Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 4 | N/A |
+| Compose independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test D | `python3 self_simulation_investigation.py` |
+| Inert independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test E | `python3 self_simulation_investigation.py` |
+| Machine boundary: instruction set (classifier, branch, Y) derived; machine (compose, inert) chosen | Argument | `docs/self_simulation_necessity.md` | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 
 ## Scope Notes

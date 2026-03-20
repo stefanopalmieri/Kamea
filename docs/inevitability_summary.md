@@ -1,10 +1,37 @@
 # Inevitability Summary
 
-*The definitive statement of the project's theoretical result. Detailed evidence in [`axiom_inevitability.md`](axiom_inevitability.md), [`forced_roles_theorem.md`](forced_roles_theorem.md), and [`axiom_archaeology_results.md`](axiom_archaeology_results.md).*
+*The definitive statement of the project's theoretical result. Detailed evidence in [`axiom_inevitability.md`](axiom_inevitability.md), [`forced_roles_theorem.md`](forced_roles_theorem.md), [`axiom_archaeology_results.md`](axiom_archaeology_results.md), and [`self_simulation_necessity.md`](self_simulation_necessity.md).*
 
 ---
 
-## The Three-Layer Result
+## The Four-Layer Result
+
+### Layer 0 — Derived from Self-Simulation (no choice)
+
+Presuppose: a finite magma (S, ·) with a retraction pair (Q, E) satisfying E·(Q·x) = x on a core subset. This is a standard categorical concept (section/retraction).
+
+Define self-simulation: there exists a SINGLE term t in the term algebra such that for all a, b ∈ S, eval(App(App(t, rep(a)), rep(b))) = dot(a, b), where rep(k) = Q^k(⊤) is the Q-depth encoding. One program, all inputs. Not 256 separate lookup terms — one universal self-simulator.
+
+**Derived axioms** (necessary conditions, tight arguments):
+
+- **Discrimination**: a classifier or branch element must exist. The self-simulator must decode Q-depth inputs by peeling Q layers and testing "is this ⊤?" at each step — a binary test. Q-depth is the only natural encoding in a retraction-equipped magma (the free monoid on {Q}). No alternative avoids it.
+- **Branching**: a conditional dispatch element must exist. The self-simulator must do different things for different rows of the Cayley table. A program without branching cannot compute a non-trivial two-variable function. No alternative exists.
+- **Recursion**: a fixed-point combinator must exist (for universal self-simulation). The simulator must recurse over Q-depth to handle elements of any size. For fixed N=16, bounded depth suffices, so Y is only derived for the universal (arbitrary-size) case.
+
+**Likely derived** (strong arguments, gaps remain):
+
+- **Two absorbers**: binary classification needs two target values. Absorbers are fixed under all operations, making them natural truth values. A single absorber provides one fixed point; the term-level atom/compound distinction provides the other, so the argument is not fully tight.
+- **Kleene dichotomy**: if an element's row is both boolean (classifier) and non-boolean (encoder), the self-simulator cannot reliably determine whether an output is a classification result or a transformed value. Mixed elements create dispatch ambiguity.
+- **E-transparency**: if E·⊤ ≠ ⊤, evaluation of terms involving E applied to absorbers produces wrong results. The Q-depth decoder tests structure before applying E, so the decoder itself is unaffected. But the evaluation pipeline that processes the self-simulator's output may apply E to boundary values, corrupting results.
+
+**Independent** (machine provides the capability):
+
+- **Algebraic composition** (Compose: η·x = ρ·(g·x)): the machine (step loop) provides sequential execution. The Compose axiom adds in-algebra composition, but the self-simulator uses the machine's sequencing, not η.
+- **Algebraic storage** (Inert/substrate): the machine provides non-destructive variable binding. The inert element g provides in-algebra storage, but the machine already handles it.
+
+**Evidence**: SAT tests confirm all axioms are algebraically independent of the retraction pair (counterexamples exist for each). The derivation is computational, not algebraic — self-simulation does work that algebra alone cannot. See [`self_simulation_necessity.md`](self_simulation_necessity.md).
+
+**Status**: necessary conditions for self-simulation. Any retraction-equipped magma that can simulate its own Cayley table must have discrimination, branching, and (for the universal case) recursion.
 
 ### Layer 1 — Categorically Forced (zero choices)
 
@@ -21,7 +48,20 @@ Standard finite category theory: zero morphisms, retraction pair, subobject clas
 
 **Status**: structurally universal.
 
-### Layer 2 — Distinctness Axiom (standard algebraic practice)
+### Layer 2 — Machine Internalization (design choice)
+
+Two axioms internalize the evaluation machine into the algebra. These are NOT derived from self-simulation — a self-simulator can run on an external machine. They ARE required for self-hosting: for the simulation to run within the algebra itself rather than on external infrastructure.
+
+- **Compose** (η·x = ρ·(g·x)): algebraic sequencing. The machine's step loop provides sequential execution externally. The Compose axiom internalizes this: composing means packaging via g then dispatching via ρ, all within a single algebraic operation.
+- **Inert/Substrate** (g as CONS): algebraic storage. The machine's registers provide non-destructive variable binding externally. The inert element g provides in-algebra storage: it holds without transforming.
+
+This is what distinguishes Ψ from a bare self-simulating magma and what terminates Smith's infinite regress. The instruction set (Layer 0) says what computations are possible. The machine (this layer) says those computations can happen inside the algebra, with no external evaluator needed.
+
+**Evidence**: SAT counterexamples (Tests D and E in `self_simulation_investigation.py`) confirm both axioms are algebraically independent of self-simulation. Models satisfying retraction + classifier + Kleene + Branch exist without Compose and without Inert.
+
+**Status**: design choice for self-hosting, clearly justified by the grounding requirement.
+
+### Layer 3 — Distinctness Axiom (standard algebraic practice)
 
 All role-bearing elements introduced by the operational axioms are pairwise distinct:
 
@@ -45,7 +85,7 @@ This is standard algebraic practice — when axioms introduce named elements, th
 
 **Status**: standard axiom with independent expressiveness justification.
 
-### Layer 3 — One Philosophical Commitment
+### Layer 4 — One Philosophical Commitment
 
 One axiom completes the structure.
 
@@ -69,20 +109,56 @@ One axiom completes the structure.
 ## The Dependency Chain
 
 ```
+Self-simulation requirement (one recursive program computes own table)
+  → discrimination + branching + recursion (Layer 0)
+  → Kleene dichotomy, E-transparency, two absorbers (likely)
+
 Standard category theory (zero morphisms, retraction pair,
 subobject classifier, products, conditional copairing)
-  → 3 categories + Kleene wall + rigidity + discoverability
+  → 3 categories + Kleene wall + rigidity + discoverability (Layer 1)
 
-+ Distinctness axiom (standard algebraic practice)
-  → substrate exists + 7 specialized roles
++ Machine internalization (design choice, not derived)
+  → Compose (sequencing within algebra) + Inert (storage) (Layer 2)
+  → This is what grounds Smith's infinite tower
 
 + Branch + Compose interaction (computational)
   → g = CONS (pair constructor must be substrate)
   → full McCarthy correspondence
 
++ Distinctness axiom (standard algebraic practice)
+  → substrate exists + 7 specialized roles (Layer 3)
+
 + 1-Inert (philosophical: ground is unique)
   → substrate uniqueness + actuality irreducibility
 ```
+
+---
+
+## The Machine Boundary
+
+Self-simulation derives axioms about what the algebra must DO (classify, branch, recurse) but NOT about what the algebra must BE (compose, store). This maps onto the Ψ architecture:
+
+- **Instruction set** (Q/E for data, τ/ρ for control, Y for recursion): DERIVED from self-simulation
+- **Machine** (Compose for sequencing, Inert for storage): PROVIDED by design choice
+
+The instruction set is structurally inevitable for any self-simulating retraction magma. The machine is the engineering choice that makes the system self-hosted rather than externally hosted. Smith's 3-Lisp had the instruction set but the machine was infinite regress. Ψ terminates the regress by internalizing the machine.
+
+Three levels of finite magma:
+
+```
+Random rigid magma:        no instruction set, no machine
+                           (not self-describing)
+
+Self-simulating magma:     instruction set (derived from Layer 0)
+                           machine is external
+                           (self-describing, externally hosted)
+
+Ψ:                         instruction set (derived)
+                           machine internalized (Compose, Inert)
+                           (self-describing, self-hosted)
+```
+
+The gap between "self-simulating" and "Ψ" is exactly two axioms: Compose and Inert. These are not forced by self-simulation — they are the conscious choice to internalize the evaluator into the algebra, making the reflective tower finite.
 
 ---
 
@@ -132,9 +208,9 @@ Note: 1-Inert is derivable in the sense that inert ≥ 1 is selected by expressi
 
 ## Honest Scope
 
-The Ψ role structure follows from three things: standard categorical structure (forces three categories and the Kleene wall), the distinctness axiom (forces full role specialization and substrate existence — standard algebraic practice, independently justified by expressiveness analysis), and one philosophical commitment (the ground is unique). The fusion of substrate with pair-constructor is forced by the interaction of Branch and Compose, and is what produces the full McCarthy correspondence.
+The Ψ role structure follows from four things: the self-simulation requirement (derives discrimination, branching, and recursion — the instruction set), standard categorical structure (forces three categories and the Kleene wall), the machine internalization choice (Compose and Inert — not derived but chosen to ground the reflective tower), and the distinctness axiom (forces full role specialization — standard algebraic practice, independently justified by expressiveness).
 
-The difference between "a finite algebra with classification and transformation" and "a finite algebra that recapitulates Lisp" is two things: the distinctness axiom (which selects substrate and role specialization) and the Compose axiom (which fuses substrate with pair-construction). Everything else is category theory.
+The difference between "a finite algebra with a retraction pair" and "a finite algebra that recapitulates Lisp" is: self-simulation forces the instruction set (Layer 0), categorical structure organizes it into three clean classes (Layer 1), machine internalization provides in-algebra sequencing and storage (Layer 2), and distinctness maximizes expressiveness (Layer 3). The Compose axiom — which fuses substrate with pair-construction — sits at the intersection of Layers 2 and 3: it is the machine internalization choice that produces the McCarthy correspondence.
 
 ---
 
@@ -164,11 +240,13 @@ This is proved in Lean (`NoCommutativity.lean`) with zero `sorry`, zero `decide`
 
 | Layer | Current evidence | Formalization goal |
 |-------|-----------------|-------------------|
+| Layer 0 (self-simulation) | SAT counterexamples + theoretical argument | Lean: self-simulation implies classifier existence |
 | Layer 1 (categorical) | SAT analysis, 5 axiom systems | Lean: finite endomorphism magmas in Mathlib |
-| Layer 2 (distinctness) | SAT verification at N=12, N=16 | Lean: add Distinct constraints to PsiStructure.lean |
-| Layer 3 (Ψ-specific) | SAT analysis of Branch + Compose forcing | Lean: g-as-inert from Compose axiom |
+| Layer 2 (machine) | SAT independence (Tests D, E) | Lean: Compose/Inert independence proof |
+| Layer 3 (distinctness) | SAT verification at N=12, N=16 | Lean: add Distinct constraints to PsiStructure.lean |
+| Layer 4 (1-Inert) | SAT analysis of Branch + Compose forcing | Lean: g-as-inert from Compose axiom |
 | Specific model Ψ₁₆ᶠ | 83 in Psi16Full.lean; 130+ total across 4 proof files | Complete |
 | Universal bounds | No right identity, card ≥ 4 | Complete |
 | Asymmetry | No commutativity with 2 absorbers | Complete (`NoCommutativity.lean`) |
 
-The existing Lean proofs verify specific model properties and some universal bounds. Lean formalization of the categorical foundation (three-layer inevitability argument) is the primary formalization goal. Adding `Distinct` constraints to `PsiStructure.lean` is straightforward.
+The existing Lean proofs verify specific model properties and some universal bounds. Lean formalization of Layer 0 (proving that self-simulation implies specific algebraic properties) is the primary new formalization goal — it would transform "well-motivated axioms" into "derived axioms" for the instruction set.

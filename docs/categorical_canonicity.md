@@ -57,6 +57,12 @@ These would require defining morphisms between KleeneMag⁺ objects and proving 
 
 ---
 
+## Relationship to Self-Simulation
+
+The canonicity of the Ψ theory acquires further support from the self-simulation analysis: the three-class decomposition and the Kleene wall are not only functorial invariants of the theory but are derivable as necessary conditions for self-simulation in any retraction-equipped magma. A self-simulator that cannot distinguish its own classifications from its own transformations cannot correctly simulate itself — this forces the Kleene dichotomy. The classifier's existence is derived from the Q-depth decoding requirement. See [`self_simulation_necessity.md`](self_simulation_necessity.md).
+
+---
+
 ## Reproduction
 
 ```bash

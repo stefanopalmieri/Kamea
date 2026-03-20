@@ -131,6 +131,8 @@ The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite al
 
 The answer is yes, and it fits in a 16×16 table.
 
+Self-simulation provides a non-circular characterization of self-description: a retraction-equipped magma is self-describing if its term algebra can compute its own Cayley table via a single recursive program. This definition — one program, all inputs — derives three axioms as necessary conditions: discrimination (a classifier must exist to decode inputs), conditional dispatch (a branch element must exist to handle different cases), and recursion (a fixed-point combinator must exist to process unbounded encodings). Two further axioms — composition and substrate — are not required for self-simulation but for self-*hosting*: running the simulation within the algebra itself rather than on external infrastructure. This is the Ψ system's distinctive contribution — internalizing the machine that terminates Smith's infinite tower of interpreters. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+
 ## Key Results
 
 ### Universal Theorems (Categorical Foundation)
@@ -183,6 +185,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
+- Self-simulation: brute-force (256 cells) and role-aware (60/256 algebraic) self-simulators verified `[Empirical]`
+- Machine boundary: instruction set (classifier, branch, Y) derived from self-simulation; machine (compose, inert) independent `[Empirical + Argument]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
@@ -193,6 +197,8 @@ Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full tec
 What is the simplest finite structure that can identify its own components through its own operation?
 
 The Ψ framework answers this by stacking axioms on a finite magma (N-element set with binary operation `dot`). Each axiom forces a specific capability — absorbers for boundaries, testers for judgment, encoders for synthesis, quote/eval for reflection, branching for control flow — until the structure is self-describing.
+
+The axioms decompose into two groups with different justifications. The **instruction set** (retraction pair, classifier, branch, Y-combinator) is derived from self-simulation — any retraction-equipped magma whose term algebra can compute its own Cayley table must have these. The **machine** (compose, inert) internalizes sequencing and storage into the algebra, enabling self-hosted simulation. The instruction set is structurally inevitable; the machine is the engineering choice that grounds the reflective tower. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
 
 **Structural Ladder (L0–L8)** — forces the basic role architecture:
 
@@ -282,6 +288,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
+- **Self-simulation derivation (partially complete).** Three axioms (discrimination, branching, recursion) are derived as necessary conditions for self-simulation in retraction-equipped magmas. Three more (two absorbers, Kleene dichotomy, E-transparency) have strong necessity arguments with gaps. Two (compose, inert) are demonstrated to be independent of self-simulation — SAT counterexamples exist of retraction-equipped magmas without them. Formalizing the derived axioms as Lean theorems (proving that self-simulation implies classifier existence, etc.) remains open. See [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kleene magmas — 112 non-isomorphic models exist at N=4, and no homomorphisms exist from the minimal witnesses to Ψ₁₆ᶠ. The canonicity of the project's results lies at the theory level (the three-class decomposition is a functorial invariant shared by all models) rather than the object level. Whether a natural universal property characterizes Ψ₁₆ᶠ within the subvariety KleeneMag⁺ (with products, copairing, fixed points, and distinctness) remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 - **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `KleeneMagma` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 16 universal theorems purely algebraically; `NoCommutativity.lean` adds 3 more (asymmetry). The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership, asymmetry) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
@@ -413,6 +420,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── psi_metacircular.lisp         # Defunctionalized CPS evaluator (~350 lines, 14 continuation types)
 │   ├── psi_reflective_tower.lisp     # Three-level reflective tower + branch swap demo
 │   ├── psi_recovery_spell.lisp       # Black-box recovery as pure Ψ-Lisp
+│   ├── psi_self_simulator.lisp       # Self-simulators: brute-force (256 cells) + role-aware (60/256 algebraic)
 │   ├── psi_hello_world.lisp          # Ψ-Lisp hello world example
 │   ├── psi_counter_known.psi          # Supercompiler test: known-base counter increments
 │   ├── psi_counter_free.psi           # Supercompiler test: free-variable counter
@@ -458,9 +466,11 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── extension_profiles.md         # Ψ₁₆ᶠ vs Ψ₁₆ᶜ: modular extension architecture
 │   ├── transpiler_gaps.md            # Transpiler implementation: symbol encoding, arena threading, compiled tower
 │   ├── categorical_canonicity.md      # Canonicity analysis: no canonical object, canonical theory
+│   ├── self_simulation_necessity.md  # Self-simulation derivation: which axioms are necessary?
 │   ├── related_work.md               # Boba's Tower vs Smith/Black/Blond/LMS-Black: the architectural fork
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
+├── self_simulation_investigation.py  # 4-phase self-simulation necessity investigation
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_star_c.py                     # Ψ∗ term algebra over Ψ₁₆ᶜ (C-interop table)
 ├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)

@@ -285,6 +285,12 @@ This is the non-circular part of the result. The axioms specify structural prope
 
 ---
 
+## Relationship to Self-Simulation
+
+The forced roles theorem assumes the Ψ axioms. The self-simulation analysis ([`self_simulation_necessity.md`](self_simulation_necessity.md)) provides independent justification for several of these axioms: discrimination, branching, and recursion are derived from the requirement that the term algebra can compute the Cayley table. Compose and inert are shown to be independent of self-simulation — they internalize the evaluation machine, enabling self-hosted simulation rather than externally-hosted simulation. The forced roles theorem's three walls (Kleene, substrate, composition) thus have two different sources of support: algebraic (this document) and computational (the self-simulation derivation).
+
+---
+
 ## What Is Not Proved
 
 - **Distinctness as theorem vs axiom.** The distinctness requirement is formulated as an axiom. Of 45 pairwise requirements, 35 are already theorems (32 categorical + 3 TC). The remaining 10 appear genuinely independent: composition closure (requiring role-bearing elements to form a sub-magma) was tested and kills none of them, confirming that no natural algebraic closure condition forces them. These 10 are the nontriviality content of the distinctness assumption — analogous to 0 ≠ 1 in ring theory. The expressiveness analysis (monotone cell count, consistent value maximization, fastest reachability) provides independent justification.
