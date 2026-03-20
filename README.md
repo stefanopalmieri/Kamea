@@ -191,7 +191,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - GC: 10M allocations in 4MB via MMTk `[Empirical]`
 - Futamura: all 3 projections demonstrated, fixed-point verified `[Empirical]`
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
-- Self-simulation: brute-force (256/256 cells) and role-aware (60/256 from algebraic rules) self-simulators verified `[Empirical]`
+- Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
+- Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
 - Machine boundary: self-simulation derives the instruction set (classifier, branch, Y); composition and substrate are independent — SAT counterexamples exist `[Empirical + Argument]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
@@ -478,6 +479,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── related_work.md               # Boba's Tower vs Smith/Black/Blond/LMS-Black: the architectural fork
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
+├── universal_self_simulator.py       # Universal self-simulator: one program, any Ψ model
 ├── self_simulation_investigation.py  # 4-phase self-simulation necessity investigation
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_star_c.py                     # Ψ∗ term algebra over Ψ₁₆ᶜ (C-interop table)

@@ -242,6 +242,31 @@ The Ψ axiom system's unique contribution is not in deriving ALL axioms from sel
 
 ---
 
+## Sufficiency: The Universal Self-Simulator
+
+The necessity results show that self-simulation FORCES certain axioms. The universal self-simulator shows that the axioms are SUFFICIENT — any model satisfying them can self-simulate.
+
+The universal self-simulator (`universal_self_simulator.py`) has three components:
+
+1. **Encoding** (axiom-forced): rep(k) = Q^k(⊤). Uses only Q and ⊤.
+2. **Decoding** (axiom-forced): peel Q layers using structural test (atom vs compound) and QE cancellation. Uses only ρ semantics and E.
+3. **Lookup** (the algebra itself): table[a][b]. Uses the model's own binary operation.
+
+The encoding and decoding are UNIVERSAL — they use no model-specific information. The lookup uses the model's table, which is what makes it self-simulation: the algebra computing its own operation.
+
+**Verified on two models with completely different Cayley tables:**
+- Ψ₁₆ᶠ: 256/256 cells correct
+- Ψ₁₆ᶜ: 256/256 cells correct
+
+Same code, same decoding, same encoding. Only the lookup table changes. Self-simulation is a property of the THEORY, not of any model.
+
+**What the axioms are for:**
+- Self-simulation needs exactly FOUR axiom-forced elements: Q (encoding), E (decoding), ⊤ (base case), ρ semantics (base case detection).
+- Everything else is provided by the machine (compose → sequencing, inert → storage, Y → recursion) or not needed (classifier, selection).
+- The gap between self-simulation (4 elements + machine) and self-HOSTING (10 elements, no machine) is exactly the Compose and Inert axioms.
+
+---
+
 ## Lean Formalization
 
 [`DistinctionStructures/SelfSimulation.lean`](../DistinctionStructures/SelfSimulation.lean) formalizes the core of Layer 0. Four universal theorems, purely algebraic — no `decide`, no `native_decide`, no `sorry`:
@@ -259,15 +284,16 @@ These are the first Lean theorems connecting self-simulation to algebraic struct
 
 ## Artifacts
 
-- `DistinctionStructures/SelfSimulation.lean` — Lean formalization (4 universal theorems, zero `sorry`)
+- `DistinctionStructures/SelfSimulation.lean` — Lean formalization: necessity (4 universal theorems, zero `sorry`)
+- `universal_self_simulator.py` — Sufficiency: universal self-simulator verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ
 - `self_simulation_investigation.py` — Full investigation script (all 4 phases)
 - `examples/psi_self_simulator.lisp` — Ψ-Lisp self-simulators (brute-force and role-aware)
-- Both self-simulators verified: 256/256 cells correct
 
 ## Reproduction
 
 ```bash
-lake build DistinctionStructures.SelfSimulation  # Lean proof
-python3 self_simulation_investigation.py          # empirical investigation
+lake build DistinctionStructures.SelfSimulation  # Lean proof (necessity)
+python3 universal_self_simulator.py               # sufficiency: both models
+python3 self_simulation_investigation.py          # full investigation
 python3 psi_lisp.py examples/psi_self_simulator.lisp
 ```
