@@ -1,6 +1,6 @@
 # Kamea
 
-A self-describing finite algebra that recovers McCarthy's Lisp primitives from axioms, with machine-checked proofs.
+A structural decomposition of reflective computation into independent capabilities, witnessed by finite algebras and proved by universal theorems over algebraic varieties.
 
 **Three capabilities. Three walls. Seven roles. Zero `sorry`.**
 
@@ -135,7 +135,7 @@ Self-simulation (computing your own table) requires only a retraction pair. Self
 
 This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kripke wall (one architectural axiom), and machine internalization (two operational axioms). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles within that architecture — and their correspondence to McCarthy's Lisp primitives — are convergently recovered by multiple independent axiom systems but not proved to be the unique decomposition. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 
-**Scope.** The core contribution is the independence structure: three capabilities, fully independent, with the Kripke wall as an epistemic (not computational) axiom and a two-layer axiom architecture separating capabilities (N=10) from organization (N=12). The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact is impressive but the theorem is the point.
+**Scope.** Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus. The core contribution is the independence structure: three capabilities, fully independent, with the Kripke wall as an epistemic (not computational) axiom and a two-layer axiom architecture separating capabilities (N=10) from organization (N=12). The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact is impressive but the theorem is the point.
 
 ### Frequently Asked Questions
 
