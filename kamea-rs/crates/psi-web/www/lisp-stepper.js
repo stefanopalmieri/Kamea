@@ -374,8 +374,10 @@ function* evalExpr(expr, env, depth, io, stack) {
         const name = expr[1];
         const params = expr[2];
         const body = expr.length === 4 ? expr[3] : ['progn', ...expr.slice(3)];
-        const fn = { _lambda: true, params, body, env: { ...env }, name };
-        fn.env[name] = fn;
+        // Capture env by reference (not copy) so mutually recursive
+        // defuns at the same scope level can see each other.
+        // This matches the Python evaluator: env=env, not env=dict(env).
+        const fn = { _lambda: true, params, body, env, name };
         env[name] = fn;
         yield yieldStep(stack, 'define', 'defun ' + name);
         return NIL;
@@ -386,8 +388,7 @@ function* evalExpr(expr, env, depth, io, stack) {
             const name = expr[1][0];
             const params = expr[1].slice(1);
             const body = expr.length === 3 ? expr[2] : ['progn', ...expr.slice(2)];
-            const fn = { _lambda: true, params, body, env: { ...env }, name };
-            fn.env[name] = fn;
+            const fn = { _lambda: true, params, body, env, name };
             env[name] = fn;
             yield yieldStep(stack, 'define', 'define ' + name);
             return NIL;
