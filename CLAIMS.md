@@ -110,7 +110,26 @@ This file is the canonical status registry for claims made in this repository.
 | Machine boundary: instruction set (classifier, branch, Y) derived; machine (compose, inert) chosen | Argument | `docs/self_simulation_necessity.md` | N/A |
 | Four roles are minimal in general | Conjecture/Open | Discussed as open in docs | N/A |
 
+### Capability Independence (S, D, H)
+
+The three capabilities — self-simulation (S), self-description (D), self-hosting (H) — are fully independent. No capability implies any other. All counterexamples are generated, independently verified, and frozen in `counterexamples.json`.
+
+| Claim | Tier | Primary Evidence | Reproduce |
+|---|---|---|---|
+| S ⊬ D: N=8 FRM self-simulates (retraction pair), violates Kripke dichotomy (2 mixed elements) | Empirical | `independence_results.py` — Palmieri's Countermodel | `python3 independence_results.py` |
+| D ⊬ H (Compose): N=10 DRM satisfies Kripke, no element satisfies Compose axiom | Empirical | `independence_results.py` — D_not_H_compose | `python3 independence_results.py` |
+| D ⊬ H (Inert): N=10 DRM satisfies Kripke, no inert element exists (all non-absorbers are testers or encoders) | Empirical | `independence_results.py` — D_not_H_inert | `python3 independence_results.py` |
+| H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates Kripke (4 mixed elements) | Empirical | `independence_results.py` — H_not_D | `python3 independence_results.py` |
+| S+D+H coexist at N=10 (minimum possible — 10 distinguished elements) | Empirical | `minimal_sdh_test.py` | `python3 minimal_sdh_test.py` |
+| Full axiom stack (capabilities + organizational ladder) requires N=12 | Empirical | `minimal_sdh_test.py`, `ds_search/stacking_analysis.py` | `python3 minimal_sdh_test.py` |
+| Kripke wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |
+| Counterexample tables frozen and independently verified (all properties checked without Z3) | Empirical | `counterexamples.json`, `independence_results.py` verification functions | `python3 independence_results.py` |
+
 ## Scope Notes
 
 - Statements labeled `Empirical` are evidence-backed but may change with stronger tests or alternative implementations.
 - Any top-level claim added to `README.md` should map to one row in this file.
+- Independence counterexamples are SAT-generated and independently verified (property checks run on the extracted table without Z3). Frozen tables in `counterexamples.json` allow re-verification without re-solving.
+- The three capabilities (S, D, H) are fully independent — no capability implies any other. The Kripke dichotomy (D) is an epistemic axiom about role coherence, not a computational consequence of evaluation machinery (H).
+
+Last updated: 2026-03-21
