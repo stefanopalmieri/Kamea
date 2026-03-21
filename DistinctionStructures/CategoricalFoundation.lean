@@ -128,7 +128,7 @@ structure CatEndoMagma (n : Nat) where
       or never does (on non-zero inputs).
 
       This is the Kleene wall stated as a structural dichotomy. -/
-  kleene : ∀ a : Fin n, a ≠ zero₁ → a ≠ zero₂ →
+  dichotomy : ∀ a : Fin n, a ≠ zero₁ → a ≠ zero₂ →
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot a x = zero₁ ∨ dot a x = zero₂) ∨
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot a x ≠ zero₁ ∧ dot a x ≠ zero₂)
 

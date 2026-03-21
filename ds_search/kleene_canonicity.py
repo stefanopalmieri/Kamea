@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-KleeneMag Canonicity Analysis
+DRMag Canonicity Analysis
 
-1. Enumerate all KleeneMagma models at N=4 (sec=ret) and N=5 (sec≠ret)
+1. Enumerate all DichotomicRetractMagma models at N=4 (sec=ret) and N=5 (sec≠ret)
 2. Count isomorphism classes — check if minimal models are unique
 3. Search for magma homomorphisms from minimal models to Ψ₁₆ᶠ
    - Strict: preserve all distinguished elements (zero₁, zero₂, sec, ret, cls)
@@ -50,13 +50,13 @@ PSI_CLS = 3     # τ (classifier)
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# KleeneMagma model enumeration via Z3
+# DichotomicRetractMagma model enumeration via Z3
 # ═══════════════════════════════════════════════════════════════════════
 
 def enumerate_kleene_models(n, sec_idx, ret_idx, cls_idx, max_models=1000,
                             timeout_s=300):
     """
-    Enumerate all KleeneMagma models at size n with given element assignments.
+    Enumerate all DichotomicRetractMagma models at size n with given element assignments.
 
     Returns list of (table, sec, ret, cls) tuples.
     """
@@ -261,12 +261,12 @@ def find_homomorphisms(src_table, src_n, dst_table, dst_n,
 
 def main():
     print("=" * 70)
-    print("KLEENE MAGMA CANONICITY ANALYSIS")
+    print("DICHOTOMIC RETRACT MAGMA CANONICITY ANALYSIS")
     print("=" * 70)
 
     # ── N=4 enumeration (sec=ret) ────────────────────────────────────
     print(f"\n{'─'*70}")
-    print("1. Enumerate all N=4 KleeneMagmas (sec=ret)")
+    print("1. Enumerate all N=4 DichotomicRetractMagmas (sec=ret)")
     print(f"{'─'*70}")
 
     # At N=4: elements {0,1,2,3}. Fix sec=ret=2, cls=3.
@@ -293,7 +293,7 @@ def main():
 
     # ── N=5 enumeration (sec≠ret) ────────────────────────────────────
     print(f"\n{'─'*70}")
-    print("2. Enumerate all N=5 KleeneMagmas (sec≠ret)")
+    print("2. Enumerate all N=5 DichotomicRetractMagmas (sec≠ret)")
     print(f"{'─'*70}")
 
     # At N=5: elements {0,1,2,3,4}. Try all 6 permutations of (sec,ret,cls)
@@ -427,7 +427,7 @@ def main():
 
     # ── N=4 without sec=ret constraint ───────────────────────────────
     print(f"\n{'─'*70}")
-    print("4. N=4 KleeneMagmas with sec≠ret (expected: none, proves N≥5)")
+    print("4. N=4 DichotomicRetractMagmas with sec≠ret (expected: none, proves N≥5)")
     print(f"{'─'*70}")
 
     models4_sr = []
@@ -451,9 +451,9 @@ def main():
     print(f"\n{'='*70}")
     print("SUMMARY")
     print(f"{'='*70}")
-    print(f"  N=4 KleeneMagmas (sec=ret): {len(classes4)} iso class(es), "
+    print(f"  N=4 DichotomicRetractMagmas (sec=ret): {len(classes4)} iso class(es), "
           f"{sum(len(m) for _, m in classes4)} total models")
-    print(f"  N=5 KleeneMagmas (sec≠ret): {len(classes5)} iso class(es), "
+    print(f"  N=5 DichotomicRetractMagmas (sec≠ret): {len(classes5)} iso class(es), "
           f"{sum(len(m) for _, m in classes5)} total models")
     if len(classes4) == 1:
         print(f"  → N=4 minimal model is UNIQUE up to isomorphism")

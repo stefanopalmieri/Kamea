@@ -38,7 +38,7 @@
    ## Structure of this file
 
    **Part 1a:** `FaithfulRetractMagma` — the standard setup.
-   **Part 1b:** `KleeneMagma` — extends the setup with the Kleene dichotomy.
+   **Part 1b:** `DichotomicRetractMagma` — extends the setup with the Kleene dichotomy.
    **Part 2a:** The 4-element witness (minimum, sec = ret).
    **Part 2b:** The 5-element witness (minimum with sec ≠ ret).
    **Part 3:** Universal theorems.
@@ -121,7 +121,7 @@ structure FaithfulRetractMagma (n : Nat) where
 
     Minimum carrier size: N ≥ 4 (tight, `kleene4`).
     With sec ≠ ret: N ≥ 5 (tight, `kleene5`). -/
-structure KleeneMagma (n : Nat) extends FaithfulRetractMagma n where
+structure DichotomicRetractMagma (n : Nat) extends FaithfulRetractMagma n where
   /-- A classifier: a non-constant transformation whose row is
       entirely in B. -/
   cls : Fin n
@@ -136,7 +136,7 @@ structure KleeneMagma (n : Nat) extends FaithfulRetractMagma n where
 
   /-- Every non-constant transformation is either all-B or all-non-B
       on the core. This is the single new property. -/
-  kleene : ∀ y : Fin n, y ≠ zero₁ → y ≠ zero₂ →
+  dichotomy : ∀ y : Fin n, y ≠ zero₁ → y ≠ zero₂ →
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ →
       dot y x = zero₁ ∨ dot y x = zero₂) ∨
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ →
@@ -153,7 +153,7 @@ structure KleeneMagma (n : Nat) extends FaithfulRetractMagma n where
 
 /-! ### The minimal witness (sec = ret)
 
-    The smallest `KleeneMagma` has **4 elements**, achieved when sec = ret.
+    The smallest `DichotomicRetractMagma` has **4 elements**, achieved when sec = ret.
 
     ```
     Element assignments:
@@ -189,7 +189,7 @@ def dotK4 (a b : Fin 4) : Fin 4 := ⟨rawK4 a.val b.val, rawK4_bound a b⟩
 
 /-- **The minimal 4-element Kleene-dichotomic magma.** The smallest possible,
     achieved with sec = ret. -/
-def kleene4 : KleeneMagma 4 where
+def kleene4 : DichotomicRetractMagma 4 where
   dot := dotK4
   zero₁ := 0
   zero₂ := 1
@@ -207,7 +207,7 @@ def kleene4 : KleeneMagma 4 where
   cls_boolean := by decide
   cls_ne_zero₁ := by decide
   cls_ne_zero₂ := by decide
-  kleene := by decide
+  dichotomy := by decide
   has_non_classifier := by decide
 
 -- ══════════════════════════════════════════════════════════════════════
@@ -216,7 +216,7 @@ def kleene4 : KleeneMagma 4 where
 
 /-! ### The minimal witness with sec ≠ ret
 
-    The smallest `KleeneMagma` with sec ≠ ret has **5 elements**.
+    The smallest `DichotomicRetractMagma` with sec ≠ ret has **5 elements**.
     N = 4 with sec ≠ ret is unsatisfiable (verified by Z3).
 
     ```
@@ -257,7 +257,7 @@ def dotK5 (a b : Fin 5) : Fin 5 := ⟨rawK5 a.val b.val, rawK5_bound a b⟩
 
 /-- **The minimal 5-element Kleene-dichotomic magma with sec ≠ ret.**
     N = 4 with sec ≠ ret is unsatisfiable. -/
-def kleene5 : KleeneMagma 5 where
+def kleene5 : DichotomicRetractMagma 5 where
   dot := dotK5
   zero₁ := 0
   zero₂ := 1
@@ -275,7 +275,7 @@ def kleene5 : KleeneMagma 5 where
   cls_boolean := by decide
   cls_ne_zero₁ := by decide
   cls_ne_zero₂ := by decide
-  kleene := by decide
+  dichotomy := by decide
   has_non_classifier := by decide
 
 
@@ -288,7 +288,7 @@ def kleene5 : KleeneMagma 5 where
 
 section UniversalTheorems
 
-variable {n : Nat} (M : KleeneMagma n)
+variable {n : Nat} (M : DichotomicRetractMagma n)
 
 -- ─────────────────────────────────────────────────────────────────────
 -- Theorem 1: Classifier distinctness from non-classifiers
@@ -347,7 +347,7 @@ theorem three_categories (a : Fin n) :
   · left; subst h1; exact M.zero₁_left
   · by_cases h2 : a = M.zero₂
     · left; subst h2; exact M.zero₂_left
-    · rcases M.kleene a h1 h2 with hb | hc
+    · rcases M.dichotomy a h1 h2 with hb | hc
       · exact Or.inr (Or.inl ⟨h1, h2, hb⟩)
       · exact Or.inr (Or.inr ⟨h1, h2, hc⟩)
 
@@ -404,7 +404,7 @@ end UniversalTheorems
 
     Proof: {zero₁, zero₂, cls, nc} are 4 pairwise-distinct elements.
     The bound is tight: `kleene4` achieves it with sec = ret. -/
-theorem card_ge_four {n : Nat} (M : KleeneMagma n) : 4 ≤ Fintype.card (Fin n) := by
+theorem card_ge_four {n : Nat} (M : DichotomicRetractMagma n) : 4 ≤ Fintype.card (Fin n) := by
   obtain ⟨nc, _, _, wit⟩ := M.has_non_classifier
   have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
   have h1c : M.zero₁ ≠ M.cls := fun h => M.cls_ne_zero₁ h.symm
@@ -422,7 +422,7 @@ theorem card_ge_four {n : Nat} (M : KleeneMagma n) : 4 ≤ Fintype.card (Fin n) 
 
 section UniversalTheorems2
 
-variable {n : Nat} (M : KleeneMagma n)
+variable {n : Nat} (M : DichotomicRetractMagma n)
 
 -- ─────────────────────────────────────────────────────────────────────
 -- Theorem 6: Retraction pair members are non-classifiers
@@ -500,7 +500,7 @@ theorem ret_is_non_classifier : IsNonClassifier M M.ret := by
   refine ⟨hrnz1, hrnz2, ?_⟩
   obtain ⟨nc, hnc1, hnc2, x, hx1, hx2, hyx1, hyx2⟩ := M.has_non_classifier
   -- ret is either all-boolean or all-non-boolean on non-zeros
-  rcases M.kleene M.ret hrnz1 hrnz2 with hbool | hcomp
+  rcases M.dichotomy M.ret hrnz1 hrnz2 with hbool | hcomp
   · -- Contradiction: if ret is all-boolean on non-zeros, then for any non-zero y
     -- with sec · y non-zero, ret · (sec · y) ∈ {zero₁, zero₂}. But ret_sec says
     -- ret · (sec · y) = y, forcing y to be zero. We find such a y.
@@ -565,7 +565,7 @@ theorem sec_is_non_classifier : IsNonClassifier M M.sec := by
   have hsec := M.sec_ret nc hnc1 hnc2
   -- sec maps (ret · nc) to nc. nc is non-boolean. ret · nc is non-zero.
   -- So sec has non-boolean output on a non-zero input → non-classifier by Kleene.
-  rcases M.kleene M.sec hsnz1 hsnz2 with hbool | hcomp
+  rcases M.dichotomy M.sec hsnz1 hsnz2 with hbool | hcomp
   · exfalso
     rcases hbool (M.dot M.ret nc) hrnc.1 hrnc.2 with h | h
     · exact hnc1 (hsec ▸ h)
@@ -585,7 +585,7 @@ end UniversalTheorems2
     sec and ret are each distinct from zero₁, zero₂, and cls by the universal
     theorems, and distinct from each other by hypothesis.
     The bound is tight: `kleene5` achieves it. -/
-theorem card_ge_five_of_sec_ne_ret {n : Nat} (M : KleeneMagma n)
+theorem card_ge_five_of_sec_ne_ret {n : Nat} (M : DichotomicRetractMagma n)
     (h_sr : M.sec ≠ M.ret) : 5 ≤ Fintype.card (Fin n) := by
   have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
   have h1c : M.zero₁ ≠ M.cls := fun h => M.cls_ne_zero₁ h.symm

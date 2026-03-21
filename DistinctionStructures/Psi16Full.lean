@@ -346,9 +346,9 @@ theorem g_enc_is_inert : is_inert g_enc := by decide
 theorem exactly_one_inert : ∀ a : Fin 16,
     is_inert a → a = g_enc := by native_decide
 
-/-! ## Part 5: Kleene (C) -/
+/-! ## Part 5: Dichotomy (C) -/
 
-theorem kleene : ∀ a x : Fin 16,
+theorem dichotomy : ∀ a x : Fin 16,
     ¬is_absorber a → ¬is_absorber x → is_boolean (psi a x) → is_tester a := by native_decide
 
 /-! ## Part 6: Power-Associativity -/

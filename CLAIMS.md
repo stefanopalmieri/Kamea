@@ -72,25 +72,25 @@ This file is the canonical status registry for claims made in this repository.
 | Distinctness decomposition: 32/45 pairs forced by categorical axioms, 3/45 forced by TC (lazy/eager + projection uniqueness), 10/45 are standard algebraic practice | Empirical | `ds_search/forced_roles_test.py` (32 categorical), `ds_search/tc_distinctness_test.py` (3 TC), `ds_search/tc_distinctness_deep.py` (E=f artifact) | `uv run python -m ds_search.tc_distinctness_test && uv run python -m ds_search.tc_distinctness_deep` |
 | Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Kleene wall: classifier ∩ non-classifier = ∅ | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| No right identity (any KleeneMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Card ≥ 4 (any KleeneMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| No right identity (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Card ≥ 4 (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Minimal KleeneMagma witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
+| Minimal DichotomicRetractMagma witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
 | Card ≥ 5 when sec ≠ ret (tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof | `lake build` |
 | 32/45 role pairs forced distinct (16-element witness) | Lean-proved | `DistinctionStructures/CatForcedDistinctness.lean` — `native_decide` | `lake build` |
 | Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
 | Discoverability of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatDiscoverable.lean` — `native_decide` | `lake build` |
 | Actuality irreducibility (categorical twin-model) | Lean-proved | `DistinctionStructures/CatActualityIrreducibility.lean` — `native_decide` | `lake build` |
 | No commutative magma admits two distinct left-absorbers (asymmetry theorem) | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — 3-line algebraic proof, no `decide` | `lake build` |
-| Asymmetry extends to FaithfulRetractMagma and KleeneMagma | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — immediate corollaries | `lake build` |
+| Asymmetry extends to FaithfulRetractMagma and DichotomicRetractMagma | Lean-proved | `DistinctionStructures/NoCommutativity.lean` — immediate corollaries | `lake build` |
 | Composition closure (10 roles form sub-magma) compatible but kills 0/10 expressiveness pairs | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Tighter closure variants (6-element computational core, 8-element non-zeros, one-sided) all UNSAT | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Reflection distinctness: 0/10 nontriviality pairs killed by full reflective tower | Empirical | `ds_search/reflection_distinctness_test.py` | `uv run python -m ds_search.reflection_distinctness_test` |
 | 10 nontriviality pairs exhaustively characterized (categorical + TC + closure + reflection all tested) | Empirical | `ds_search/tc_distinctness_test.py`, `reflection_distinctness_test.py`, `composition_closure_test.py` | See individual scripts |
-| 112 non-isomorphic KleeneMagmas at N=4 (minimal model not unique) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
+| 112 non-isomorphic DichotomicRetractMagmas at N=4 (minimal model not unique) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
 | 0 homomorphisms from N=4/5 Lean witnesses to Ψ₁₆ᶠ (weak or strict) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
-| Three-class decomposition (Z, C, N) is functorial invariant of all KleeneMagma models | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — `three_categories` | `lake build` |
-| No initial object in category KleeneMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
+| Three-class decomposition (Z, C, N) is functorial invariant of all DichotomicRetractMagma models | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — `three_categories` | `lake build` |
+| No initial object in category DRMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
 | Compiled reflective tower: 2.2 ms native, ~20,000x over interpreted (meta-circular evaluator + continuation reification + branch swap in single binary) | Empirical | `psi_transpile.py --target rust` on metacircular + tower | `python3 psi_transpile.py --target rust examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs && cp psi_runtime_f.rs /tmp/ && rustc -O -o /tmp/tower /tmp/tower.rs && /tmp/tower` |
 | Transpiler handles metaprograms: quoted symbol encoding, cons-cell data construction, arena threading | Empirical | Compiled tower produces identical output to interpreted tower | `diff <(python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp 2>/dev/null) <(/tmp/tower)` |
 | Partial application injectivity: self-simulation + extensionality + compositionality ⇒ `a ↦ eval(App(t, rep(a)))` injective | Lean-proved | `DistinctionStructures/SelfSimulation.lean` — algebraic proof, no `decide` | `lake build` |

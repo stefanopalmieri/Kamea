@@ -17,7 +17,7 @@ import time
 
 
 def test_kleene_magma(N):
-    """Test if a KleeneMagma of size N is satisfiable."""
+    """Test if a DichotomicRetractMagma of size N is satisfiable."""
     print(f"\n{'='*60}")
     print(f"Testing N={N}")
     print(f"{'='*60}")

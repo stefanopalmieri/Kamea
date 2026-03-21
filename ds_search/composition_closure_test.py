@@ -4,7 +4,7 @@ Task 1: Composition Closure Axiom — does requiring role-bearing elements
 to form a sub-magma force any of the 10 expressiveness-only distinctness pairs?
 
 Task 2: Symmetric Impossibility — is commutativity compatible with the Ψ axioms
-or with the KleeneMagma axioms?
+or with the DichotomicRetractMagma axioms?
 
 Usage:
   uv run python -m ds_search.closure_and_symmetry_test
@@ -623,9 +623,9 @@ def task2_symmetry():
             print(f"    Remove {skip_name:>12s}: {str(res).upper():>6s} "
                   f"  {status}  ({elapsed:.1f}s)")
 
-    # ── Step 2: KleeneMagma axioms + commutativity ───────────────────
+    # ── Step 2: DichotomicRetractMagma axioms + commutativity ───────────────────
     print(f"\n{'─'*70}")
-    print("Step 2: KleeneMagma axioms + commutativity")
+    print("Step 2: DichotomicRetractMagma axioms + commutativity")
     print(f"{'─'*70}")
 
     for test_n in [5, 6, 7, 8]:
@@ -633,25 +633,25 @@ def task2_symmetry():
         s, dot = build_kleene_solver(test_n, commutative=True, timeout_s=300)
         result = s.check()
         elapsed = time.time() - t0
-        print(f"  KleeneMagma + commutativity at N={test_n}: "
+        print(f"  DichotomicRetractMagma + commutativity at N={test_n}: "
               f"{str(result).upper()} ({elapsed:.1f}s)")
         if str(result) == "sat":
             m = s.model()
-            print_table(dot, m, test_n, f"Commutative KleeneMagma N={test_n}:")
+            print_table(dot, m, test_n, f"Commutative DichotomicRetractMagma N={test_n}:")
 
-    # ── Step 3: KleeneMagma without commutativity (sanity check) ─────
-    print(f"\n  Sanity check: KleeneMagma without commutativity")
+    # ── Step 3: DichotomicRetractMagma without commutativity (sanity check) ─────
+    print(f"\n  Sanity check: DichotomicRetractMagma without commutativity")
     for test_n in [4, 5]:
         t0 = time.time()
         s, dot = build_kleene_solver(test_n, commutative=False, timeout_s=60)
         result = s.check()
         elapsed = time.time() - t0
-        print(f"    KleeneMagma at N={test_n}: {str(result).upper()} ({elapsed:.1f}s)")
+        print(f"    DichotomicRetractMagma at N={test_n}: {str(result).upper()} ({elapsed:.1f}s)")
 
 
 def build_kleene_solver(n, commutative=False, timeout_s=120):
     """
-    Encode the KleeneMagma axioms from CatKleeneWallMinimal.lean.
+    Encode the DichotomicRetractMagma axioms from CatKleeneWallMinimal.lean.
 
     Structure:
     - zero₁, zero₂: left-absorbers (indices 0, 1)

@@ -5,7 +5,7 @@
    No commutative magma can have two distinct left-absorbers.
 
    In particular, no commutative magma satisfies the axioms of
-   `FaithfulRetractMagma` or `KleeneMagma` from `CatKleeneWallMinimal.lean`.
+   `FaithfulRetractMagma` or `DichotomicRetractMagma` from `CatKleeneWallMinimal.lean`.
 
    ## Proof
 
@@ -62,9 +62,9 @@ theorem FaithfulRetractMagma.no_commutativity (M : FaithfulRetractMagma n)
   no_comm_two_absorbers M.dot M.zero₁ M.zero₂
     M.zero₁_left M.zero₂_left M.zeros_distinct h_comm
 
-/-- **No commutative KleeneMagma**: commutativity is incompatible
-    with the `KleeneMagma` axioms. Immediate from the weaker result. -/
-theorem KleeneMagma.no_commutativity (M : KleeneMagma n)
+/-- **No commutative DichotomicRetractMagma**: commutativity is incompatible
+    with the `DichotomicRetractMagma` axioms. Immediate from the weaker result. -/
+theorem DichotomicRetractMagma.no_commutativity (M : DichotomicRetractMagma n)
     (h_comm : ∀ a b : Fin n, M.dot a b = M.dot b a) :
     False :=
   M.toFaithfulRetractMagma.no_commutativity h_comm

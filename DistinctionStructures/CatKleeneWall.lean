@@ -56,7 +56,7 @@ theorem computational_all_nonboolean {n : Nat} (M : CatEndoMagma n)
     (hnonbool : M.dot a x₀ ≠ M.zero₁ ∧ M.dot a x₀ ≠ M.zero₂) :
     ∀ x : Fin n, x ≠ M.zero₁ → x ≠ M.zero₂ →
       M.dot a x ≠ M.zero₁ ∧ M.dot a x ≠ M.zero₂ := by
-  rcases M.kleene a ha1 ha2 with hbool | hcomp
+  rcases M.dichotomy a ha1 ha2 with hbool | hcomp
   · -- a is boolean-type: contradicts hnonbool
     exfalso
     rcases hbool x₀ hx₀1 hx₀2 with h | h

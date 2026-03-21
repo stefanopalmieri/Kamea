@@ -116,7 +116,7 @@ def psi16_cat : CatEndoMagma 16 where
   sec_ret := by decide
   -- Subobject classifier
   cls_boolean := by decide
-  kleene := by decide
+  dichotomy := by decide
   -- Conditional copairing
   copair_true := by decide
   copair_false := by decide
