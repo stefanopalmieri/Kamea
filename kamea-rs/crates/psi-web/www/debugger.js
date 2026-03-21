@@ -726,6 +726,7 @@ async function runProgram() {
 
 async function resetMachine() {
     if (!workerReady) return;
+    if (typeof stopStepping === 'function') stopStepping();
     await send('reset');
     document.getElementById('output').textContent = '';
     showResultTrees([]);
@@ -734,7 +735,9 @@ async function resetMachine() {
 }
 
 function loadExample(name) {
-    if (name && EXAMPLES[name]) {
+    if (name && STEP_EXAMPLES && STEP_EXAMPLES[name]) {
+        document.getElementById('source').value = STEP_EXAMPLES[name];
+    } else if (name && EXAMPLES[name]) {
         document.getElementById('source').value = EXAMPLES[name];
     }
 }
@@ -774,6 +777,107 @@ document.addEventListener('keydown', (e) => {
         if (!modal.classList.contains('hidden')) toggleTableModal();
     }
 });
+
+// ── Term stepping examples + wiring ──
+
+const STEP_EXAMPLES = {
+    'step-qe':       'E(Q(nat(5)))',
+    'step-car':      'f(App(App(g, nat(1)), nat(2)))',
+    'step-cdr':      '\u03b7(App(App(g, nat(1)), nat(2)))',
+    'step-absorber': 'App(\u22a4, nat(7))',
+};
+
+let stepping = false;
+let autoInterval = null;
+
+function isStepExample(name) {
+    return name in STEP_EXAMPLES;
+}
+
+async function startStepping() {
+    if (!workerReady || running || stepping) return;
+    const source = document.getElementById('source').value.trim();
+    if (!source) return;
+
+    stepping = true;
+    document.getElementById('btn-step-start').disabled = true;
+    document.getElementById('btn-step').disabled = false;
+    document.getElementById('btn-auto').disabled = false;
+    document.getElementById('output').textContent = '';
+
+    const data = await send('start_stepping', { expr: source });
+    document.getElementById('output').textContent = data.display || data.error || '';
+    document.getElementById('stats').textContent = 'Stepping — use Step or Auto';
+
+    // Show initial trace
+    const trace = document.getElementById('step-trace');
+    if (trace) {
+        trace.innerHTML = '<tr><td>0</td><td>start</td><td>' +
+            escapeHtml(data.display || source) + '</td></tr>';
+    }
+}
+
+async function doStep() {
+    if (!workerReady || !stepping) return;
+    const data = await send('step', {});
+    const info = JSON.parse(data.info || '{}');
+
+    // Update output
+    document.getElementById('output').textContent = info.term_display || '';
+    document.getElementById('stats').textContent =
+        'Step ' + info.step_count + ' — ' + info.rule + (info.done ? ' (done)' : '');
+
+    // Append to trace
+    const trace = document.getElementById('step-trace');
+    if (trace) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td>' + info.step_count + '</td><td>' +
+            escapeHtml(info.rule) + '</td><td>' +
+            escapeHtml(info.term_display) + '</td>';
+        trace.appendChild(row);
+        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    if (info.done) {
+        stopStepping();
+    }
+}
+
+function stopStepping() {
+    stepping = false;
+    if (autoInterval) { clearInterval(autoInterval); autoInterval = null; }
+    document.getElementById('btn-step-start').disabled = false;
+    document.getElementById('btn-step').disabled = true;
+    document.getElementById('btn-auto').disabled = true;
+}
+
+function toggleAuto() {
+    if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+        document.getElementById('btn-auto').textContent = '\u25b6\u25b6';
+    } else {
+        const speeds = [500, 200, 100, 50, 20];
+        const speed = speeds[document.getElementById('speed-slider').value] || 100;
+        autoInterval = setInterval(doStep, speed);
+        document.getElementById('btn-auto').textContent = '\u23f8';
+    }
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+document.getElementById('btn-step-start').addEventListener('click', startStepping);
+document.getElementById('btn-step').addEventListener('click', doStep);
+document.getElementById('btn-auto').addEventListener('click', toggleAuto);
+
+// F10 = step, F5 = auto
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'F10' && stepping) { e.preventDefault(); doStep(); }
+    if (e.key === 'F5' && stepping) { e.preventDefault(); toggleAuto(); }
+});
+
 
 // ── Init ──
 
