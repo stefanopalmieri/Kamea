@@ -124,6 +124,7 @@ The three capabilities — self-simulation (S), self-description (D), self-hosti
 | Full axiom stack (capabilities + organizational ladder) requires N=12 | Empirical | `minimal_sdh_test.py`, `ds_search/stacking_analysis.py` | `python3 minimal_sdh_test.py` |
 | Kripke wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |
 | Counterexample tables frozen and independently verified (all properties checked without Z3) | Empirical | `counterexamples.json`, `independence_results.py` verification functions | `python3 independence_results.py` |
+| Partial minimality: each capability's axiom set is irredundant (no axiom derivable from the others) | Empirical | `axiom_irredundancy_test.py` — 5/5 SAT (E-trans, Branch, Compose, Inert, Y all irredundant) | `python3 axiom_irredundancy_test.py` |
 
 ## Scope Notes
 

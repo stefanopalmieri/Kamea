@@ -125,6 +125,7 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 | S+D+H coexist at N=10 (tight bound) | Lean-proved | `Witness10.lean` |
 | Kripke wall is epistemic, not computational | Proved (H⊬D) | `Countermodels10.lean` |
 | Full axiom stack requires N=12 | SAT-verified | `minimal_sdh_test.py` |
+| Each capability's axioms irredundant (partial minimality) | SAT-verified | `axiom_irredundancy_test.py` |
 | Cross-formalism universality | Conjectured | — |
 | Kripke ↔ subobject classifier decidability | Conjectured | — |
 | Role uniqueness (McCarthy correspondence) | Open | — |

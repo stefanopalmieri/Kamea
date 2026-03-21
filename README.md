@@ -198,6 +198,13 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - S+D+H coexist at N=10: concrete witness is both a DRM and has Branch+Compose+Inert+Y `[Lean, by native_decide]`
 - N=10 is optimal: 10 distinct distinguished elements need N ≥ 10 (counting) `[trivial]`
 
+**Partial minimality** (`axiom_irredundancy_test.py`):
+- Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
+- S = {retraction pair, E-transparency}: both irredundant
+- D = {Kripke dichotomy}: single axiom
+- H = {Branch, Compose, Inert, Y}: all four irredundant over S+D
+- Total: 7 irredundant axioms across 3 independent capabilities
+
 ### Paper 2: The Artifact (supporting material)
 
 Proved for the specific 16-element table by `decide`/`native_decide`. These are properties of one model, not universal theorems — they motivate the independence structure but are not load-bearing for the core claim.
