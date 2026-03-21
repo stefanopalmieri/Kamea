@@ -27,8 +27,9 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 
 | | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
 |---|---|---|---|---|
-| **Counterexample** | N=8 mixed magma | N=10 (Test D, E) | N=10 (diagonal test) | N=10 (Test D) |
-| **What it shows** | Self-simulates, no clean roles | Has Kripke, no Compose/Inert | Has Branch+Compose+Y, no Kripke | Has retraction, Kripke, no Compose |
+| **Counterexample** | N=8 (the Countermodel) | N=10 (Test D, E) | N=10 (diagonal test) | N=4 (`kripke4`) |
+| **What it shows** | Self-simulates, no clean roles | Has Kripke, no Compose/Inert | Has Branch+Compose+Y, no Kripke | Has retraction pair, too small for H |
+| **Proof** | `[Lean]` | `[SAT]` | `[SAT]` | `[Lean]` (trivial: H needs N≥10) |
 
 A retraction magma can compute its own table without the Kripke wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the Kripke wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The Kripke wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
 
@@ -133,6 +134,8 @@ The contribution is not "a small table implements Lisp." It is the **independenc
 Self-simulation (computing your own table) requires only a retraction pair. Self-description (having coherent roles — judgment distinct from computation) requires the Kripke dichotomy. Self-hosting (running the simulation without an external evaluator) requires composition and substrate. Each pair of capabilities is separated by a concrete finite counterexample: an N=8 non-dichotomic retraction magma self-simulates but has no clean roles (S without D); an N=10 dichotomic retraction magma has roles but no element satisfying Compose (D without H); an N=10 retraction magma has all evaluation machinery but 4 mixed elements violating the dichotomy (H without D). The Ψ₁₆ᶠ table has all three at once.
 
 This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kripke wall (one architectural axiom), and machine internalization (two operational axioms). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles within that architecture — and their correspondence to McCarthy's Lisp primitives — are convergently recovered by multiple independent axiom systems but not proved to be the unique decomposition. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+
+**Scope.** The core contribution is the independence structure: three capabilities, fully independent, with the Kripke wall as an epistemic (not computational) axiom and a two-layer axiom architecture separating capabilities (N=10) from organization (N=12). The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact is impressive but the theorem is the point.
 
 ### Frequently Asked Questions
 
