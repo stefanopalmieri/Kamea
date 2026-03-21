@@ -147,7 +147,7 @@ This matters because every reflective system — every runtime with a reflection
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). Level 1 gives quote/eval. Level 2 gives the wall that separates judgment from transformation, enabling conditional dispatch. Level 3 gives composition and substrate, enabling pair construction and sequential evaluation. The roles fall out of the levels.
 
-The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)).
+The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)).
 
 The canonicity lies in the theory, not any model: every finite dichotomic retract magma decomposes into the same three classes with the same hard walls (112 non-isomorphic models at N=4 all share the decomposition). Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **35 are derived theorems** (32 from categorical axioms + 3 from Turing completeness). The remaining **10 are the nontriviality axiom** — as 0 ≠ 1 in a nontrivial ring. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). Canonicity: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
@@ -157,7 +157,7 @@ The canonicity lies in the theory, not any model: every finite dichotomic retrac
 
 Proved for ALL finite magmas satisfying the relevant axioms — not just one table. Pure algebraic proofs, no `decide`, no `sorry`. Two independent sources:
 
-**From axioms** ([`CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)) — assume Kripke axioms, derive consequences:
+**From axioms** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)) — assume Kripke axioms, derive consequences:
 
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
 - Kripke wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
@@ -166,7 +166,7 @@ Proved for ALL finite magmas satisfying the relevant axioms — not just one tab
 - Retraction pair members are non-classifiers `[Lean, universal]`
 - Asymmetry: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
 
-**From definition** ([`SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean)) — assume self-simulation, derive structural requirements:
+**From definition** ([`SelfSimulation.lean`](Kamea/SelfSimulation.lean)) — assume self-simulation, derive structural requirements:
 
 - Partial application injectivity: the map a ↦ eval(App(t, rep(a))) must be injective — the self-simulator cannot compress the encoding `[Lean, universal]`
 - Partial application distinctness: distinct elements produce distinct intermediate terms `[Lean, universal]`
@@ -265,7 +265,7 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
-The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kripke dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
+The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kripke dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](Kamea/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
 The axioms correspond to the three levels: the retraction pair (level 1) enables self-simulation, the Kripke dichotomy (level 2) creates clean roles, and compose + inert (level 3) internalize the evaluator. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
@@ -287,9 +287,9 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 **The proofs**
-- [`DistinctionStructures/CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
-- [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-- [`DistinctionStructures/SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
+- [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean))
+- [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
+- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
 - [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
 
@@ -383,7 +383,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 ## Repository Structure
 
 ```
-├── DistinctionStructures/
+├── Kamea/
 │   ├── Basic.lean                    # Abstract DS definitions and axioms
 │   ├── BaseAxiomDerivation.lean      # Base axioms imply only card ≥ 2 (tight)
 │   ├── BasePlusA7Derivation.lean     # Adding generic A7′ still doesn't force card ≥ 17

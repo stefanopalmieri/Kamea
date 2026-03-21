@@ -68,5 +68,5 @@ python3 examples/psi16_corrupted_host_demo.py --plain
 - The algebra and its axioms: [README.md](../README.md)
 - The recovery algorithm in detail: [psi_blackbox.py](../psi_blackbox.py)
 - The spell source code: [psi_recovery_spell.lisp](psi_recovery_spell.lisp)
-- The Lean proofs: [DistinctionStructures/](../DistinctionStructures/)
+- The Lean proofs: [Kamea/](../Kamea/)
 - The Ψ-Lisp language: [psi_lisp.py](../psi_lisp.py)

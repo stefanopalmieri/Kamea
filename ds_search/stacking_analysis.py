@@ -18047,7 +18047,7 @@ def extract_psi16_full():
 
     lean_content = "\n".join(L)
 
-    lean_path = "/Users/spalmieri/Desktop/DistinctionStructures/DistinctionStructures/Psi16Full.lean"
+    lean_path = "/Users/spalmieri/Desktop/DistinctionStructures/Kamea/Psi16Full.lean"
     with open(lean_path, "w") as f:
         f.write(lean_content)
     print(f"\n  Wrote {lean_path} ({len(L)} lines)")

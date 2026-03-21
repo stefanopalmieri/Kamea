@@ -273,7 +273,7 @@ Same code, same decoding, same encoding. Only the lookup table changes. Self-sim
 
 ## Lean Formalization
 
-[`DistinctionStructures/SelfSimulation.lean`](../DistinctionStructures/SelfSimulation.lean) formalizes the core of Layer 0. Four universal theorems, purely algebraic — no `decide`, no `native_decide`, no `sorry`:
+[`Kamea/SelfSimulation.lean`](../Kamea/SelfSimulation.lean) formalizes the core of Layer 0. Four universal theorems, purely algebraic — no `decide`, no `native_decide`, no `sorry`:
 
 1. **`partial_app_injective`**: if a magma self-simulates, then `a ↦ eval(App(t, rep(a)))` is injective.
 2. **`partial_app_distinct`**: distinct elements produce distinct intermediate terms (contrapositive).
@@ -288,7 +288,7 @@ These are the first Lean theorems connecting self-simulation to algebraic struct
 
 ## Artifacts
 
-- `DistinctionStructures/SelfSimulation.lean` — Lean formalization: necessity (4 universal theorems, zero `sorry`)
+- `Kamea/SelfSimulation.lean` — Lean formalization: necessity (4 universal theorems, zero `sorry`)
 - `universal_self_simulator.py` — Sufficiency: universal self-simulator verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ
 - `self_simulation_investigation.py` — Full investigation script (all 4 phases)
 - `examples/psi_self_simulator.lisp` — Ψ-Lisp self-simulators (brute-force and role-aware)
@@ -296,7 +296,7 @@ These are the first Lean theorems connecting self-simulation to algebraic struct
 ## Reproduction
 
 ```bash
-lake build DistinctionStructures.SelfSimulation  # Lean proof (necessity)
+lake build Kamea.SelfSimulation  # Lean proof (necessity)
 python3 universal_self_simulator.py               # sufficiency: both models
 python3 self_simulation_investigation.py          # full investigation
 python3 psi_lisp.py examples/psi_self_simulator.lisp
