@@ -1,4 +1,4 @@
-; psi_hello_world.lisp — "Hello, world!\n" via Ψ∗ Mini-Lisp
+; psi_hello_world.lisp — "Hello, world!\n" via Ψ-Lisp
 ;
 ; Port of hello_world.ds from the legacy Delta/Kamea IO atoms
 ; (IO_PUT, IO_SEQ with manual nibble encoding) to the Ψ∗ framework.
@@ -44,7 +44,7 @@
 (emit-hello)
 
 ; ── Method 3: recursive list walker (pure Ψ∗) ───────────────
-; Demonstrates that the mini-lisp's recursion + list operations
+; Demonstrates that Ψ-Lisp's recursion + list operations
 ; (all backed by Ψ∗ primitives g/f/η) compose with IO.
 
 (defun emit-chars (chars)

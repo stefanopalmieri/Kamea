@@ -146,7 +146,7 @@ NIL
       (+ (fib (- n 1)) (fib (- n 2)))))
 (fib 8)`,
 
-    hello: `; Hello World via Ψ\\u2217 Mini-Lisp
+    hello: `; Hello World via Ψ-Lisp
 (write-string "Hello, world!\\n")
 
 (defun emit-chars (chars)

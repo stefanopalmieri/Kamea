@@ -71,7 +71,7 @@ impl PsiDebugger {
         }
     }
 
-    /// Load and run a Mini-Lisp source string. Returns output.
+    /// Load and run a Ψ-Lisp source string. Returns output.
     pub fn run(&mut self, source: &str) -> String {
         self.trace.clear();
         self.evaluator = None;

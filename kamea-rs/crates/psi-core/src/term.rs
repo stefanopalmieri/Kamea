@@ -113,7 +113,7 @@ impl Arena {
         }
     }
 
-    /// Encode integer in Mini-Lisp convention: 0 = App(Q, TOP), n = (n+1) Q layers around TOP.
+    /// Encode integer in Ψ-Lisp convention: 0 = App(Q, TOP), n = (n+1) Q layers around TOP.
     pub fn encode_int(&mut self, n: u64) -> u32 {
         let mut t = self.atom(TOP);
         for _ in 0..=n {
@@ -123,7 +123,7 @@ impl Arena {
         t
     }
 
-    /// Decode integer in Mini-Lisp convention: count Q layers, must be >= 1, core must be TOP.
+    /// Decode integer in Ψ-Lisp convention: count Q layers, must be >= 1, core must be TOP.
     pub fn decode_int(&self, mut idx: u32) -> Option<i64> {
         let mut count = 0i64;
         loop {
@@ -178,7 +178,7 @@ impl Arena {
         elems
     }
 
-    /// Display a term in Mini-Lisp format.
+    /// Display a term in Ψ-Lisp format.
     pub fn display_lisp(&self, idx: u32) -> String {
         let term = self.get(idx);
         match term {

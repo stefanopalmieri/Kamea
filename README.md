@@ -294,7 +294,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
 
 **The language**
-- [`psi_lisp.py`](psi_lisp.py) — Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+- [`psi_lisp.py`](psi_lisp.py) — Ψ-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 - [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator with inspectable continuations
 - [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
 - [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp
@@ -415,7 +415,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   │   │       ├── table.rs              # 16×16 Cayley table as const array
 │   │   │       ├── term.rs               # Term enum + arena allocator
 │   │   │       └── eval.rs               # Explicit-stack Ψ∗ evaluator
-│   │   ├── psi-runtime/                  # The machine — heap, IO, Mini-Lisp
+│   │   ├── psi-runtime/                  # The machine — heap, IO, Ψ-Lisp
 │   │   │   └── src/
 │   │   │       ├── machine.rs            # Lisp evaluator, builtins, environment
 │   │   │       ├── lisp.rs               # S-expression parser
@@ -458,7 +458,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── psi_specialize.lisp           # Ψ-Lisp specializer: Futamura projections 1 & 2
 │   ├── psi_transpile.lisp            # Self-hosted transpiler: Ψ-Lisp IR → Rust code
 │   ├── psi_transpile_test.lisp       # Transpiler test harness (6 expression types)
-│   └── psi_*.lisp                    # Mini-Lisp test programs (fibonacci, recursion, etc.)
+│   └── psi_*.lisp                    # Ψ-Lisp test programs (fibonacci, recursion, etc.)
 ├── ds_search/
 │   ├── axiom_explorer.py             # Core encoder: encode_level(), classify_elements()
 │   ├── stacking_analysis.py          # All Ψ analysis functions (~17k lines)
@@ -502,7 +502,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 ├── self_simulation_investigation.py  # 4-phase self-simulation necessity investigation
 ├── psi_star.py                       # Ψ∗ TC proof: 2CM simulation via 7 axiom-forced elements
 ├── psi_star_c.py                     # Ψ∗ term algebra over Ψ₁₆ᶜ (C-interop table)
-├── psi_lisp.py                       # Mini-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
+├── psi_lisp.py                       # Ψ-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
 ├── psi_supercompile.py               # Partial evaluator: 2–5 pass supercompiler (table-dependent)
 ├── psi_transpile.py                  # Ψ-Lisp → C/Rust transpiler (--target c|rust)
 ├── psi_runtime.h                     # C runtime for Ψ₁₆ᶠ: 256-byte table + inline dot
@@ -561,7 +561,7 @@ python3 -m http.server 8080 --directory www                    # serve debugger 
 
 Lean proofs use two techniques: universal theorems (`CatKripkeWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning — no `decide`, no `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
 
-All Mini-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
+All Ψ-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
 
 ---
 

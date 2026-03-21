@@ -106,7 +106,7 @@ fn test_rho_compound_branch() {
 
 #[test]
 fn test_encode_decode_int() {
-    // Mini-Lisp integer convention: 0 = App(Q, ⊤), n = (n+1) Q layers
+    // Ψ-Lisp integer convention: 0 = App(Q, ⊤), n = (n+1) Q layers
     let mut arena = Arena::new(1024);
     for n in 0..50i64 {
         let encoded = arena.encode_int(n as u64);

@@ -114,7 +114,7 @@ fn bench_file(path: &str, use_table_c: bool) {
 fn repl(use_table_c: bool) {
     let mut machine = make_machine(use_table_c);
     let table_name = if use_table_c { "Ψ₁₆ᶜ" } else { "Ψ₁₆ᶠ" };
-    println!("Ψ∗ Mini-Lisp ({}) — type expressions, Ctrl-D to exit", table_name);
+    println!("Ψ-Lisp ({}) — type expressions, Ctrl-D to exit", table_name);
     println!("  T = ⊤ (true), NIL = ⊥ (false/empty list)");
     println!("  Integers = Q-chains rooted at ⊤. Only NIL is falsy.");
     println!();

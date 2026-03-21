@@ -11,7 +11,7 @@ pub struct MachineStats {
     pub arena_size: usize,
 }
 
-/// A value in the Mini-Lisp environment.
+/// A value in the Ψ-Lisp environment.
 #[derive(Clone, Debug)]
 pub enum Value {
     Term(u32),
@@ -81,12 +81,12 @@ impl<I: IoChannel> Machine<I> {
         eval::eval_with_table(&mut self.arena, term, &self.eval_config, self.table)
     }
 
-    /// Encode integer (Mini-Lisp convention: n+1 Q layers).
+    /// Encode integer (Ψ-Lisp convention: n+1 Q layers).
     pub fn encode_int(&mut self, n: i64) -> u32 {
         self.arena.encode_int(n as u64)
     }
 
-    /// Decode integer (Mini-Lisp convention).
+    /// Decode integer (Ψ-Lisp convention).
     pub fn decode_int(&self, term: u32) -> Option<i64> {
         self.arena.decode_int(term)
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mini-Lisp → Ψ∗ transpiler.
+Ψ-Lisp → Ψ∗ transpiler.
 
 Parses a McCarthy 1960-style Lisp subset, translates to Ψ∗ terms, evaluates
 via psi_star.py. The 7 axiom-forced elements correspond exactly to McCarthy's
@@ -780,10 +780,10 @@ def repl():
     """Interactive REPL."""
     env = builtin_env()
     if ALGEBRAIC:
-        print("Ψ∗ Mini-Lisp [algebraic mode] — type expressions, Ctrl-D to exit")
+        print("Ψ-Lisp [algebraic mode] — type expressions, Ctrl-D to exit")
         print("  0 = ⊤, n = n Q layers around ⊤. NIL = ⊥ (only falsy value).")
     else:
-        print("Ψ∗ Mini-Lisp — type expressions, Ctrl-D to exit")
+        print("Ψ-Lisp — type expressions, Ctrl-D to exit")
         print("  T = ⊤ (true), NIL = ⊥ (false/empty list)")
         print("  Integers = Q-chains rooted at ⊤. Only NIL is falsy.")
     print()

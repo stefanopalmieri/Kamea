@@ -156,7 +156,7 @@ NIL
       (+ (fib (- n 1)) (fib (- n 2)))))
 (fib 8)`,
 
-    hello: `; Hello World via \u03A8\u2217 Mini-Lisp
+    hello: `; Hello World via \u03A8-Lisp
 (write-string "Hello, world!\\n")
 
 (defun emit-chars (chars)
@@ -175,7 +175,7 @@ NIL
     'step-absorber': `\u22A4(nat(7))`,
 };
 
-// Which examples are term-stepping (vs Mini-Lisp)
+// Which examples are term-stepping (vs Ψ-Lisp)
 const STEP_EXAMPLES = new Set(['step-qe', 'step-car', 'step-cdr', 'step-absorber']);
 
 // ═══════════════════════════════════════════════════════════
@@ -253,7 +253,7 @@ const btnReset = $('#btn-reset');
 const speedSlider = $('#speed-slider');
 const examplesSelect = $('#examples');
 
-// Lisp stepper state (JS-based stepping for Mini-Lisp programs)
+// Lisp stepper state (JS-based stepping for Ψ-Lisp programs)
 let lispStepper = null;   // generator from lisp-stepper.js
 let lispStepCount = 0;
 let cayleyTableData = null; // cached Cayley table for JS stepper

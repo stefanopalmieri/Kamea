@@ -4,11 +4,11 @@
 
 **Context:**
 
-Ψ₁₆ᶠ is a 16-element self-describing algebra. Ψ∗ is the term algebra over it — Turing complete using 7 axiom-forced elements corresponding to McCarthy's 1960 Lisp primitives. We have a working Python implementation (`psi_star.py` for the algebra, `psi_lisp.py` for the Mini-Lisp transpiler). The Rust emulator is the production runtime.
+Ψ₁₆ᶠ is a 16-element self-describing algebra. Ψ∗ is the term algebra over it — Turing complete using 7 axiom-forced elements corresponding to McCarthy's 1960 Lisp primitives. We have a working Python implementation (`psi_star.py` for the algebra, `psi_lisp.py` for the Ψ-Lisp transpiler). The Rust emulator is the production runtime.
 
 The reference implementations are the source of truth:
 - `psi_star.py` — term representation, evaluation semantics, the Cayley table
-- `psi_lisp.py` — Mini-Lisp parser, translator, evaluator, builtins
+- `psi_lisp.py` — Ψ-Lisp parser, translator, evaluator, builtins
 
 **Read both files carefully before writing any Rust.** The evaluation semantics are subtle — constructor laziness, rule priority, structural dispatch. The Rust implementation must match the Python behavior exactly. Run the Python test suite (`examples/psi_*.lisp`) and understand what each test exercises before reimplementing.
 
@@ -329,7 +329,7 @@ impl PsiDebugger {
 │                    │                                         │
 ├────────────────────┴─────────────────────────────────────────┤
 │                                                              │
-│   Source Editor (Mini-Lisp)                                  │
+│   Source Editor (Ψ-Lisp)                                     │
 │   (textarea with syntax highlighting, monospace)             │
 │                                                              │
 │   Preloaded examples: [fibonacci] [factorial] [list ops]     │

@@ -1,7 +1,7 @@
 use psi_runtime::io::BufferIo;
 use psi_runtime::machine::{Machine, Value, VOID_TERM};
 
-// The Mini-Lisp evaluator uses Rust recursion (the machine level),
+// The Ψ-Lisp evaluator uses Rust recursion (the machine level),
 // so deep Lisp recursion needs adequate stack. In debug mode, Rust
 // frames are large, so we increase the default test thread stack.
 const STACK_SIZE: usize = 16 * 1024 * 1024; // 16 MB
