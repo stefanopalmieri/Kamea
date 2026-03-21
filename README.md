@@ -167,34 +167,34 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ## Key Results
 
-### Universal Theorems
+### Paper 1: The Independence Structure (self-contained)
 
-Proved for ALL finite magmas satisfying the relevant axioms — not just one table. Pure algebraic proofs, no `decide`, no `sorry`. Two independent sources:
+48 theorems across 6 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
 
-**From axioms** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)) — assume Kripke axioms, derive consequences:
-
+**The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
-- Kripke wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
-- No right identity in any model `[Lean, universal]`
-- Card ≥ 4, tight; card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
+- Kripke wall: classifier ∩ non-classifier = ∅ `[Lean, universal]`
 - Retraction pair members are non-classifiers `[Lean, universal]`
-- Asymmetry: no commutative magma admits two distinct left-absorbers `[Lean, universal]`
+- No right identity in any model `[Lean, universal]`
+- Card ≥ 4 (tight); card ≥ 5 when sec ≠ ret (tight) `[Lean, universal]`
+- Asymmetry: two distinct left-absorbers ⇒ non-commutative `[Lean, universal]`
 
-**From definition** ([`SelfSimulation.lean`](Kamea/SelfSimulation.lean)) — assume self-simulation, derive structural requirements:
+**It's invariant** ([`Functoriality.lean`](Kamea/Functoriality.lean)):
+- DRM isomorphisms preserve zeros, classifiers, and non-classifiers `[Lean, algebraic, no decide]`
+- Combined: the three-category decomposition is a proved algebraic invariant `[Lean, algebraic]`
 
-- Partial application injectivity: the map a ↦ eval(App(t, rep(a))) must be injective — the self-simulator cannot compress the encoding `[Lean, universal]`
-- Partial application distinctness: distinct elements produce distinct intermediate terms `[Lean, universal]`
-- Encoding injectivity: self-simulation forces Q-depth encoding to be injective `[Lean, universal]`
-- Row determination: equal partial applications imply identical rows `[Lean, universal]`
+**Self-simulation forces injectivity** ([`SelfSimulation.lean`](Kamea/SelfSimulation.lean)):
+- Partial application injectivity: the self-simulator cannot compress the encoding `[Lean, universal]`
+- Encoding injectivity: Q-depth encoding is injective `[Lean, universal]`
+- Row determination: equal partial applications ⇒ identical rows `[Lean, universal]`
 
-**From counterexample** ([`Countermodel.lean`](Kamea/Countermodel.lean)) — concrete 8-element FRM violating dichotomy:
+**The three capabilities are independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean)):
+- S ⊬ D: N=8 FRM with classifier that violates Kripke dichotomy `[Lean, by decide]`
+- D ⊬ H: N=10 DRM satisfying Kripke where no element satisfies Compose `[Lean, by native_decide]`
+- H ⊬ D: N=10 FRM with Branch+Compose+Y that violates Kripke `[Lean, by native_decide]`
+- S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
 
-- the Countermodel is a FaithfulRetractMagma: extensionality, retraction pair, E-transparency `[Lean, by decide]`
-- Element 5 is mixed: both boolean and non-boolean outputs on core `[Lean, by decide]`
-- Dichotomy violated: the DichotomicRetractMagma axiom fails for this table `[Lean, by decide]`
-- Combined independence: ∃ FRM with classifier that is not a DRM `[Lean, by decide]`
-
-23 universal theorems + 14 independence theorems + 4 functoriality theorems across 6 proof files, zero `sorry`.
+### Paper 2: The Artifact (supporting material)
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -304,28 +304,27 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ### How to Read This Repo
 
-**Start here**
-- [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
-- [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify table → inspect/modify continuations → branch swap. Runs interpreted (~43 s) or compiled to native (~2.2 ms)
-- [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another
+**Paper 1: The independence structure** (self-contained, no artifact needed)
+- [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here**: FaithfulRetractMagma + DichotomicRetractMagma, minimal witnesses, 19 universal theorems
+- [`Kamea/Functoriality.lean`](Kamea/Functoriality.lean) — DRM isomorphisms preserve the Z/C/N decomposition (algebraic proof)
+- [`Kamea/NoCommutativity.lean`](Kamea/NoCommutativity.lean) — Asymmetry: two left-absorbers ⇒ non-commutative
+- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
+- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating Kripke dichotomy
+- [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
+- [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
+- [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) — Standard categorical vocabulary translation
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
-**The proofs**
-- [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean))
-- [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — **Self-simulation**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
-- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — **S ⊬ D**: 8-element FRM with classifier that violates Kripke dichotomy (4 theorems)
-- [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — **D ⊬ H** and **H ⊬ D**: 10-element counterexamples (DRM without Compose; FRM with Branch+Compose+Y without Kripke)
-- [`Kamea/Functoriality.lean`](Kamea/Functoriality.lean) — **Functoriality**: DRM isomorphisms preserve the three-category decomposition (algebraic proof, no `decide`)
-- [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
-- [`independence_results.py`](independence_results.py) — All four independence counterexamples: generate, verify, freeze
-- [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
-
-**The language**
+**Paper 2: The artifact** (the 16-element witness and its consequences)
+- [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
+- [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify → inspect/modify continuations → branch swap
+- [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility
+- [`psi_star.py`](psi_star.py) — Turing-completeness: 2CM simulation via 7 axiom-forced elements
 - [`psi_lisp.py`](psi_lisp.py) — Ψ-Lisp → Ψ∗ transpiler (McCarthy 1960 conventions)
-- [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator with inspectable continuations
-- [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster than Python)
-- [`examples/psi_recovery_spell.lisp`](examples/psi_recovery_spell.lisp) — Black-box recovery as pure Ψ-Lisp
+- [`examples/psi_metacircular.lisp`](examples/psi_metacircular.lisp) — Defunctionalized CPS meta-circular evaluator
+- [`kamea-rs/`](kamea-rs/) — Rust emulator + WASM browser debugger (~25x faster)
+- [`examples/psi16_corrupted_host_demo.py`](examples/psi16_corrupted_host_demo.py) — Animated TUI: watch one wizard heal another
+- [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — Full axiom search results and Cayley tables
 
 **Compilation and performance**
 - [`psi_supercompile.py`](psi_supercompile.py) — Partial evaluator: constant folding + QE cancellation + branch elimination + let propagation + lambda inlining

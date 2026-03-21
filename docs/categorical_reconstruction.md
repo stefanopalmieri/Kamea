@@ -64,17 +64,31 @@ The Compose axiom η · x = ρ · (g · x) is a fragment of internal hom: η rep
 
 The novel elements are the Kripke dichotomy and the three-category decomposition as a universal invariant. Everything else translates to standard categorical vocabulary.
 
-## Universal Theorems (Lean-Proved)
+## Lean Proof Inventory (Paper 1, self-contained)
 
-The following hold for ALL models, stated in standard vocabulary:
+48 theorems across 6 files. Zero `sorry`. A reviewer does not need the 16-element table, the Lisp implementation, or the reflective tower.
 
-1. **Three-category decomposition.** In any DRM, S = Z ⊔ C ⊔ N (zeros, classifiers, non-classifiers). Exhaustive and pairwise disjoint. [`CatKripkeWallMinimal.lean`: `three_categories`]
-2. **Kripke wall.** C ∩ N = ∅. [`CatKripkeWallMinimal.lean`: `classifier_not_non_classifier`]
-3. **Retraction pair placement.** s, r ∈ N. [`CatKripkeWallMinimal.lean`: `ret_is_non_classifier`, `sec_is_non_classifier`]
-4. **Asymmetry.** No extensional magma with two distinct left-absorbers is commutative. [`NoCommutativity.lean`]
-5. **Cardinality.** |S| ≥ 4 (tight); |S| ≥ 5 when s ≠ r (tight). [`CatKripkeWallMinimal.lean`]
-6. **No right identity.** No DRM has a right identity element. [`CatKripkeWallMinimal.lean`]
-7. **Partial application injectivity.** Self-simulation forces the encoding map to be injective. [`SelfSimulation.lean`]
+**The decomposition exists** (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`):
+1. Three-category decomposition: S = Z ⊔ C ⊔ N. Exhaustive and pairwise disjoint.
+2. Kripke wall: C ∩ N = ∅.
+3. Retraction pair placement: s, r ∈ N.
+4. No right identity.
+5. Cardinality: |S| ≥ 4 (tight); |S| ≥ 5 when s ≠ r (tight).
+6. Asymmetry: two distinct left-absorbers ⇒ non-commutative.
+
+**It's invariant** (`Functoriality.lean`):
+7. DRM isomorphisms preserve Z, C, and N. Algebraic proof, no `decide`.
+
+**Self-simulation forces injectivity** (`SelfSimulation.lean`):
+8. Partial application injectivity.
+9. Encoding injectivity.
+10. Row determination.
+
+**The capabilities are independent** (`Countermodel.lean`, `Countermodels10.lean`):
+11. S ⊬ D: N=8 FRM with classifier violating Kripke. `[decide]`
+12. D ⊬ H: N=10 DRM without Compose. `[native_decide]`
+13. H ⊬ D: N=10 FRM with Branch+Compose+Y violating Kripke. `[native_decide]`
+14. S ⊬ H: N=4 DRM, trivially too small for H. `[decide]`
 
 ## The Two-Layer Structure
 
@@ -109,4 +123,4 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 | Cross-formalism universality | Conjectured |
 | Kripke = finite subobject classifier decidability | Conjectured |
 | Role uniqueness (McCarthy correspondence) | Open |
-| Functorial naturality of decomposition (DRM isos) | Lean-proved |
+| Decomposition is an algebraic invariant (DRM isos) | Lean-proved |
