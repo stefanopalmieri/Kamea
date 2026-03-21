@@ -323,6 +323,11 @@ function* evalExpr(expr, env, depth, io, stack) {
 
     if (head === 'quote') return quoteDatum(expr[1]);
 
+    if (head === 'bound?') {
+        const name = expr[1];
+        return (typeof name === 'string' && name in env) ? T : NIL;
+    }
+
     if (head === 'if') {
         stack.push({ name: 'if', rule: 'if-test', expr: expr });
         yield yieldStep(stack, 'eval', 'if-test');
