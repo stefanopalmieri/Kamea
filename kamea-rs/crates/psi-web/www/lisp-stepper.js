@@ -100,7 +100,12 @@ function displayVal(v) {
     return String(v);
 }
 
-// ── Tree snapshot (for TreeRenderer) ──
+// ── Call stack → tree visualization ──
+//
+// The call stack is the evaluation state. Each frame represents a
+// pending function call or expression evaluation. The stack renders
+// as a nested tree: the outermost call at the root, inner calls as
+// children, with the active frame highlighted.
 
 function valToTree(v) {
     if (v === NIL) return { kind: 'atom', value: 'NIL' };
@@ -120,28 +125,81 @@ function valToTree(v) {
     return { kind: 'atom', value: String(v) };
 }
 
-function exprToTree(expr, activeId, nextId) {
-    const id = nextId.val++;
-    const active = (id === activeId);
-
-    if (typeof expr === 'number') {
-        return { kind: 'int', value: String(expr), int_value: expr, _active: active, _id: id };
-    }
-    if (typeof expr === 'string') {
-        return { kind: 'atom', value: expr, _active: active, _id: id };
-    }
+function exprToTree(expr) {
+    if (expr === NIL || expr === null || expr === undefined)
+        return { kind: 'atom', value: 'NIL' };
+    if (expr === T) return { kind: 'atom', value: 'T' };
+    if (typeof expr === 'number')
+        return { kind: 'int', value: String(expr), int_value: expr };
+    if (typeof expr === 'string')
+        return { kind: 'atom', value: expr };
+    if (expr && typeof expr === 'object' && '_str' in expr)
+        return { kind: 'atom', value: '"' + expr._str + '"' };
     if (Array.isArray(expr) && !expr._pair) {
-        // S-expression list: first element is operator
-        const children = expr.map(e => exprToTree(e, activeId, nextId));
         return {
             kind: 'list',
-            list_items: children,
-            value: '(' + expr.map(e => typeof e === 'number' ? e : (typeof e === 'string' ? e : '...')).join(' ') + ')',
-            _active: active,
-            _id: id
+            list_items: expr.map(exprToTree),
+            value: sexprToString(expr),
         };
     }
-    return { kind: 'atom', value: displayVal(expr), _active: active, _id: id };
+    return { kind: 'atom', value: displayVal(expr) };
+}
+
+function sexprToString(expr) {
+    if (expr === NIL || expr === null) return 'NIL';
+    if (expr === T) return 'T';
+    if (typeof expr === 'number') return String(expr);
+    if (typeof expr === 'string') return expr;
+    if (expr && typeof expr === 'object' && '_str' in expr) return '"' + expr._str + '"';
+    if (Array.isArray(expr) && !expr._pair)
+        return '(' + expr.map(sexprToString).join(' ') + ')';
+    return displayVal(expr);
+}
+
+// Build tree from the call stack. Each frame becomes a nested node.
+// The deepest frame is the active one (highlighted).
+function stackToTree(stack) {
+    if (stack.length === 0) return { kind: 'atom', value: '\u2014' };
+
+    // Build bottom-up: deepest frame is innermost
+    let tree = null;
+    for (let i = stack.length - 1; i >= 0; i--) {
+        const frame = stack[i];
+        const isActive = (i === stack.length - 1);
+
+        const items = [];
+
+        // Frame label
+        const label = { kind: 'atom', value: frame.name || frame.rule || 'eval' };
+        if (isActive) label.value = '\u25b6 ' + label.value;  // ▶ marker
+        items.push(label);
+
+        // Frame arguments / details
+        if (frame.args) {
+            for (const a of frame.args) {
+                items.push({ kind: 'int', value: String(a), int_value: typeof a === 'number' ? a : 0 });
+            }
+        }
+        if (frame.expr) {
+            items.push(exprToTree(frame.expr));
+        }
+
+        // If there's a result, show it
+        if (frame.result !== undefined) {
+            items.push({ kind: 'atom', value: '\u2192' });  // →
+            items.push(valToTree(frame.result));
+        }
+
+        // Nest previous tree as child (the inner computation)
+        if (tree) items.push(tree);
+
+        tree = {
+            kind: 'list',
+            list_items: items,
+            value: frame.name || frame.rule || 'eval',
+        };
+    }
+    return tree;
 }
 
 // ── Stepping evaluator ──
@@ -156,9 +214,10 @@ const ATOM_NAMES = [
 export function createStepper(source, cayleyTable) {
     const exprs = parseAll(source);
     const io = { output: '' };
+    const stack = [];  // call stack for visualization
     const env = makeBuiltins(cayleyTable, io);
     return {
-        steps: evalProgram(exprs, env, io),
+        steps: evalProgram(exprs, env, io, stack),
         source,
         io,
     };
@@ -226,24 +285,26 @@ function makeBuiltins(table, io) {
     return env;
 }
 
-function* evalProgram(exprs, env, io) {
+function* evalProgram(exprs, env, io, stack) {
     let result = NIL;
     for (const expr of exprs) {
-        result = yield* evalExpr(expr, env, 0, io);
+        result = yield* evalExpr(expr, env, 0, io, stack);
     }
     yield { type: 'done', result, display: displayVal(result), tree: valToTree(result), io: io.output };
 }
 
-function* evalExpr(expr, env, depth, io) {
+function yieldStep(stack, type, rule, extra) {
+    return { type, rule, depth: stack.length, tree: stackToTree(stack), ...extra };
+}
+
+function* evalExpr(expr, env, depth, io, stack) {
     // String literals
     if (expr && typeof expr === 'object' && '_str' in expr) {
         return expr._str;
     }
 
     // Atoms
-    if (typeof expr === 'number') {
-        return expr;
-    }
+    if (typeof expr === 'number') return expr;
 
     if (typeof expr === 'string') {
         const upper = expr.toUpperCase();
@@ -262,22 +323,25 @@ function* evalExpr(expr, env, depth, io) {
     if (head === 'quote') return quoteDatum(expr[1]);
 
     if (head === 'if') {
-        yield { type: 'eval', rule: 'if-test', expr: expr, depth, focus: expr[1] };
-        const test = yield* evalExpr(expr[1], env, depth + 1, io);
+        stack.push({ name: 'if', rule: 'if-test', expr: expr });
+        yield yieldStep(stack, 'eval', 'if-test');
+        const test = yield* evalExpr(expr[1], env, depth + 1, io, stack);
         const branch = isTruthy(test) ? 'then' : 'else';
         const branchExpr = branch === 'then' ? expr[2] : (expr[3] || NIL);
-        yield { type: 'branch', rule: 'if-' + branch, test: displayVal(test), expr: expr, depth, taking: branch };
+        stack[stack.length - 1].rule = 'if-' + branch;
+        stack[stack.length - 1].result = test;
+        yield yieldStep(stack, 'branch', 'if-' + branch, { test: displayVal(test), taking: branch });
+        stack.pop();
         if (branchExpr === undefined || branchExpr === NIL) return NIL;
-        return yield* evalExpr(branchExpr, env, depth + 1, io);
+        return yield* evalExpr(branchExpr, env, depth + 1, io, stack);
     }
 
     if (head === 'cond') {
         for (let i = 1; i < expr.length; i++) {
             const clause = expr[i];
-            const test = yield* evalExpr(clause[0], env, depth + 1, io);
+            const test = yield* evalExpr(clause[0], env, depth + 1, io, stack);
             if (isTruthy(test)) {
-                yield { type: 'branch', rule: 'cond-match', depth, taking: i };
-                return yield* evalExpr(clause[1], env, depth + 1, io);
+                return yield* evalExpr(clause[1], env, depth + 1, io, stack);
             }
         }
         return NIL;
@@ -288,9 +352,9 @@ function* evalExpr(expr, env, depth, io) {
         const params = expr[2];
         const body = expr.length === 4 ? expr[3] : ['progn', ...expr.slice(3)];
         const fn = { _lambda: true, params, body, env: { ...env }, name };
-        fn.env[name] = fn; // self-reference for recursion
+        fn.env[name] = fn;
         env[name] = fn;
-        yield { type: 'define', rule: 'defun', name, depth };
+        yield yieldStep(stack, 'define', 'defun ' + name);
         return NIL;
     }
 
@@ -302,10 +366,10 @@ function* evalExpr(expr, env, depth, io) {
             const fn = { _lambda: true, params, body, env: { ...env }, name };
             fn.env[name] = fn;
             env[name] = fn;
-            yield { type: 'define', rule: 'define-fn', name, depth };
+            yield yieldStep(stack, 'define', 'define ' + name);
             return NIL;
         }
-        const val = yield* evalExpr(expr[2], env, depth + 1, io);
+        const val = yield* evalExpr(expr[2], env, depth + 1, io, stack);
         env[expr[1]] = val;
         return NIL;
     }
@@ -321,14 +385,13 @@ function* evalExpr(expr, env, depth, io) {
         const body = expr.length === 3 ? expr[2] : ['progn', ...expr.slice(2)];
         const newEnv = { ...env };
         for (const [name, valExpr] of bindings) {
-            newEnv[name] = yield* evalExpr(valExpr, env, depth + 1, io);
+            newEnv[name] = yield* evalExpr(valExpr, env, depth + 1, io, stack);
         }
-        yield { type: 'eval', rule: 'let-body', depth };
-        return yield* evalExpr(body, newEnv, depth + 1, io);
+        return yield* evalExpr(body, newEnv, depth + 1, io, stack);
     }
 
     if (head === 'setq') {
-        const val = yield* evalExpr(expr[2], env, depth + 1, io);
+        const val = yield* evalExpr(expr[2], env, depth + 1, io, stack);
         env[expr[1]] = val;
         return val;
     }
@@ -336,7 +399,7 @@ function* evalExpr(expr, env, depth, io) {
     if (head === 'progn' || head === 'begin') {
         let result = NIL;
         for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1, io);
+            result = yield* evalExpr(expr[i], env, depth + 1, io, stack);
         }
         return result;
     }
@@ -344,7 +407,7 @@ function* evalExpr(expr, env, depth, io) {
     if (head === 'and') {
         let result = T;
         for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1, io);
+            result = yield* evalExpr(expr[i], env, depth + 1, io, stack);
             if (!isTruthy(result)) return NIL;
         }
         return result;
@@ -352,7 +415,7 @@ function* evalExpr(expr, env, depth, io) {
 
     if (head === 'or') {
         for (let i = 1; i < expr.length; i++) {
-            const r = yield* evalExpr(expr[i], env, depth + 1, io);
+            const r = yield* evalExpr(expr[i], env, depth + 1, io, stack);
             if (isTruthy(r)) return r;
         }
         return NIL;
@@ -360,22 +423,23 @@ function* evalExpr(expr, env, depth, io) {
 
     // ── Application ──
 
-    yield { type: 'eval', rule: 'apply', expr, depth, focus: head };
-    const fn = yield* evalExpr(head, env, depth + 1, io);
+    const fn = yield* evalExpr(head, env, depth + 1, io, stack);
     const args = [];
     for (let i = 1; i < expr.length; i++) {
-        args.push(yield* evalExpr(expr[i], env, depth + 1, io));
+        args.push(yield* evalExpr(expr[i], env, depth + 1, io, stack));
     }
 
     // Builtin
     if (typeof fn === 'function') {
+        const fnName = typeof head === 'string' ? head : '?';
+        stack.push({ name: fnName, args: args.map(displayVal) });
         const result = fn(...args);
-        yield {
-            type: 'result', rule: 'builtin',
-            expr, result, display: displayVal(result), depth,
-            call: displayVal(head) + '(' + args.map(displayVal).join(', ') + ')',
-            tree: valToTree(result),
-        };
+        stack[stack.length - 1].result = result;
+        yield yieldStep(stack, 'result', 'builtin', {
+            display: displayVal(result),
+            call: fnName + '(' + args.map(displayVal).join(', ') + ')',
+        });
+        stack.pop();
         return result;
     }
 
@@ -385,13 +449,16 @@ function* evalExpr(expr, env, depth, io) {
         for (let i = 0; i < fn.params.length; i++) {
             callEnv[fn.params[i]] = args[i];
         }
-        yield {
-            type: 'call', rule: 'call',
-            name: fn.name || '#<lambda>',
-            args: args.map(displayVal),
-            depth,
-        };
-        return yield* evalExpr(fn.body, callEnv, depth + 1, io);
+        const name = fn.name || '#<lambda>';
+        stack.push({ name, args: args.map(displayVal), expr: fn.body });
+        yield yieldStep(stack, 'call', 'call ' + name);
+        const result = yield* evalExpr(fn.body, callEnv, depth + 1, io, stack);
+        stack[stack.length - 1].result = result;
+        yield yieldStep(stack, 'return', name + ' \u2192 ' + displayVal(result), {
+            display: displayVal(result),
+        });
+        stack.pop();
+        return result;
     }
 
     throw new Error('not callable: ' + displayVal(fn));
