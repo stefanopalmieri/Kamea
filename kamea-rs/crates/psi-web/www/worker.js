@@ -26,8 +26,18 @@ self.onmessage = async function (e) {
     try {
         switch (type) {
             case 'run': {
-                const result = psi.run_with_trees(payload.source);
-                const stats = psi.stats();
+                let result, stats;
+                try {
+                    result = psi.run_with_trees(payload.source);
+                } catch (runErr) {
+                    // If run_with_trees panics (stack overflow, etc.),
+                    // the RefCell borrow may be stuck. Recreate the debugger.
+                    const wasm = await import('./pkg/psi_web.js');
+                    psi = new wasm.PsiDebugger();
+                    postMessage({ type: 'result', id, result: JSON.stringify({ error: runErr.message || String(runErr), results: [], io_output: '' }), stats: '{}' });
+                    break;
+                }
+                stats = psi.stats();
                 postMessage({ type: 'result', id, result, stats });
                 break;
             }

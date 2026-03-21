@@ -539,13 +539,27 @@ function evalAtom(expr, env, io, K, callStack) {
     return NEED_MORE;
 }
 
+// Symbol table: quoted symbols become integers ≥ 100, matching the
+// Python evaluator's _symbol_to_term. This is critical for the
+// metacircular evaluator: symbol? checks (numberp x) && (>= x 100),
+// and (eq 'foo 'foo) works because both map to the same integer.
+const _symbolTable = {};
+let _nextSymbolId = 100;
+
+function symbolToInt(name) {
+    if (!(name in _symbolTable)) {
+        _symbolTable[name] = _nextSymbolId++;
+    }
+    return _symbolTable[name];
+}
+
 function quoteDatum(expr) {
     if (typeof expr === 'number') return expr;
     if (typeof expr === 'string') {
         const u = expr.toUpperCase();
         if (u === 'NIL') return NIL;
         if (u === 'T') return T;
-        return expr;
+        return symbolToInt(expr);
     }
     if (Array.isArray(expr)) return toList(expr.map(quoteDatum));
     return NIL;
