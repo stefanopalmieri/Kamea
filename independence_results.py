@@ -5,7 +5,7 @@ Independence Results for the Three Capabilities (S, D, H)
 Generates, verifies, and displays the four canonical counterexamples
 that establish full independence of the three capabilities:
 
-  S ⊬ D  (Palmieri's Countermodel, N=8): self-simulates, violates Kripke
+  S ⊬ D  (the Countermodel, N=8): self-simulates, violates Kripke
   D ⊬ H  (N=10, Test D):                 has Kripke, no Compose element
   D ⊬ H  (N=10, Test E):                 has Kripke, no Inert element
   H ⊬ D  (N=10, diagonal):               has Branch+Compose+Y, violates Kripke
@@ -335,7 +335,7 @@ def print_table(table, n, label=""):
 TESTS = [
     {
         'id': 'S_not_D',
-        'name': "Palmieri's Countermodel (S ⊬ D)",
+        'name': "the Countermodel (S ⊬ D)",
         'gen': gen_s_not_d,
         'n': 8,
         'desc': 'Self-simulates (retraction pair), violates Kripke dichotomy (mixed elements)',
@@ -465,7 +465,7 @@ def run_all():
     print(f"  INDEPENDENCE MATRIX")
     print(f"{'='*70}")
     print()
-    print(f"  S ⊬ D:  Palmieri's Countermodel (N=8)  — simulates without clean roles")
+    print(f"  S ⊬ D:  the Countermodel (N=8)  — simulates without clean roles")
     print(f"  D ⊬ H:  N=10 (no Compose, no Inert)    — has roles, needs external machine")
     print(f"  H ⊬ D:  N=10 (diagonal)                — evaluates without clean roles")
     print()

@@ -1,7 +1,7 @@
 import Kamea.CatKripkeWallMinimal
 
 /-!
-# Palmieri's Countermodel: FRM ⊬ Kripke Dichotomy
+# The Countermodel: FRM ⊬ Kripke Dichotomy
 
 A concrete 8-element FaithfulRetractMagma that satisfies all retraction axioms
 (extensionality, two absorbers, retraction pair) but violates the Kripke dichotomy.
@@ -20,7 +20,7 @@ set_option autoImplicit false
 
 namespace KripkeWall
 
-/-- The raw 8×8 Cayley table of Palmieri's Countermodel. -/
+/-- The raw 8×8 Cayley table of The Countermodel. -/
 private def rawPC8 : Nat → Nat → Nat
   -- Row 0: ⊤ (absorber)
   | 0, _ => 0
@@ -43,13 +43,13 @@ private def rawPC8 : Nat → Nat → Nat
 private theorem rawPC8_bound (a b : Fin 8) : rawPC8 a.val b.val < 8 := by
   revert a b; decide
 
-/-- The binary operation of Palmieri's Countermodel. -/
+/-- The binary operation of The Countermodel. -/
 def dotPC8 (a b : Fin 8) : Fin 8 := ⟨rawPC8 a.val b.val, rawPC8_bound a b⟩
 
-/-- **Palmieri's Countermodel**: an 8-element FaithfulRetractMagma.
+/-- **The Countermodel**: an 8-element FaithfulRetractMagma.
     Has two absorbers (0,1), a retraction pair (Q=2, E=3),
     extensionality, and E-transparency. -/
-def palmieriCountermodel : FaithfulRetractMagma 8 where
+def countermodel8 : FaithfulRetractMagma 8 where
   dot := dotPC8
   zero₁ := 0
   zero₂ := 1
@@ -69,21 +69,21 @@ def palmieriCountermodel : FaithfulRetractMagma 8 where
 -- ═══════════════════════════════════════════════════════════════════
 
 /-- E-transparency: E(⊤) = ⊤ and E(⊥) = ⊥. -/
-theorem palmieri_e_transparent :
-    palmieriCountermodel.dot 3 0 = 0 ∧ palmieriCountermodel.dot 3 1 = 1 := by
+theorem countermodel8_e_transparent :
+    countermodel8.dot 3 0 = 0 ∧ countermodel8.dot 3 1 = 1 := by
   decide
 
 /-- Element 4 is a classifier: all outputs are in {zero₁, zero₂}. -/
-theorem palmieri_has_classifier :
+theorem countermodel8_has_classifier :
     ∀ x : Fin 8,
-      palmieriCountermodel.dot 4 x = palmieriCountermodel.zero₁ ∨
-      palmieriCountermodel.dot 4 x = palmieriCountermodel.zero₂ := by
+      countermodel8.dot 4 x = countermodel8.zero₁ ∨
+      countermodel8.dot 4 x = countermodel8.zero₂ := by
   decide
 
 /-- Element 5 is mixed: it produces both boolean and non-boolean outputs on core.
     Specifically, dot(5,4) = 1 ∈ {0,1} but dot(5,2) = 6 ∉ {0,1}. -/
-theorem palmieri_element5_mixed :
-    let M := palmieriCountermodel
+theorem countermodel8_element5_mixed :
+    let M := countermodel8
     -- Element 5 is not an absorber
     (5 : Fin 8) ≠ M.zero₁ ∧ (5 : Fin 8) ≠ M.zero₂ ∧
     -- It has a boolean output on core (dot(5,4) = 1 = zero₂)
@@ -95,34 +95,34 @@ theorem palmieri_element5_mixed :
   decide
 
 /-- **The independence theorem**: the Kripke dichotomy does not hold
-    for Palmieri's Countermodel. There exists a non-absorber whose
+    for The Countermodel. There exists a non-absorber whose
     core outputs are neither all-boolean nor all-non-boolean. -/
-theorem palmieri_violates_dichotomy :
-    ¬ (∀ y : Fin 8, y ≠ palmieriCountermodel.zero₁ → y ≠ palmieriCountermodel.zero₂ →
-      (∀ x : Fin 8, x ≠ palmieriCountermodel.zero₁ → x ≠ palmieriCountermodel.zero₂ →
-        palmieriCountermodel.dot y x = palmieriCountermodel.zero₁ ∨
-        palmieriCountermodel.dot y x = palmieriCountermodel.zero₂) ∨
-      (∀ x : Fin 8, x ≠ palmieriCountermodel.zero₁ → x ≠ palmieriCountermodel.zero₂ →
-        palmieriCountermodel.dot y x ≠ palmieriCountermodel.zero₁ ∧
-        palmieriCountermodel.dot y x ≠ palmieriCountermodel.zero₂)) := by
+theorem countermodel8_violates_dichotomy :
+    ¬ (∀ y : Fin 8, y ≠ countermodel8.zero₁ → y ≠ countermodel8.zero₂ →
+      (∀ x : Fin 8, x ≠ countermodel8.zero₁ → x ≠ countermodel8.zero₂ →
+        countermodel8.dot y x = countermodel8.zero₁ ∨
+        countermodel8.dot y x = countermodel8.zero₂) ∨
+      (∀ x : Fin 8, x ≠ countermodel8.zero₁ → x ≠ countermodel8.zero₂ →
+        countermodel8.dot y x ≠ countermodel8.zero₁ ∧
+        countermodel8.dot y x ≠ countermodel8.zero₂)) := by
   decide
 
-/-- Combined: Palmieri's Countermodel is a FaithfulRetractMagma (self-simulation
+/-- Combined: The Countermodel is a FaithfulRetractMagma (self-simulation
     infrastructure) with a classifier, but NOT a DichotomicRetractMagma
     (self-description structure). This is the S ⊬ D independence result. -/
 theorem frm_independent_of_dichotomy :
     ∃ (_ : FaithfulRetractMagma 8),
     -- Has a classifier (element 4)
-    (∀ x : Fin 8, palmieriCountermodel.dot 4 x = palmieriCountermodel.zero₁ ∨
-                   palmieriCountermodel.dot 4 x = palmieriCountermodel.zero₂) ∧
+    (∀ x : Fin 8, countermodel8.dot 4 x = countermodel8.zero₁ ∨
+                   countermodel8.dot 4 x = countermodel8.zero₂) ∧
     -- But violates the dichotomy
-    ¬ (∀ y : Fin 8, y ≠ palmieriCountermodel.zero₁ → y ≠ palmieriCountermodel.zero₂ →
-      (∀ x : Fin 8, x ≠ palmieriCountermodel.zero₁ → x ≠ palmieriCountermodel.zero₂ →
-        palmieriCountermodel.dot y x = palmieriCountermodel.zero₁ ∨
-        palmieriCountermodel.dot y x = palmieriCountermodel.zero₂) ∨
-      (∀ x : Fin 8, x ≠ palmieriCountermodel.zero₁ → x ≠ palmieriCountermodel.zero₂ →
-        palmieriCountermodel.dot y x ≠ palmieriCountermodel.zero₁ ∧
-        palmieriCountermodel.dot y x ≠ palmieriCountermodel.zero₂)) :=
-  ⟨palmieriCountermodel, palmieri_has_classifier, palmieri_violates_dichotomy⟩
+    ¬ (∀ y : Fin 8, y ≠ countermodel8.zero₁ → y ≠ countermodel8.zero₂ →
+      (∀ x : Fin 8, x ≠ countermodel8.zero₁ → x ≠ countermodel8.zero₂ →
+        countermodel8.dot y x = countermodel8.zero₁ ∨
+        countermodel8.dot y x = countermodel8.zero₂) ∨
+      (∀ x : Fin 8, x ≠ countermodel8.zero₁ → x ≠ countermodel8.zero₂ →
+        countermodel8.dot y x ≠ countermodel8.zero₁ ∧
+        countermodel8.dot y x ≠ countermodel8.zero₂)) :=
+  ⟨countermodel8, countermodel8_has_classifier, countermodel8_violates_dichotomy⟩
 
 end KripkeWall

@@ -32,7 +32,7 @@ The Compose axiom η · x = ρ · (g · x) is a fragment of internal hom: η rep
 
 ## Independence Results
 
-**Theorem (S ⊬ D).** There exists an 8-element FRM with a classifier that violates the Kripke dichotomy. Element 5 has both boolean and non-boolean outputs on core. [Lean-proved: `PalmieriCountermodel.lean`, `palmieri_violates_dichotomy`]
+**Theorem (S ⊬ D).** There exists an 8-element FRM with a classifier that violates the Kripke dichotomy. Element 5 has both boolean and non-boolean outputs on core. [Lean-proved: `Countermodel.lean`, `countermodel8_violates_dichotomy`]
 
 **Theorem (D ⊬ H).** There exists a 10-element DRM satisfying the Kripke dichotomy where (a) no element satisfies the Compose axiom, and (b) no inert element exists. [SAT: `independence_results.py`, Tests D and E]
 
@@ -100,7 +100,7 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 |---|---|
 | Three-category decomposition universal | Lean-proved |
 | Kripke wall universal (C ∩ N = ∅) | Lean-proved |
-| S ⊬ D (Palmieri's Countermodel) | Lean-proved |
+| S ⊬ D (the Countermodel) | Lean-proved |
 | D ⊬ H (no Compose, no Inert) | SAT-verified |
 | H ⊬ D (diagonal) | SAT-verified |
 | S+D+H coexist at N=10 | SAT-verified |
