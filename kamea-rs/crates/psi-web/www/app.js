@@ -166,191 +166,7 @@ NIL
         (emit-chars (cdr chars)))))
 (emit-chars '(72 101 108 108 111 44 32 119 111 114 108 100 33 10))`,
 
-    tower: `; Three-level reflective tower
-; Level 0: Compute within the algebra
-; Level 1: Verify the Cayley table substrate
-; Level 2: Inspect the evaluator's own state
-
-;; Atom indices
-(setq TOP  0)
-(setq BOT  1)
-(setq F    2)
-(setq TAU  3)
-(setq G    4)
-(setq QQ   6)
-(setq EE   7)
-(setq RHO  8)
-(setq ETA  9)
-(setq YY  10)
-
-;; Helpers
-(defun write-name (idx)
-  (write-string (atom-name idx)))
-
-(defun banner (msg)
-  (terpri)
-  (write-string "--- ")
-  (write-string msg)
-  (write-string " ---")
-  (terpri))
-
-;; === LEVEL 0: Computation ===
-(defun fib (n)
-  (if (< n 2) n
-    (+ (fib (- n 1)) (fib (- n 2)))))
-
-(write-string "=== PSI REFLECTIVE TOWER ===")
-(terpri)
-(banner "Level 0: Computation")
-(write-string "Computing fibonacci(8)...")
-(terpri)
-(setq fib-result (fib 8))
-(write-string "Result: ")
-(print fib-result)
-
-;; === LEVEL 1: Ground Verification ===
-(banner "Shift Up to Level 1: Ground Verification")
-
-(defun check-absorber (abs x)
-  (let ((result (dot abs x)))
-    (write-string "  ")
-    (write-name abs)
-    (write-string " . ")
-    (write-name x)
-    (write-string " = ")
-    (write-name result)
-    (if (= result abs)
-      (progn (write-string " ok") (terpri) T)
-      (progn (write-string " FAIL") (terpri) NIL))))
-
-(write-string "Absorber laws:")
-(terpri)
-(setq absorber-ok
-  (and (check-absorber TOP TOP)
-       (check-absorber TOP BOT)
-       (check-absorber TOP QQ)
-       (check-absorber TOP EE)
-       (check-absorber BOT TOP)
-       (check-absorber BOT BOT)
-       (check-absorber BOT QQ)
-       (check-absorber BOT EE)))
-
-(defun check-tester (x)
-  (let ((result (dot TAU x)))
-    (write-string "  tau . ")
-    (write-name x)
-    (write-string " = ")
-    (write-name result)
-    (if (or (= result TOP) (= result BOT))
-      (progn (write-string " ok") (terpri) T)
-      (progn (write-string " FAIL") (terpri) NIL))))
-
-(write-string "Tester boolean output:")
-(terpri)
-(setq tester-ok
-  (and (check-tester F)
-       (check-tester TAU)
-       (check-tester QQ)
-       (check-tester EE)
-       (check-tester RHO)
-       (check-tester ETA)))
-
-(defun check-qe (x)
-  (let ((qx (dot QQ x)))
-    (let ((eqx (dot EE qx)))
-      (write-string "  E . (Q . ")
-      (write-name x)
-      (write-string ") = E . ")
-      (write-name qx)
-      (write-string " = ")
-      (write-name eqx)
-      (if (= eqx x)
-        (progn (write-string " ok") (terpri) T)
-        (progn (write-string " FAIL") (terpri) NIL)))))
-
-(write-string "QE round-trip:")
-(terpri)
-(setq qe-ok
-  (and (check-qe F)
-       (check-qe TAU)
-       (check-qe G)
-       (check-qe QQ)
-       (check-qe RHO)))
-
-(defun check-idempotent (x expected)
-  (let ((xx (dot x x)))
-    (write-string "  ")
-    (write-name x)
-    (write-string " . ")
-    (write-name x)
-    (write-string " = ")
-    (write-name xx)
-    (if (= (= xx x) expected)
-      (progn (write-string " ok") (terpri) T)
-      (progn (write-string " FAIL") (terpri) NIL))))
-
-(write-string "Idempotents (only absorbers):")
-(terpri)
-(setq idem-ok
-  (and (check-idempotent TOP T)
-       (check-idempotent BOT T)
-       (check-idempotent QQ NIL)
-       (check-idempotent EE NIL)))
-
-(terpri)
-(setq table-healthy (and absorber-ok tester-ok qe-ok idem-ok))
-(if table-healthy
-  (progn
-    (write-string "Table health: ALL INVARIANTS HOLD")
-    (terpri))
-  (progn
-    (write-string "Table health: CORRUPTION DETECTED")
-    (terpri)))
-
-;; === LEVEL 2: Evaluator Inspection ===
-(banner "Shift Up to Level 2: Evaluator Inspection")
-
-(setq num-bindings (env-size))
-(write-string "Current environment: ")
-(display num-bindings)
-(write-string " bindings")
-(terpri)
-(write-string "Last result (fib-result): ")
-(print fib-result)
-
-(write-string "Binding 'fib': ")
-(if (bound? fib) (write-string "present") (write-string "MISSING"))
-(terpri)
-(write-string "Binding 'table-healthy': ")
-(if (bound? table-healthy) (write-string "present") (write-string "MISSING"))
-(terpri)
-(write-string "Binding 'fib-result': ")
-(if (bound? fib-result) (write-string "present") (write-string "MISSING"))
-(terpri)
-
-(write-string "Consistency check: (fib 8) = fib-result? ")
-(if (= (fib 8) fib-result)
-  (write-string "ok")
-  (write-string "INCONSISTENT"))
-(terpri)
-(terpri)
-(write-string "Evaluator state: CONSISTENT")
-(terpri)
-
-;; === SHIFT DOWN: Resume ===
-(banner "Shift Down: Resume with Verified Substrate")
-(write-string "Computing fibonacci(12) on verified ground...")
-(terpri)
-(setq fib-result-2 (fib 12))
-(write-string "Result: ")
-(print fib-result-2)
-(terpri)
-(write-string "=== TOWER COMPLETE ===")
-(terpri)
-(write-string "Three levels. One algebra. One table.")
-(terpri)
-(write-string "Smith's tower had no ground. This one does.")
-(terpri)`,
+    tower: '__LOAD_TOWER__',
 
     // Term stepping examples
     'step-qe': `E(Q(nat(5)))`,
@@ -991,13 +807,25 @@ function bindEvents() {
     });
 
     // Examples
-    examplesSelect.addEventListener('change', (e) => {
+    examplesSelect.addEventListener('change', async (e) => {
         const name = e.target.value;
-        if (name && EXAMPLES[name]) {
-            resetMachine().then(() => {
-                setSource(EXAMPLES[name]);
-            });
+        if (!name || !EXAMPLES[name]) { e.target.value = ''; return; }
+        await resetMachine();
+        let src = EXAMPLES[name];
+        // Load tower files from server
+        if (src === '__LOAD_TOWER__') {
+            try {
+                setStatus('Loading tower...');
+                const [meta, tower] = await Promise.all([
+                    fetch('psi_metacircular.lisp').then(r => r.text()),
+                    fetch('psi_reflective_tower.lisp').then(r => r.text()),
+                ]);
+                src = meta + '\n' + tower;
+            } catch (err) {
+                src = '; Error loading tower files: ' + err.message;
+            }
         }
+        setSource(src);
         e.target.value = '';
     });
 

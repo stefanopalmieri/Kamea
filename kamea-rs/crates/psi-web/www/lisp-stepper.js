@@ -273,6 +273,23 @@ function makeBuiltins(table, io) {
             }
             return NIL;
         },
+        'length': (lst) => {
+            let n = 0;
+            while (lst !== NIL && Array.isArray(lst) && lst._pair) { n++; lst = lst[1]; }
+            return n;
+        },
+        'nth': (n, lst) => {
+            for (let i = 0; i < n && lst !== NIL && Array.isArray(lst); i++) lst = lst[1];
+            return (lst !== NIL && Array.isArray(lst)) ? lst[0] : NIL;
+        },
+        'assoc': (key, alist) => {
+            while (alist !== NIL && Array.isArray(alist) && alist._pair) {
+                const pair = alist[0];
+                if (Array.isArray(pair) && pair._pair && pair[0] === key) return pair;
+                alist = alist[1];
+            }
+            return NIL;
+        },
         'env-size': () => Object.keys(env).length,
         'env-keys': () => toList(Object.keys(env).map(k => toList([...k].map(c => c.charCodeAt(0))))),
     };
