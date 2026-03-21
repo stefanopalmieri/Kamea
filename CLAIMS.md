@@ -117,9 +117,9 @@ The three capabilities — self-simulation (S), self-description (D), self-hosti
 | Claim | Tier | Primary Evidence | Reproduce |
 |---|---|---|---|
 | S ⊬ D: N=8 FRM self-simulates (retraction pair), violates Kripke dichotomy (2 mixed elements) | Lean-proved | `Kamea/Countermodel.lean` — `countermodel8_violates_dichotomy`, `frm_independent_of_dichotomy` | `lake build Kamea.Countermodel` |
-| D ⊬ H (Compose): N=10 DRM satisfies Kripke, no element satisfies Compose axiom | Empirical | `independence_results.py` — D_not_H_compose | `python3 independence_results.py` |
+| D ⊬ H (Compose): N=10 DRM satisfies Kripke, no element satisfies Compose axiom | Lean-proved | `Kamea/Countermodels10.lean` — `dNotH` (DRM instance) + `dNotH_no_compose` | `lake build Kamea.Countermodels10` |
 | D ⊬ H (Inert): N=10 DRM satisfies Kripke, no inert element exists (all non-absorbers are testers or encoders) | Empirical | `independence_results.py` — D_not_H_inert | `python3 independence_results.py` |
-| H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates Kripke (4 mixed elements) | Empirical | `independence_results.py` — H_not_D | `python3 independence_results.py` |
+| H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates Kripke (4 mixed elements) | Lean-proved | `Kamea/Countermodels10.lean` — `hNotD` (FRM) + `hNotD_branch/compose/y_fixpoint` + `hNotD_violates_dichotomy` | `lake build Kamea.Countermodels10` |
 | S+D+H coexist at N=10 (minimum possible — 10 distinguished elements) | Empirical | `minimal_sdh_test.py` | `python3 minimal_sdh_test.py` |
 | Full axiom stack (capabilities + organizational ladder) requires N=12 | Empirical | `minimal_sdh_test.py`, `ds_search/stacking_analysis.py` | `python3 minimal_sdh_test.py` |
 | Kripke wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |

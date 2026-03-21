@@ -42,7 +42,7 @@ The Compose axiom η · x = ρ · (g · x) is a fragment of internal hom: η rep
 
 |  | S ⊬ D | D ⊬ H | H ⊬ D |
 |---|---|---|---|
-| Counterexample | N=8 (Lean) | N=10 (SAT) | N=10 (SAT) |
+| Counterexample | N=8 (Lean) | N=10 (Lean) | N=10 (Lean) |
 
 **Theorem (Coexistence).** The three capability axioms are simultaneously satisfiable at N=10, the minimum possible size (10 distinguished elements). The full axiom system (capabilities + organizational ladder L3–L8 + PA + Selection) has minimum satisfying size N=12. [SAT: `minimal_sdh_test.py`]
 
@@ -101,8 +101,8 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 | Three-category decomposition universal | Lean-proved |
 | Kripke wall universal (C ∩ N = ∅) | Lean-proved |
 | S ⊬ D (the Countermodel) | Lean-proved |
-| D ⊬ H (no Compose, no Inert) | SAT-verified |
-| H ⊬ D (diagonal) | SAT-verified |
+| D ⊬ H (no Compose) | Lean-proved |
+| H ⊬ D (diagonal) | Lean-proved |
 | S+D+H coexist at N=10 | SAT-verified |
 | Full axiom stack requires N=12 | SAT-verified |
 | Kripke wall is epistemic, not computational | Proved (H⊬D) |

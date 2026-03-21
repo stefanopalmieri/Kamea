@@ -20,16 +20,16 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 | Capability | Axioms | What it gives | Independence |
 |------------|--------|---------------|--------------|
 | **Self-simulating (S)** | Retraction pair (Q/E) | Computes own Cayley table. Partial application injectivity forced. | `[Lean]` `SelfSimulation.lean` — 4 universal theorems |
-| **Self-describing (D)** | Kripke dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | Independent of S: N=8 the Countermodel `[Lean]`; independent of H: N=10 diagonal counterexample `[SAT]` |
-| **Self-hosting (H)** | Compose + Inert | Evaluator internalized. Smith's tower terminates at 256 bytes. | Independent of S and D: N=10 counterexamples satisfy Kripke but lack Compose or Inert `[SAT]` |
+| **Self-describing (D)** | Kripke dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | Independent of S: N=8 the Countermodel `[Lean]`; independent of H: N=10 diagonal `[Lean]` |
+| **Self-hosting (H)** | Compose + Inert | Evaluator internalized. Smith's tower terminates at 256 bytes. | Independent of D: N=10 DRM without Compose `[Lean]` |
 
 **Full independence.** No capability implies any other:
 
 | | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
 |---|---|---|---|---|
-| **Counterexample** | N=8 (the Countermodel) | N=10 (Test D, E) | N=10 (diagonal test) | N=4 (`kripke4`) |
-| **What it shows** | Self-simulates, no clean roles | Has Kripke, no Compose/Inert | Has Branch+Compose+Y, no Kripke | Has retraction pair, too small for H |
-| **Proof** | `[Lean]` | `[SAT]` | `[SAT]` | `[Lean]` (trivial: H needs N≥10) |
+| **Counterexample** | N=8 (the Countermodel) | N=10 (no Compose) | N=10 (diagonal) | N=4 (`kripke4`) |
+| **What it shows** | Self-simulates, no clean roles | Has Kripke, no Compose | Has Branch+Compose+Y, no Kripke | Has retraction pair, too small for H |
+| **Proof** | `[Lean]` | `[Lean]` | `[Lean]` | `[Lean]` (trivial: H needs N≥10) |
 
 A retraction magma can compute its own table without the Kripke wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the Kripke wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The Kripke wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
 
@@ -194,7 +194,7 @@ Proved for ALL finite magmas satisfying the relevant axioms — not just one tab
 - Dichotomy violated: the DichotomicRetractMagma axiom fails for this table `[Lean, by decide]`
 - Combined independence: ∃ FRM with classifier that is not a DRM `[Lean, by decide]`
 
-23 universal theorems + 4 independence theorems across 4 proof files, zero `sorry`.
+23 universal theorems + 14 independence theorems across 5 proof files, zero `sorry`.
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -235,8 +235,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
 - Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma (the Countermodel) `[Lean: Countermodel.lean]`
-- Machine boundary: composition and substrate are independent of Kripke dichotomy — N=10 SAT counterexamples (Test D: no Compose, Test E: no Inert) `[SAT]`
-- Diagonal independence: Kripke dichotomy independent of internal composition — N=10 counterexample has Branch + Compose + Y but 4 mixed elements violating dichotomy (`composition_forces_kripke_test.py`) `[SAT]`
+- Machine boundary: composition independent of Kripke dichotomy — N=10 DRM without Compose `[Lean: Countermodels10.lean]`; substrate independent — N=10 DRM without Inert `[SAT]`
+- Diagonal independence: Kripke dichotomy independent of internal composition — N=10 FRM with Branch+Compose+Y but 4 mixed elements `[Lean: Countermodels10.lean]`
 - Capability coexistence: all three capabilities (S+D+H) coexist at N=10 — the minimum possible size (10 distinguished elements). Full axiom stack requires N=12 due to ladder + coherence axioms (`minimal_sdh_test.py`) `[SAT]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
@@ -314,7 +314,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean))
 - [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 - [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — **Self-simulation**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
-- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — **S ⊬ D independence**: 8-element FRM with classifier that violates Kripke dichotomy (4 theorems, zero `sorry`)
+- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — **S ⊬ D**: 8-element FRM with classifier that violates Kripke dichotomy (4 theorems)
+- [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — **D ⊬ H** and **H ⊬ D**: 10-element counterexamples (DRM without Compose; FRM with Branch+Compose+Y without Kripke)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
 - [`independence_results.py`](independence_results.py) — All four independence counterexamples: generate, verify, freeze
 - [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
