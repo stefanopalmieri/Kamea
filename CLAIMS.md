@@ -104,6 +104,7 @@ This file is the canonical status registry for claims made in this repository.
 | Y-combinator derived from universal self-simulation (unbounded Q-depth requires recursion) | Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 4 | N/A |
 | Compose independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test D | `python3 self_simulation_investigation.py` |
 | Inert independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test E | `python3 self_simulation_investigation.py` |
+| Kleene dichotomy independent of self-simulation: N=8 non-Kleene retraction magma self-simulates (64/64 cells) | Empirical | `self_simulation_investigation.py` — Test B + universal self-simulator | `python3 self_simulation_investigation.py` |
 | Universal self-simulator: one program computes dot(a,b) for any Ψ model (verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ) | Empirical | `universal_self_simulator.py` | `python3 universal_self_simulator.py` |
 | Self-simulation is a property of the theory, not any model (same code, different tables, both pass) | Empirical | `universal_self_simulator.py` — both Ψ₁₆ᶠ and Ψ₁₆ᶜ | `python3 universal_self_simulator.py` |
 | Machine boundary: instruction set (classifier, branch, Y) derived; machine (compose, inert) chosen | Argument | `docs/self_simulation_necessity.md` | N/A |

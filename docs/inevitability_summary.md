@@ -6,32 +6,26 @@
 
 ## The Four-Layer Result
 
-### Layer 0 — Derived from Self-Simulation (no choice)
+### Layer 0 — Self-Simulation (retraction pair only)
 
-Presuppose: a finite magma (S, ·) with a retraction pair (Q, E) satisfying E·(Q·x) = x on a core subset. This is a standard categorical concept (section/retraction).
+Presuppose: a finite extensional magma (S, ·) with a retraction pair (Q, E) satisfying E·(Q·x) = x on a core subset. Define self-simulation: ∃ term t, ∀ a b ∈ S, eval(App(App(t, rep(a)), rep(b))) = atom(dot(a, b)), where rep(k) = Q^k(⊤). One program, all inputs.
 
-Define self-simulation: there exists a SINGLE term t in the term algebra such that for all a, b ∈ S, eval(App(App(t, rep(a)), rep(b))) = dot(a, b), where rep(k) = Q^k(⊤) is the Q-depth encoding. One program, all inputs. Not 256 separate lookup terms — one universal self-simulator.
+**Lean-proved** (from self-simulation + extensionality + compositionality):
 
-**Derived axioms** (necessary conditions, tight arguments):
+- **Partial application injectivity**: the map a ↦ eval(App(t, rep(a))) is injective — the self-simulator cannot compress the encoding. Each element must map to a distinct intermediate term. `[SelfSimulation.lean]`
+- **Encoding injectivity**: Q-depth encoding must be injective. `[SelfSimulation.lean]`
+- **Row determination**: equal partial applications imply identical rows. `[SelfSimulation.lean]`
 
-- **Discrimination**: a classifier or branch element must exist. The self-simulator must decode Q-depth inputs by peeling Q layers and testing "is this ⊤?" at each step — a binary test. Q-depth is the only natural encoding in a retraction-equipped magma (the free monoid on {Q}). No alternative avoids it.
-- **Branching**: a conditional dispatch element must exist. The self-simulator must do different things for different rows of the Cayley table. A program without branching cannot compute a non-trivial two-variable function. No alternative exists.
-- **Recursion**: a fixed-point combinator must exist (for universal self-simulation). The simulator must recurse over Q-depth to handle elements of any size. For fixed N=16, bounded depth suffices, so Y is only derived for the universal (arbitrary-size) case.
+**Sufficient**: a universal self-simulator (encode → decode → lookup) works for ANY model satisfying the axioms. Verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ — same code, different tables, 512/512 cells correct. `[universal_self_simulator.py]`
 
-**Likely derived** (strong arguments, gaps remain):
+**Independent** (concrete counterexamples):
 
-- **Two absorbers**: binary classification needs two target values. Absorbers are fixed under all operations, making them natural truth values. A single absorber provides one fixed point; the term-level atom/compound distinction provides the other, so the argument is not fully tight.
-- **Kleene dichotomy**: if an element's row is both boolean (classifier) and non-boolean (encoder), the self-simulator cannot reliably determine whether an output is a classification result or a transformed value. Mixed elements create dispatch ambiguity.
-- **E-transparency**: if E·⊤ ≠ ⊤, evaluation of terms involving E applied to absorbers produces wrong results. The Q-depth decoder tests structure before applying E, so the decoder itself is unaffected. But the evaluation pipeline that processes the self-simulator's output may apply E to boundary values, corrupting results.
+- **Kleene dichotomy**: an N=8 non-Kleene retraction magma with two mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells. The universal self-simulator never classifies outputs by type; it decodes Q-depth and looks up the table. Mixed elements cause no interference. The Kleene wall is not about computing the table — it is the architectural axiom that organizes computation into coherent roles.
+- **Compose**, **Inert**: SAT counterexamples at N=10. The machine provides sequencing and storage externally.
 
-**Independent** (machine provides the capability):
+**Unresolved**: Two absorbers, E-transparency (strong arguments, no proof or counterexample).
 
-- **Algebraic composition** (Compose: η·x = ρ·(g·x)): the machine (step loop) provides sequential execution. The Compose axiom adds in-algebra composition, but the self-simulator uses the machine's sequencing, not η.
-- **Algebraic storage** (Inert/substrate): the machine provides non-destructive variable binding. The inert element g provides in-algebra storage, but the machine already handles it.
-
-**Evidence**: SAT tests confirm all axioms are algebraically independent of the retraction pair (counterexamples exist for each). The derivation is computational, not algebraic — self-simulation does work that algebra alone cannot. See [`self_simulation_necessity.md`](self_simulation_necessity.md).
-
-**Status**: necessary conditions for self-simulation. Any retraction-equipped magma that can simulate its own Cayley table must have discrimination, branching, and (for the universal case) recursion.
+**Status**: self-simulation forces injectivity (proved) and is sufficient (verified). It does NOT force the Kleene dichotomy (disproved by counterexample). The gap between self-simulation and self-description is exactly the Kleene wall.
 
 ### Layer 1 — Categorically Forced (zero choices)
 
@@ -138,27 +132,29 @@ subobject classifier, products, conditional copairing)
 
 Self-simulation derives axioms about what the algebra must DO (classify, branch, recurse) but NOT about what the algebra must BE (compose, store). This maps onto the Ψ architecture:
 
-- **Instruction set** (Q/E for data, τ/ρ for control, Y for recursion): DERIVED from self-simulation
-- **Machine** (Compose for sequencing, Inert for storage): PROVIDED by design choice
+- **Retraction pair** (Q/E): PRESUPPOSED — provides encoding/decoding
+- **Kleene wall** (τ classifiers vs non-classifiers): NOT derived from self-simulation (N=8 counterexample). The architectural axiom that creates coherent roles.
+- **Machine** (Compose for sequencing, Inert for storage): NOT derived from self-simulation. The engineering choice that internalizes the evaluator.
 
-The instruction set is structurally inevitable for any self-simulating retraction magma. The machine is the engineering choice that makes the system self-hosted rather than externally hosted. Smith's 3-Lisp had the instruction set but the machine was infinite regress. Ψ terminates the regress by internalizing the machine.
+Self-simulation forces injectivity (Lean-proved) and suffices for any model (verified). But it does not force the Kleene wall or machine internalization. The Ψ axiom system adds two things beyond what self-simulation provides: the Kleene wall (which organizes computation into roles) and the machine axioms (which ground the reflective tower). Both are genuine axioms.
 
 Three levels of finite magma:
 
 ```
-Random rigid magma:        no instruction set, no machine
-                           (not self-describing)
+Self-simulating magma:     retraction pair + extensionality
+                           computes own table (Lean: injectivity forced)
+                           no clean roles, no walls, machine external
 
-Self-simulating magma:     instruction set (derived from Layer 0)
-                           machine is external
-                           (self-describing, externally hosted)
+Self-describing magma:     + Kleene dichotomy
+                           three categories, hard walls, coherent roles
+                           interpretable as a computational system
 
-Ψ:                         instruction set (derived)
-                           machine internalized (Compose, Inert)
-                           (self-describing, self-hosted)
+Self-hosting magma (Ψ):    + Compose + Inert
+                           evaluator internalized, no external machine
+                           Smith's tower terminates
 ```
 
-The gap between "self-simulating" and "Ψ" is exactly two axioms: Compose and Inert. These are not forced by self-simulation — they are the conscious choice to internalize the evaluator into the algebra, making the reflective tower finite.
+The gap between self-simulating and self-describing is the Kleene wall. The gap between self-describing and self-hosting is machine internalization.
 
 ---
 

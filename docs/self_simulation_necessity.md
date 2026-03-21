@@ -183,7 +183,7 @@ Binary classification needs two distinct target values. Absorbers are natural ca
 | **Two absorbers** | INDEPENDENT (Test F: SAT) | Step 7: MODERATE | **LIKELY DERIVED** — binary classification needs two targets |
 | **Extensionality** | PRESUPPOSED | PRESUPPOSED | **PRESUPPOSED** |
 | **Classifier exists** | INDEPENDENT (Test A: SAT) | Step 1: TIGHT (but term-level) | **PARTIALLY DERIVED** — discrimination yes, full classifier no |
-| **Kleene dichotomy** | INDEPENDENT (Test B: SAT) | Ambiguity argument | **LIKELY DERIVED** — mixed elements prevent reliable dispatch |
+| **Kleene dichotomy** | INDEPENDENT (Test B: SAT) | N=8 counterexample self-simulates | **INDEPENDENT** — non-Kleene magma self-simulates (64/64 cells) |
 | **Branch exists** | INDEPENDENT (Test C: SAT) | Step 2: TIGHT | **DERIVED** at term level; algebraic Branch is convenience |
 | **Compose exists** | INDEPENDENT (Test D: SAT) | Step 3: LOOSE | **INDEPENDENT** — machine provides sequencing |
 | **Y-combinator** | Not testable (SAT) | Step 4: SIZE-DEPENDENT | **DERIVED** (universal) / **INDEPENDENT** (bounded) |
@@ -196,43 +196,47 @@ Binary classification needs two distinct target values. Absorbers are natural ca
 
 ## The Honest Result
 
-The investigation reveals a **three-tier structure** rather than a clean derived/assumed split:
+The investigation reveals a clean separation:
 
-### Tier 1: Structurally Derived (3 axioms)
-These are forced by the computational requirement of self-simulation at the term level:
+### Lean-Proved (from self-simulation definition alone)
 
-1. **Binary discrimination** (some form of classifier/branch): The Q-depth decoder MUST distinguish base case from recursive case. No alternative exists.
-2. **Conditional dispatch** (branching): The self-simulator MUST take different paths for different elements. A program without branching cannot compute the table.
-3. **Y combinator** (for universal self-simulation): Arbitrary-size magmas require recursion. Fixed-size magmas don't.
+- **Partial application injectivity**: the map a ↦ eval(App(t, rep(a))) must be injective — the self-simulator cannot compress the encoding `[SelfSimulation.lean]`
+- **Encoding injectivity**: Q-depth encoding must be injective `[SelfSimulation.lean]`
+- **Row determination**: equal partial applications imply identical rows `[SelfSimulation.lean]`
 
-### Tier 2: Likely Derived (3 axioms)
-These have strong arguments but with gaps:
+### Independent of Self-Simulation (concrete counterexamples)
 
-4. **Two absorbers**: Binary classification needs two targets. Absorbers are the natural choice but not the only possibility.
-5. **Kleene dichotomy**: Mixed classifier/encoder elements create dispatch ambiguity. But the argument needs formalization.
-6. **E-transparency**: Evaluation consistency requires E to preserve boundaries. But the decoder itself doesn't need it.
+- **Kleene dichotomy**: A concrete N=8 non-Kleene retraction magma with two mixed elements (rows with both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells correct. The universal self-simulator decodes Q-depth and looks up the table; it never classifies outputs by type. The Kleene wall is not about computing the table — it is the architectural choice that organizes the algebra into coherent roles.
+- **Algebraic composition** (Compose): The machine sequences operations. SAT counterexample at N=10.
+- **Algebraic storage** (Inert/g): The machine provides non-destructive variable binding. SAT counterexample at N=10.
 
-### Tier 3: Independent (2 axioms)
-These are NOT derived — the machine provides the capability:
+### Unresolved
 
-7. **Algebraic composition** (Compose): The machine sequences operations.
-8. **Algebraic storage** (Inert/g): The machine provides non-destructive variable binding.
-
-### Tier 4: Unknown (3 axioms)
-Not analyzed:
-
-9. **1-Inert** (substrate uniqueness)
-10. **Selection** (η·ρ = τ)
-11. **Power-associativity**, **VV**
+- **Two absorbers**, **E-transparency**: strong arguments for necessity, but no proof and no counterexample.
+- **1-Inert**, **Selection**, **PA**, **VV**: not analyzed.
 
 ---
 
-## Key Finding: The Machine Boundary
+## Key Finding: Self-Simulation ≠ Self-Description
 
-The deepest finding is the **machine boundary**: self-simulation derives axioms about **discrimination and control flow** (what the algebra must DO) but NOT axioms about **structure and storage** (what the algebra must BE).
+Self-simulation (computing the table) and self-description (having clean internal roles) are different requirements. Self-simulation forces injectivity — the encoding can't be compressed. But it does NOT force the Kleene wall, because the self-simulator doesn't need to classify elements by row type. It just decodes and looks up.
 
-- **Derived:** The algebra must classify, branch, and recurse. These are COMPUTATIONAL requirements.
-- **Independent:** The algebra need not compose or store. The MACHINE provides these.
+The Kleene dichotomy is the axiom that bridges the gap: it says every non-absorber either fully classifies or fully transforms, never both. This creates the three-class decomposition (zeros, classifiers, non-classifiers) with hard walls between classes. Without it, the algebra can still compute its own table — but its elements don't have coherent roles, and the algebra is not interpretable as a computational system.
+
+Three levels of finite magma:
+
+```
+Self-simulating magma:     computes its own table (retraction pair suffices)
+                           no clean roles, no walls
+
+Self-describing magma:     + Kleene dichotomy (three clean categories)
+                           roles are coherent, walls are hard
+
+Self-hosting magma (Ψ):    + compose + inert (evaluator internalized)
+                           no external machine needed
+```
+
+The Ψ axiom system contributes two things beyond self-simulation: the Kleene wall (which creates structure) and machine internalization (which creates grounding). Both are genuine axioms, not derived. The Kleene wall is the more fundamental — it's what makes the algebra interpretable as a language rather than a table.
 
 This boundary corresponds to the separation in the Ψ system between:
 - **The instruction set** (Q/E for data, τ/ρ for control): DERIVED from self-simulation
