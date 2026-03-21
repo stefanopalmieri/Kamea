@@ -4,7 +4,7 @@ A self-describing finite algebra that recovers McCarthy's Lisp primitives from a
 
 **Three capabilities. Three walls. Seven roles. Zero `sorry`.**
 
-*A finite algebra can simulate itself without describing itself. It can describe itself without hosting itself. It can host itself without describing itself. No capability implies any other. A 16×16 table has all three.*
+*A finite algebra can simulate itself without describing itself. It can describe itself without hosting itself. It can host itself without describing itself. No capability implies any other.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
