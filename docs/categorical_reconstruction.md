@@ -100,13 +100,27 @@ The axiom system operates at two layers:
 
 The computational primitives of Lisp fall out of the capability layer alone at N=10. The clean separation into seven interpretable roles requires the organizational layer and pushes the minimum to N=12. The gap is the cost of legibility.
 
+## Realization Freedom
+
+Each capability admits multiple inequivalent axiom forms (`axiom_mutation_test.py`):
+
+| Capability | Axiom | Alternatives tested | Result |
+|---|---|---|---|
+| H | Compose: η·x = ρ·(g·x) | 5 variants (reversed, f∘g, ρ∘f, f∘ρ, g∘f) | All 6 SAT |
+| H | Y: Y·ρ = ρ·(Y·ρ) | 3 variants (general, g-fixpt, idempotent) | All 4 SAT |
+| H | Branch: τ→f, else→g | 2 variants (swapped, three-way) | All 3 SAT |
+
+The capabilities are the invariants; the axiom forms are presentations of those capabilities. Different presentations produce different role assignments within the same three-category architecture. The McCarthy role inventory (quote, eval, cons, car, cdr, cond, nil) is one realization — a canonical point within an equivalence class.
+
+This is analogous to the relationship between groups and group presentations, or between λ-calculus and combinatory logic: the algebraic structure is fixed, but the specific generators and relations are a choice.
+
 ## Conjectures
 
 **Conjecture 1 (Cross-Formalism Universality).** The three capabilities (naming, judging, evaluating) are three independent design choices for any finite reflective system. The specific axioms may vary across formalisms, but the independence of the three capabilities persists.
 
 **Conjecture 2 (Kripke–Subobject Correspondence).** The Kripke dichotomy is the finite analog of decidability of the subobject classifier in a topos. A formal functor from the category of DRMs to Set, sending each DRM to its three-category decomposition (Z, C, N), is natural.
 
-**Conjecture 3 (Internal Hom Fragment).** The Compose axiom η · x = ρ · (g · x) provides exactly the internal composition fragment sufficient for Turing-complete evaluation. A full internal hom (arbitrary composition representable) is not needed and may not exist in finite models.
+**Conjecture 3 (Realization Equivalence).** The set of axiom systems realizing each capability forms an equivalence class under a natural notion of "same capability, different presentation." The McCarthy realization and its 12+ tested alternatives are all equivalent in this sense.
 
 ## What Is Proved vs. What Is Open
 
