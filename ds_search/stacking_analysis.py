@@ -2655,11 +2655,11 @@ def lower_subtable_uniqueness():
     print("=" * 70)
 
 
-def kleene_exploration():
+def kripke_exploration():
     """
-    Test strict Kleene-inspired constraints on L8 algebras.
+    Test strict Kripke-inspired constraints on L8 algebras.
 
-    In strong Kleene: U (undefined) propagates unless short-circuited.
+    In strong Kripke: U (undefined) propagates unless short-circuited.
     Our framework: 0,1 = definite; everything else = indeterminate.
     Left-absorption already gives left-short-circuit.
 
@@ -2673,7 +2673,7 @@ def kleene_exploration():
       F. Right columns fixed: column 0 = all 0, column 1 = all 1
     """
     print("=" * 70)
-    print("KLEENE-INSPIRED CONSTRAINTS ON L8")
+    print("KRIPKE-INSPIRED CONSTRAINTS ON L8")
     print("=" * 70)
 
     results = {}
@@ -2801,7 +2801,7 @@ def kleene_exploration():
         count_and_report(f"E(N={N})", s, dot, N)
 
         # ── F: Two-sided absorbers + non-absorber closure ──
-        print(f"\n  F: Two-sided absorbers + non-absorber closure (full Kleene)")
+        print(f"\n  F: Two-sided absorbers + non-absorber closure (full Kripke)")
         s, dot = encode_level(8, N, timeout_seconds=120)
         for x in range(N):
             s.add(dot[x][0] == 0)
@@ -2835,11 +2835,11 @@ def kleene_exploration():
         print(f"  {label:<43} {status:>12}")
 
     print(f"\n{'═'*70}")
-    print("KLEENE EXPLORATION COMPLETE")
+    print("KRIPKE EXPLORATION COMPLETE")
     print(f"{'═'*70}")
 
 
-def kleene_c_stacking():
+def kripke_c_stacking():
     """
     Test tester-only resolution (Constraint C) combined with
     stacking framework at N=10 (double L8 + PA).
@@ -3121,11 +3121,11 @@ def kleene_c_stacking():
             print(f"    Lower×Lower: {lower_lower}/16")
 
     print("\n" + "=" * 70)
-    print("KLEENE C + STACKING COMPLETE")
+    print("KRIPKE C + STACKING COMPLETE")
     print("=" * 70)
 
 
-def kleene_c_cores_and_stacking():
+def kripke_c_cores_and_stacking():
     """
     Explore the L8 + C family:
     1. What do C-compatible L8 cores at N=6 look like?
@@ -3136,7 +3136,7 @@ def kleene_c_cores_and_stacking():
     print("C-COMPATIBLE L8 CORES AND STACKING")
     print("=" * 70)
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         """Only testers map non-absorbers → {0,1}."""
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
@@ -3146,7 +3146,7 @@ def kleene_c_cores_and_stacking():
     # ── Step 1: Enumerate C-compatible cores at N=6 ──
     print("\n--- C-compatible L8 cores at N=6 ---")
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
 
     cores = []
     t0 = time.time()
@@ -3204,7 +3204,7 @@ def kleene_c_cores_and_stacking():
     # Use raw L8 + C on the full N=10, then check for sub-algebra structure
     N = 10
     s, dot = encode_level(8, N, timeout_seconds=300)
-    add_kleene_c(s, dot, N)
+    add_kripke_c(s, dot, N)
 
     # Require a 6-element sub-algebra {0,1,2,3,4,5}:
     # closure: dot[i][j] < 6 for i,j in {0..5}
@@ -3277,7 +3277,7 @@ def kleene_c_cores_and_stacking():
         # Enumerate distinct upper sub-tables
         print(f"\n  Enumerating distinct upper sub-tables (blocking on 6×6)...")
         s2, dot2 = encode_level(8, N, timeout_seconds=300)
-        add_kleene_c(s2, dot2, N)
+        add_kripke_c(s2, dot2, N)
         for i in range(6):
             for j in range(6):
                 s2.add(dot2[i][j] < 6)
@@ -3299,7 +3299,7 @@ def kleene_c_cores_and_stacking():
         # Enumerate distinct lower sub-tables
         print(f"\n  Enumerating distinct lower sub-tables (blocking on 4×4)...")
         s3, dot3 = encode_level(8, N, timeout_seconds=300)
-        add_kleene_c(s3, dot3, N)
+        add_kripke_c(s3, dot3, N)
         for i in range(6):
             for j in range(6):
                 s3.add(dot3[i][j] < 6)
@@ -3326,7 +3326,7 @@ def kleene_c_cores_and_stacking():
         for N2 in [12, 14]:
             print(f"\n  Trying N={N2}...")
             s, dot = encode_level(8, N2, timeout_seconds=300)
-            add_kleene_c(s, dot, N2)
+            add_kripke_c(s, dot, N2)
             for i in range(6):
                 for j in range(6):
                     s.add(dot[i][j] < 6)
@@ -3372,7 +3372,7 @@ def meta_framework_campaign():
     import itertools
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         """C: only testers map non-absorbers → {0,1}."""
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
@@ -3484,7 +3484,7 @@ def meta_framework_campaign():
     # Exhaustive enumeration
     print("\nExhaustive enumeration of L8+C cores...")
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
 
     all_cores = []
     t0 = time.time()
@@ -3538,14 +3538,14 @@ def meta_framework_campaign():
 
     # C alone (baseline)
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
     report("L8 + C", cnt, elapsed, 100)
     combos["C"] = cnt
 
     # C + D (inert propagation)
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
     report("L8 + C + D (inert propagation)", cnt, elapsed, 100)
@@ -3553,7 +3553,7 @@ def meta_framework_campaign():
 
     # C + PA
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_pa(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
     report("L8 + C + PA", cnt, elapsed, 100)
@@ -3561,7 +3561,7 @@ def meta_framework_campaign():
 
     # C + v·v→core
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_vv_core(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
     report("L8 + C + v·v→core", cnt, elapsed, 100)
@@ -3569,7 +3569,7 @@ def meta_framework_campaign():
 
     # C + tester discrimination
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_tester_discrimination(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
     report("L8 + C + tester-discrim", cnt, elapsed, 100)
@@ -3577,7 +3577,7 @@ def meta_framework_campaign():
 
     # C + D + PA
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_pa(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
@@ -3586,7 +3586,7 @@ def meta_framework_campaign():
 
     # C + D + v·v→core
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_vv_core(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
@@ -3595,7 +3595,7 @@ def meta_framework_campaign():
 
     # C + D + tester-discrim
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_tester_discrimination(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
@@ -3604,7 +3604,7 @@ def meta_framework_campaign():
 
     # C + PA + v·v→core
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_pa(s, dot, 6)
     add_vv_core(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
@@ -3613,7 +3613,7 @@ def meta_framework_campaign():
 
     # C + PA + tester-discrim
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_pa(s, dot, 6)
     add_tester_discrimination(s, dot, 6)
     cnt, tbl, elapsed = count_models_fast(s, dot, 6, cap=100)
@@ -3622,7 +3622,7 @@ def meta_framework_campaign():
 
     # C + D + PA + v·v→core
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_pa(s, dot, 6)
     add_vv_core(s, dot, 6)
@@ -3632,7 +3632,7 @@ def meta_framework_campaign():
 
     # C + D + PA + tester-discrim
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_pa(s, dot, 6)
     add_tester_discrimination(s, dot, 6)
@@ -3642,7 +3642,7 @@ def meta_framework_campaign():
 
     # ALL: C + D + PA + v·v→core + tester-discrim
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     add_inert_propagation(s, dot, 6)
     add_pa(s, dot, 6)
     add_vv_core(s, dot, 6)
@@ -3668,7 +3668,7 @@ def meta_framework_campaign():
         print(f"\n  Best combo: {best_combo} ({combos[best_combo]} models)")
         # Re-run to get all tables
         s, dot = encode_level(8, 6, timeout_seconds=120)
-        add_kleene_c(s, dot, 6)
+        add_kripke_c(s, dot, 6)
         if 'D' in best_combo:
             add_inert_propagation(s, dot, 6)
         if 'PA' in best_combo:
@@ -3699,7 +3699,7 @@ def meta_framework_campaign():
 
     # Associativity
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     for a in range(6):
         for b in range(6):
             ab = dot[a][b]
@@ -3715,7 +3715,7 @@ def meta_framework_campaign():
 
     # Flexible
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     for a in range(6):
         for b in range(6):
             ba = dot[b][a]
@@ -3726,7 +3726,7 @@ def meta_framework_campaign():
 
     # Left alternative
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     for x in range(6):
         xx = dot[x][x]
         for y in range(6):
@@ -3737,7 +3737,7 @@ def meta_framework_campaign():
 
     # Right alternative
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     for x in range(6):
         for y in range(6):
             yy = dot[y][y]
@@ -3748,7 +3748,7 @@ def meta_framework_campaign():
 
     # x⁴ = x²
     s, dot = encode_level(8, 6, timeout_seconds=120)
-    add_kleene_c(s, dot, 6)
+    add_kripke_c(s, dot, 6)
     for x in range(6):
         xx = dot[x][x]
         x4 = dot[0][0]
@@ -3779,7 +3779,7 @@ def meta_framework_campaign():
         for N in [8, 10, 12]:
             print(f"\n  {combo_name} at N={N}:")
             s, dot = encode_level(8, N, timeout_seconds=300)
-            add_kleene_c(s, dot, N)
+            add_kripke_c(s, dot, N)
             if 'D' in combo_name:
                 add_inert_propagation(s, dot, N)
             if 'PA' in combo_name:
@@ -3846,7 +3846,7 @@ def meta_framework_campaign():
         print(f"\n  Depth {depth} (N={N}), L8+C + sub-algebra closure per layer:")
 
         s, dot = encode_level(8, N, timeout_seconds=300)
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
 
         # Layer 0: {0..5} closed
         for i in range(6):
@@ -3925,7 +3925,7 @@ def universality_check():
 
     # ── Helpers (same as meta_framework_campaign) ──────────────────
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -3981,7 +3981,7 @@ def universality_check():
 
     def add_full_meta(s, dot, N):
         """Add C+D+PA+vv→core (strongest SAT combo)."""
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -4610,7 +4610,7 @@ def meta_operations_analysis():
     import time
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -4665,7 +4665,7 @@ def meta_operations_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_meta(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -5201,7 +5201,7 @@ def integrated_meta_framework():
 
     Axiom levels:
       L8      — base axiom ladder (Ext, absorbers, tester, encoder, ...)
-      C       — tester-only resolution (Kleene constraint)
+      C       — tester-only resolution (Kripke constraint)
       D       — inert propagation
       PA      — power-associativity
       VV      — v·v → core (inert self-application is structured)
@@ -5221,7 +5221,7 @@ def integrated_meta_framework():
 
     # ── Constraint helpers ────────────────────────────────────────
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -5277,7 +5277,7 @@ def integrated_meta_framework():
 
     def add_full_base(s, dot, N):
         """C+D+PA+VV — the strongest SAT base combo."""
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -5345,12 +5345,12 @@ def integrated_meta_framework():
 
     tests = [
         ("L8 + QE",             lambda s, d, n: None),
-        ("L8 + C + QE",         lambda s, d, n: add_kleene_c(s, d, n)),
-        ("L8 + C+D + QE",       lambda s, d, n: (add_kleene_c(s, d, n),
+        ("L8 + C + QE",         lambda s, d, n: add_kripke_c(s, d, n)),
+        ("L8 + C+D + QE",       lambda s, d, n: (add_kripke_c(s, d, n),
                                                    add_inert_propagation(s, d, n))),
-        ("L8 + C+PA + QE",      lambda s, d, n: (add_kleene_c(s, d, n),
+        ("L8 + C+PA + QE",      lambda s, d, n: (add_kripke_c(s, d, n),
                                                    add_pa(s, d, n))),
-        ("L8 + C+D+PA + QE",    lambda s, d, n: (add_kleene_c(s, d, n),
+        ("L8 + C+D+PA + QE",    lambda s, d, n: (add_kripke_c(s, d, n),
                                                    add_inert_propagation(s, d, n),
                                                    add_pa(s, d, n))),
         ("L8 + C+D+PA+VV + QE", lambda s, d, n: add_full_base(s, d, n)),
@@ -5381,7 +5381,7 @@ def integrated_meta_framework():
 
     tests2 = [
         ("L8 + QE + AU",              lambda s, d, n: None),
-        ("L8 + C + QE + AU",          lambda s, d, n: add_kleene_c(s, d, n)),
+        ("L8 + C + QE + AU",          lambda s, d, n: add_kripke_c(s, d, n)),
         ("L8 + full-base + QE + AU",  lambda s, d, n: add_full_base(s, d, n)),
     ]
 
@@ -5715,7 +5715,7 @@ def integrated_meta_framework():
     print("""
 Integrated Meta-Framework Axioms:
   L8    — base axiom ladder (ext, absorbers, tester, encoder, ...)
-  C     — tester-only resolution (Kleene)
+  C     — tester-only resolution (Kripke)
   D     — inert propagation
   PA    — power-associativity
   VV    — v·v → core
@@ -5735,7 +5735,7 @@ def scaling_and_constructibility():
 
     # ── Constraint helpers ────────────────────────────────────────
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -5790,7 +5790,7 @@ def scaling_and_constructibility():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -6127,7 +6127,7 @@ def rigidity_analysis():
     from itertools import permutations
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -6182,7 +6182,7 @@ def rigidity_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -6786,7 +6786,7 @@ def actuality_irreducibility():
 
     # ── Constraint helpers ────────────────────────────────────────
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -6841,7 +6841,7 @@ def actuality_irreducibility():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -7462,7 +7462,7 @@ def computational_axioms():
 
     # ── Constraint helpers ────────────────────────────────────────
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -7517,7 +7517,7 @@ def computational_axioms():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -8053,7 +8053,7 @@ def tester_branching():
     """
     Path 2: Branch through the tester directly.
 
-    C (Kleene) blocks single-element dispatch: d·0 = d·1 for non-testers.
+    C (Kripke) blocks single-element dispatch: d·0 = d·1 for non-testers.
     But the tester itself gives binary output. Branching happens at the
     TERM level: evaluate t·x → {0,1}, then the caller applies either
     encoder f (on result 0) or encoder g (on result 1).
@@ -8073,7 +8073,7 @@ def tester_branching():
     """
 
     # ── Helpers (local to function) ──────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -8128,7 +8128,7 @@ def tester_branching():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -8732,7 +8732,7 @@ def tester_branching():
   r·x = f·x when t·x = 0
   r·x = g·x when t·x = 1
 
-  This bypasses C (Kleene)'s constraint that non-testers must
+  This bypasses C (Kripke)'s constraint that non-testers must
   treat absorbers uniformly. The branch element r is not a
   dispatcher — it's the RESULT of the branch, a new encoder
   that embodies the conditional computation.
@@ -8754,7 +8754,7 @@ def model_space_analysis():
     """
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -8809,7 +8809,7 @@ def model_space_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -9385,7 +9385,7 @@ def variation_analysis():
     from itertools import combinations
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -9440,7 +9440,7 @@ def variation_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -10102,7 +10102,7 @@ def pinning_analysis():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -10157,7 +10157,7 @@ def pinning_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -11269,7 +11269,7 @@ def squaring_stability():
 
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -11324,7 +11324,7 @@ def squaring_stability():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -11825,7 +11825,7 @@ def computational_activity():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -11880,7 +11880,7 @@ def computational_activity():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -12215,7 +12215,7 @@ def activity_refinement():
 
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -12270,7 +12270,7 @@ def activity_refinement():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -12491,7 +12491,7 @@ def extract_psi():
 
     from collections import Counter
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -12546,7 +12546,7 @@ def extract_psi():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -12752,7 +12752,7 @@ def extract_psi():
     other_abs = [i for i in range(2, N) if all(psi[i][j] == i for j in range(N))]
     print(f"  No other absorbers: {len(other_abs) == 0}")
 
-    # C (Kleene): non-testers map non-absorbers to ≥2
+    # C (Kripke): non-testers map non-absorbers to ≥2
     c_ok = True
     for x in range(2, N):
         is_tst = all(psi[x][j] in (0, 1) for j in range(N))
@@ -12760,7 +12760,7 @@ def extract_psi():
             for y in range(2, N):
                 if psi[x][y] < 2:
                     c_ok = False
-    print(f"  C (Kleene): {c_ok}")
+    print(f"  C (Kripke): {c_ok}")
 
     # D (inert propagation): inert elements map non-absorbers to ≥2
     inert_elems = [i for i in range(2, N) if rm.get(i) == "inert"]
@@ -13017,7 +13017,7 @@ def extract_psi():
     L0-L8  Structural ladder (absorbers, extensionality, tester,
            encoder, no extra absorbers, no extra testers, inert,
            encoder separation)
-    C      Kleene: only testers produce boolean outputs
+    C      Kripke: only testers produce boolean outputs
     D      Inert propagation: inert preserves non-absorber status
     PA     Power-associativity: (x·x)·x = x·(x·x)
     VV     Inert self-application yields core (tester or encoder)
@@ -13050,7 +13050,7 @@ def qe_boundary_pinning():
     from collections import Counter
 
     # ── Helpers (same as extract_psi) ─────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -13105,7 +13105,7 @@ def qe_boundary_pinning():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -13437,7 +13437,7 @@ def qe_tester_causality():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -13492,7 +13492,7 @@ def qe_tester_causality():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -13719,7 +13719,7 @@ def qe_tester_causality():
 
         # Trace: how does E·0=0 propagate?
         print(f"\n  Propagation from E·⊤=⊤:")
-        # Kleene (C): non-testers map non-absorbers to ≥2
+        # Kripke (C): non-testers map non-absorbers to ≥2
         # Element 7 (E) is an encoder, so E·x ≥ 2 for x ≥ 2
         # E·0 = 0 is allowed because 0 is an absorber
         # But E·0 = 0 means E maps ⊤ to ⊤
@@ -13790,7 +13790,7 @@ def etrans_residual_freedom():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -13845,7 +13845,7 @@ def etrans_residual_freedom():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -14103,7 +14103,7 @@ def n8_freedom_analysis():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -14158,7 +14158,7 @@ def n8_freedom_analysis():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -14426,7 +14426,7 @@ def counter_embedding():
     from collections import Counter
 
     # ── Helpers ──────────────────────────────────────────────────────
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -14481,7 +14481,7 @@ def counter_embedding():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -14974,7 +14974,7 @@ def n16_viability():
 
     # ─── Helper functions (same as counter_embedding but for N=16) ───
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -15029,7 +15029,7 @@ def n16_viability():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -15596,7 +15596,7 @@ def extract_psi16():
 
     # ─── Helpers (same as n16_viability) ───
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -15651,7 +15651,7 @@ def extract_psi16():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -15836,7 +15836,7 @@ def extract_psi16():
             for y in range(2, N):
                 if tbl[x][y] < 2:
                     c_ok = False
-    print(f"    C (Kleene closure):                {'PASS' if c_ok else 'FAIL'}")
+    print(f"    C (Kripke closure):                {'PASS' if c_ok else 'FAIL'}")
 
     # D axiom: inert maps core to core
     inert_elems = [i for i in range(2, N) if rm.get(i) == "inert"]
@@ -16296,7 +16296,7 @@ def extract_psi16():
     all_checks = {
         "L0 Ext-magma": ext_ok,
         "L0 Absorbers": abs0 and abs1 and no_extra_abs,
-        "C (Kleene)": c_ok,
+        "C (Kripke)": c_ok,
         "D (inert prop)": d_ok,
         "PA": pa_ok,
         "VV": vv_ok,
@@ -16355,7 +16355,7 @@ def extract_psi16_selection():
 
     # ─── Helpers (same as extract_psi16) ───
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -16410,7 +16410,7 @@ def extract_psi16_selection():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -16638,7 +16638,7 @@ def extract_psi16_selection():
         all_checks = {
             "L0 Ext-magma": ext_ok,
             "L0 Absorbers": abs0 and abs1 and no_extra_abs,
-            "C (Kleene)": c_ok,
+            "C (Kripke)": c_ok,
             "D (inert prop)": d_ok,
             "PA": pa_ok,
             "VV": vv_ok,
@@ -16953,7 +16953,7 @@ def extract_psi16_full():
 
     # ─── Helpers ───
 
-    def add_kleene_c(s, dot, N):
+    def add_kripke_c(s, dot, N):
         for x in range(2, N):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
             for y in range(2, N):
@@ -17008,7 +17008,7 @@ def extract_psi16_full():
             s.add(Or(Not(is_inert_v), vv_is_core))
 
     def add_full_base(s, dot, N):
-        add_kleene_c(s, dot, N)
+        add_kripke_c(s, dot, N)
         add_inert_propagation(s, dot, N)
         add_pa(s, dot, N)
         add_vv_core(s, dot, N)
@@ -17414,7 +17414,7 @@ def extract_psi16_full():
     checks["L0 Absorber ⊤"] = all(tbl[0][j] == 0 for j in range(N))
     checks["L0 Absorber ⊥"] = all(tbl[1][j] == 1 for j in range(N))
     checks["L0 No extra abs"] = not any(all(tbl[i][j] == i for j in range(N)) for i in range(2, N))
-    checks["C (Kleene)"] = all(tbl[x][y] >= 2
+    checks["C (Kripke)"] = all(tbl[x][y] >= 2
         for x in range(2, N) if not all(tbl[x][j] in (0,1) for j in range(N))
         for y in range(2, N))
     checks["D (inert prop)"] = all(tbl[v][y] >= 2 for v in inert_elems for y in range(2, N))
@@ -17850,10 +17850,10 @@ def extract_psi16_full():
         L.append(f"    is_inert a → a = {ln(inert_e)} := by native_decide")
     L.append("")
 
-    # Part 5: Kleene
-    L.append("/-! ## Part 5: Kleene (C) -/")
+    # Part 5: Kripke
+    L.append("/-! ## Part 5: Kripke (C) -/")
     L.append("")
-    L.append("theorem kleene : ∀ a x : Fin 16,")
+    L.append("theorem kripke : ∀ a x : Fin 16,")
     L.append("    ¬is_absorber a → ¬is_absorber x → is_boolean (psi a x) → is_tester a := by native_decide")
     L.append("")
 

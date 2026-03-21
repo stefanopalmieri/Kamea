@@ -55,8 +55,8 @@ for x in range(N):
     ok = v in (0, 1)
     print(f"   cls·{x} = {v} {'✓' if ok else '✗'}")
 
-# 6. Kleene dichotomy
-print("6. Kleene dichotomy:")
+# 6. Kripke dichotomy
+print("6. Kripke dichotomy:")
 for a in range(2, N):
     nonzero_outputs = [dot(a, x) for x in range(2, N)]
     all_bool = all(v in (0, 1) for v in nonzero_outputs)

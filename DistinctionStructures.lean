@@ -12,11 +12,11 @@ import DistinctionStructures.PsiUniversalBounds
 import DistinctionStructures.PsiCountermodels
 -- Categorical foundation (standard vocabulary)
 import DistinctionStructures.CategoricalFoundation
-import DistinctionStructures.CatKleeneWall
+import DistinctionStructures.CatKripkeWall
 import DistinctionStructures.CatWitness
 import DistinctionStructures.CatForcedDistinctness
 import DistinctionStructures.CatRigidity
 import DistinctionStructures.CatDiscoverable
 import DistinctionStructures.CatActualityIrreducibility
--- Kleene wall paper (self-contained, minimal structure)
-import DistinctionStructures.CatKleeneWallMinimal
+-- Kripke wall paper (self-contained, minimal structure)
+import DistinctionStructures.CatKripkeWallMinimal

@@ -23,7 +23,7 @@ from ds_search.axiom_explorer import (
     print_table,
 )
 from ds_search.forced_roles_test import (
-    axiom_L0, axiom_kleene, axiom_inert_prop, axiom_pa, axiom_vv,
+    axiom_L0, axiom_kripke, axiom_inert_prop, axiom_pa, axiom_vv,
     axiom_qe, axiom_e_trans, axiom_1_inert, axiom_branch, axiom_compose,
     axiom_y, axiom_selection, role_tester, role_inert, role_encoder,
     is_inert_z3,
@@ -39,7 +39,7 @@ ROLES = {
 }
 
 AXIOM_NAMES = [
-    "Kleene", "InertProp", "PA", "VV", "QE",
+    "Kripke", "InertProp", "PA", "VV", "QE",
     "E-trans", "1-Inert", "Branch", "Compose", "Y", "Selection",
 ]
 
@@ -66,7 +66,7 @@ def build_solver(skip_axioms=None, role_a=None, role_b=None):
         s.add(c)
 
     axiom_map = {
-        "Kleene": lambda: axiom_kleene(dot, N),
+        "Kripke": lambda: axiom_kripke(dot, N),
         "InertProp": lambda: axiom_inert_prop(dot, N),
         "PA": lambda: axiom_pa(dot, N),
         "VV": lambda: axiom_vv(dot, N),
@@ -162,7 +162,7 @@ def max_removable_set():
 
     # Wall test pairs (UNSAT pairs from each wall)
     wall_unsat_pairs = [
-        # Kleene wall — just test one representative
+        # Kripke wall — just test one representative
         ("τ", "Q"),
         # Substrate wall — just test one representative
         ("g", "Q"),
@@ -245,7 +245,7 @@ def freedom_comparison():
         ("-VV", {"VV"}),
         ("-PA, -VV", {"PA", "VV"}),
         ("-PA, -VV, -E-trans", {"PA", "VV", "E-trans"}),
-        ("-Kleene, -InertProp, -PA", {"Kleene", "InertProp", "PA"}),
+        ("-Kripke, -InertProp, -PA", {"Kripke", "InertProp", "PA"}),
     ]
 
     for label, skip_set in configs:
@@ -320,7 +320,7 @@ def check_axiom_in_model(axiom_name, table, idx):
     def dot(a, b):
         return table[a][b]
 
-    if axiom_name == "Kleene":
+    if axiom_name == "Kripke":
         # C: for non-absorbers x, if row x is not all-boolean, then x·y ≥ 2 for all y ≥ 2
         for x in range(2, N_t):
             is_tst = all(table[x][j] in (0, 1) for j in range(N_t))

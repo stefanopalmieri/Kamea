@@ -42,7 +42,7 @@ This file is the canonical status registry for claims made in this repository.
 | Ψ∗ Turing-completeness: 7 axiom-forced elements (⊤, Q, E, f, g, η, ρ) simulate 2-counter machines; universal across all models | Empirical | `psi_star.py` — stepped 2CM matches reference interpreter on 4 test programs | `uv run python psi_star.py` |
 | 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `ds_search/n16_freedom.py` build_solver + XOR/AND/OR constraints |
 | Five behavioral categories forced (32/45 role pairs UNSAT, min 5 elements) | Empirical | `ds_search/forced_roles_test.py` — role-aliasing at N=12; `docs/forced_roles.md` | `uv run python -m ds_search.forced_roles_test` |
-| Kleene wall: τ cannot merge with any encoder or inert role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
+| Kripke wall: τ cannot merge with any encoder or inert role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
 | Inert wall: g cannot merge with any other role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
 | Rigidity survives all collapse levels: 6/6 levels WL-1 rigid, |Aut|=1, 1-probe discoverable | Empirical | `ds_search/collapse_rigidity_test.py` | `uv run python -m ds_search.collapse_rigidity_test` |
 | Model diversity at maximal collapse: 20+ distinct rigid models, 116/144 cells free | Empirical | `ds_search/collapse_model_count.py` | `uv run python -m ds_search.collapse_model_count` |
@@ -61,7 +61,7 @@ This file is the canonical status registry for claims made in this repository.
 | Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on fibonacci + recursion | Empirical | `psi_transpile.py --target c\|rust` | `python3 psi_transpile.py --target rust examples/psi_fibonacci.lisp > /tmp/fib.rs && cp psi_runtime.rs /tmp/ && rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib` |
 | MMTk GC stress test: 10M cons cells in 4MB heap (MarkSweep + shadow stack roots) | Empirical | `kamea-rs/crates/wispy-gc/` + `wispy-stress/` | `cd kamea-rs && HEAP_MB=4 cargo run -p wispy-stress --release` |
 | 3 categories universal (absorbers, classifiers, transformers from all 4+ axiom systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.alternative_axioms` |
-| Kleene wall universal (classifiers ≠ transformers in all systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
+| Kripke wall universal (classifiers ≠ transformers in all systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Rigidity emerges from categorical axioms (50/50 models, no rigidity axiom) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Discoverability emerges from categorical axioms (49/50 models) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Substrate existence selected by expressiveness (inert=0 degenerate: 1/10 discoverable) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
@@ -70,13 +70,13 @@ This file is the canonical status registry for claims made in this repository.
 | 3 redundant axioms identified (InertProp, VV, 1-Inert implied by remaining 8) | Empirical | `ds_search/axiom_archaeology_deep.py` | `uv run python -c "from ds_search.axiom_archaeology_deep import axiom_dependencies; axiom_dependencies()"` |
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
 | Distinctness decomposition: 32/45 pairs forced by categorical axioms, 3/45 forced by TC (lazy/eager + projection uniqueness), 10/45 are standard algebraic practice | Empirical | `ds_search/forced_roles_test.py` (32 categorical), `ds_search/tc_distinctness_test.py` (3 TC), `ds_search/tc_distinctness_deep.py` (E=f artifact) | `uv run python -m ds_search.tc_distinctness_test && uv run python -m ds_search.tc_distinctness_deep` |
-| Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Kleene wall: classifier ∩ non-classifier = ∅ | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| No right identity (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Card ≥ 4 (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Minimal DichotomicRetractMagma witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — witnesses by `decide` | `lake build` |
-| Card ≥ 5 when sec ≠ ret (tight) | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — algebraic proof | `lake build` |
+| Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Kripke wall: classifier ∩ non-classifier = ∅ | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| No right identity (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Card ≥ 4 (any DichotomicRetractMagma) | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Retraction pair ∈ non-classifier class | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Minimal DichotomicRetractMagma witness: N=4 (sec=ret), N=5 (sec≠ret, tight) | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — witnesses by `decide` | `lake build` |
+| Card ≥ 5 when sec ≠ ret (tight) | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — algebraic proof | `lake build` |
 | 32/45 role pairs forced distinct (16-element witness) | Lean-proved | `DistinctionStructures/CatForcedDistinctness.lean` — `native_decide` | `lake build` |
 | Rigidity of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatRigidity.lean` — via table equivalence | `lake build` |
 | Discoverability of 16-element categorical witness | Lean-proved | `DistinctionStructures/CatDiscoverable.lean` — `native_decide` | `lake build` |
@@ -87,10 +87,10 @@ This file is the canonical status registry for claims made in this repository.
 | Tighter closure variants (6-element computational core, 8-element non-zeros, one-sided) all UNSAT | Empirical | `ds_search/composition_closure_test.py` | `uv run python -m ds_search.composition_closure_test` |
 | Reflection distinctness: 0/10 nontriviality pairs killed by full reflective tower | Empirical | `ds_search/reflection_distinctness_test.py` | `uv run python -m ds_search.reflection_distinctness_test` |
 | 10 nontriviality pairs exhaustively characterized (categorical + TC + closure + reflection all tested) | Empirical | `ds_search/tc_distinctness_test.py`, `reflection_distinctness_test.py`, `composition_closure_test.py` | See individual scripts |
-| 112 non-isomorphic DichotomicRetractMagmas at N=4 (minimal model not unique) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
-| 0 homomorphisms from N=4/5 Lean witnesses to Ψ₁₆ᶠ (weak or strict) | Empirical | `ds_search/kleene_canonicity.py` | `uv run python -m ds_search.kleene_canonicity` |
-| Three-class decomposition (Z, C, N) is functorial invariant of all DichotomicRetractMagma models | Lean-proved | `DistinctionStructures/CatKleeneWallMinimal.lean` — `three_categories` | `lake build` |
-| No initial object in category DRMag | Empirical | `ds_search/kleene_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kleene_canonicity` |
+| 112 non-isomorphic DichotomicRetractMagmas at N=4 (minimal model not unique) | Empirical | `ds_search/kripke_canonicity.py` | `uv run python -m ds_search.kripke_canonicity` |
+| 0 homomorphisms from N=4/5 Lean witnesses to Ψ₁₆ᶠ (weak or strict) | Empirical | `ds_search/kripke_canonicity.py` | `uv run python -m ds_search.kripke_canonicity` |
+| Three-class decomposition (Z, C, N) is functorial invariant of all DichotomicRetractMagma models | Lean-proved | `DistinctionStructures/CatKripkeWallMinimal.lean` — `three_categories` | `lake build` |
+| No initial object in category DRMag | Empirical | `ds_search/kripke_canonicity.py` — 112 iso classes + 0 homomorphisms | `uv run python -m ds_search.kripke_canonicity` |
 | Compiled reflective tower: 2.2 ms native, ~20,000x over interpreted (meta-circular evaluator + continuation reification + branch swap in single binary) | Empirical | `psi_transpile.py --target rust` on metacircular + tower | `python3 psi_transpile.py --target rust examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp > /tmp/tower.rs && cp psi_runtime_f.rs /tmp/ && rustc -O -o /tmp/tower /tmp/tower.rs && /tmp/tower` |
 | Transpiler handles metaprograms: quoted symbol encoding, cons-cell data construction, arena threading | Empirical | Compiled tower produces identical output to interpreted tower | `diff <(python3 psi_lisp.py examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp 2>/dev/null) <(/tmp/tower)` |
 | Partial application injectivity: self-simulation + extensionality + compositionality ⇒ `a ↦ eval(App(t, rep(a)))` injective | Lean-proved | `DistinctionStructures/SelfSimulation.lean` — algebraic proof, no `decide` | `lake build` |
@@ -104,7 +104,7 @@ This file is the canonical status registry for claims made in this repository.
 | Y-combinator derived from universal self-simulation (unbounded Q-depth requires recursion) | Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 4 | N/A |
 | Compose independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test D | `python3 self_simulation_investigation.py` |
 | Inert independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test E | `python3 self_simulation_investigation.py` |
-| Kleene dichotomy independent of self-simulation: N=8 non-Kleene retraction magma self-simulates (64/64 cells) | Empirical | `self_simulation_investigation.py` — Test B + universal self-simulator | `python3 self_simulation_investigation.py` |
+| Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma self-simulates (64/64 cells) | Empirical | `self_simulation_investigation.py` — Test B + universal self-simulator | `python3 self_simulation_investigation.py` |
 | Universal self-simulator: one program computes dot(a,b) for any Ψ model (verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ) | Empirical | `universal_self_simulator.py` | `python3 universal_self_simulator.py` |
 | Self-simulation is a property of the theory, not any model (same code, different tables, both pass) | Empirical | `universal_self_simulator.py` — both Ψ₁₆ᶠ and Ψ₁₆ᶜ | `python3 universal_self_simulator.py` |
 | Machine boundary: instruction set (classifier, branch, Y) derived; machine (compose, inert) chosen | Argument | `docs/self_simulation_necessity.md` | N/A |

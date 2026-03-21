@@ -20,12 +20,12 @@ Presuppose: a finite extensional magma (S, ·) with a retraction pair (Q, E) sat
 
 **Independent** (concrete counterexamples):
 
-- **Kleene dichotomy**: an N=8 non-Kleene retraction magma with two mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells. The universal self-simulator never classifies outputs by type; it decodes Q-depth and looks up the table. Mixed elements cause no interference. The Kleene wall is not about computing the table — it is the architectural axiom that organizes computation into coherent roles.
+- **Kripke dichotomy**: an N=8 non-dichotomic retraction magma with two mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells. The universal self-simulator never classifies outputs by type; it decodes Q-depth and looks up the table. Mixed elements cause no interference. The Kripke wall is not about computing the table — it is the architectural axiom that organizes computation into coherent roles.
 - **Compose**, **Inert**: SAT counterexamples at N=10. The machine provides sequencing and storage externally.
 
 **Unresolved**: Two absorbers, E-transparency (strong arguments, no proof or counterexample).
 
-**Status**: self-simulation forces injectivity (proved) and is sufficient (verified). It does NOT force the Kleene dichotomy (disproved by counterexample). The gap between self-simulation and self-description is exactly the Kleene wall.
+**Status**: self-simulation forces injectivity (proved) and is sufficient (verified). It does NOT force the Kripke dichotomy (disproved by counterexample). The gap between self-simulation and self-description is exactly the Kripke wall.
 
 ### Layer 1 — Categorically Forced (zero choices)
 
@@ -34,11 +34,11 @@ Standard finite category theory: zero morphisms, retraction pair, subobject clas
 **What emerges:**
 
 - **Three behavioral categories**: absorbers (constant morphisms), classifiers (Bool-valued morphisms), transformers (morphisms with multiple non-boolean outputs).
-- **Kleene wall**: classifiers cannot be transformers. A morphism's image is either contained in {0,1} or has elements outside {0,1}. These are mutually exclusive row profiles.
+- **Kripke wall**: classifiers cannot be transformers. A morphism's image is either contained in {0,1} or has elements outside {0,1}. These are mutually exclusive row profiles.
 - **Rigidity**: 50/50 sampled categorical models are WL-1 rigid. No rigidity axiom was included — it emerges from the interaction of retraction pair + unique subobject classifier + product structure + conditional dispatch.
 - **Discoverability**: 49/50 sampled categorical models have the property that every non-absorber element is uniquely identifiable from probes. No discoverability axiom was included.
 
-**Evidence**: Five independent axiom systems tested (Ψ, information-theoretic, category-theoretic, game-theoretic, categorical topos). All five produce the three categories and the Kleene wall. Rigidity and discoverability verified on 50 categorical topos models.
+**Evidence**: Five independent axiom systems tested (Ψ, information-theoretic, category-theoretic, game-theoretic, categorical topos). All five produce the three categories and the Kripke wall. Rigidity and discoverability verified on 50 categorical topos models.
 
 **Status**: structurally universal.
 
@@ -51,7 +51,7 @@ Two axioms internalize the evaluation machine into the algebra. These are NOT de
 
 This is what distinguishes Ψ from a bare self-simulating magma and what terminates Smith's infinite regress. The instruction set (Layer 0) says what computations are possible. The machine (this layer) says those computations can happen inside the algebra, with no external evaluator needed.
 
-**Evidence**: SAT counterexamples (Tests D and E in `self_simulation_investigation.py`) confirm both axioms are algebraically independent of self-simulation. Models satisfying retraction + classifier + Kleene + Branch exist without Compose and without Inert.
+**Evidence**: SAT counterexamples (Tests D and E in `self_simulation_investigation.py`) confirm both axioms are algebraically independent of self-simulation. Models satisfying retraction + classifier + Kripke + Branch exist without Compose and without Inert.
 
 **Status**: design choice for self-hosting, clearly justified by the grounding requirement.
 
@@ -105,11 +105,11 @@ One axiom completes the structure.
 ```
 Self-simulation requirement (one recursive program computes own table)
   → discrimination + branching + recursion (Layer 0)
-  → Kleene dichotomy, E-transparency, two absorbers (likely)
+  → Kripke dichotomy, E-transparency, two absorbers (likely)
 
 Standard category theory (zero morphisms, retraction pair,
 subobject classifier, products, conditional copairing)
-  → 3 categories + Kleene wall + rigidity + discoverability (Layer 1)
+  → 3 categories + Kripke wall + rigidity + discoverability (Layer 1)
 
 + Machine internalization (design choice, not derived)
   → Compose (sequencing within algebra) + Inert (storage) (Layer 2)
@@ -133,10 +133,10 @@ subobject classifier, products, conditional copairing)
 Self-simulation derives axioms about what the algebra must DO (classify, branch, recurse) but NOT about what the algebra must BE (compose, store). This maps onto the Ψ architecture:
 
 - **Retraction pair** (Q/E): PRESUPPOSED — provides encoding/decoding
-- **Kleene wall** (τ classifiers vs non-classifiers): NOT derived from self-simulation (N=8 counterexample). The architectural axiom that creates coherent roles.
+- **Kripke wall** (τ classifiers vs non-classifiers): NOT derived from self-simulation (N=8 counterexample). The architectural axiom that creates coherent roles.
 - **Machine** (Compose for sequencing, Inert for storage): NOT derived from self-simulation. The engineering choice that internalizes the evaluator.
 
-Self-simulation forces injectivity (Lean-proved) and suffices for any model (verified). But it does not force the Kleene wall or machine internalization. The Ψ axiom system adds two things beyond what self-simulation provides: the Kleene wall (which organizes computation into roles) and the machine axioms (which ground the reflective tower). Both are genuine axioms.
+Self-simulation forces injectivity (Lean-proved) and suffices for any model (verified). But it does not force the Kripke wall or machine internalization. The Ψ axiom system adds two things beyond what self-simulation provides: the Kripke wall (which organizes computation into roles) and the machine axioms (which ground the reflective tower). Both are genuine axioms.
 
 Three levels of finite magma:
 
@@ -145,7 +145,7 @@ Self-simulating magma:     retraction pair + extensionality
                            computes own table (Lean: injectivity forced)
                            no clean roles, no walls, machine external
 
-Self-describing magma:     + Kleene dichotomy
+Self-describing magma:     + Kripke dichotomy
                            three categories, hard walls, coherent roles
                            interpretable as a computational system
 
@@ -154,13 +154,13 @@ Self-hosting magma (Ψ):    + Compose + Inert
                            Smith's tower terminates
 ```
 
-The gap between self-simulating and self-describing is the Kleene wall. The gap between self-describing and self-hosting is machine internalization.
+The gap between self-simulating and self-describing is the Kripke wall. The gap between self-describing and self-hosting is machine internalization.
 
 ---
 
 ## What Each Axiom System Found
 
-| System | Categories | Kleene | Substrate | g = CONS | Rigid | Discoverable |
+| System | Categories | Kripke | Substrate | g = CONS | Rigid | Discoverable |
 |--------|-----------|--------|-----------|----------|-------|-------------|
 | Ψ (full) | 2-1-8-1 | YES | YES | **YES** | YES | YES |
 | Info-theoretic | 2-1-9-0 | YES | NO | NO | — | — |
@@ -192,11 +192,11 @@ Three of eleven behavioral axioms are redundant — implied by the remaining eig
 
 | Axiom | Status |
 |-------|--------|
-| InertProp (D) | Redundant — implied by Kleene + role constraints |
+| InertProp (D) | Redundant — implied by Kripke + role constraints |
 | VV | Redundant — implied by remaining axioms |
 | 1-Inert | Redundant — implied by Branch + Compose + role constraints |
 
-The minimal independent set: **{Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}** — eight axioms. Fewer axioms, less opportunity for indirect encoding.
+The minimal independent set: **{Kripke, PA, QE, E-trans, Branch, Compose, Y, Selection}** — eight axioms. Fewer axioms, less opportunity for indirect encoding.
 
 Note: 1-Inert is derivable in the sense that inert ≥ 1 is selected by expressiveness and forced by the distinctness axiom (g must be distinct from all encoders, and g is inert). Its status as Layer 3 reflects that the choice of EXACTLY one inert element (versus two or more) is not structurally forced — it is a philosophical commitment to the uniqueness of ground.
 
@@ -204,7 +204,7 @@ Note: 1-Inert is derivable in the sense that inert ≥ 1 is selected by expressi
 
 ## Honest Scope
 
-The Ψ role structure follows from four things: the self-simulation requirement (derives discrimination, branching, and recursion — the instruction set), standard categorical structure (forces three categories and the Kleene wall), the machine internalization choice (Compose and Inert — not derived but chosen to ground the reflective tower), and the distinctness axiom (forces full role specialization — standard algebraic practice, independently justified by expressiveness).
+The Ψ role structure follows from four things: the self-simulation requirement (derives discrimination, branching, and recursion — the instruction set), standard categorical structure (forces three categories and the Kripke wall), the machine internalization choice (Compose and Inert — not derived but chosen to ground the reflective tower), and the distinctness axiom (forces full role specialization — standard algebraic practice, independently justified by expressiveness).
 
 The difference between "a finite algebra with a retraction pair" and "a finite algebra that recapitulates Lisp" is: self-simulation forces the instruction set (Layer 0), categorical structure organizes it into three clean classes (Layer 1), machine internalization provides in-algebra sequencing and storage (Layer 2), and distinctness maximizes expressiveness (Layer 3). The Compose axiom — which fuses substrate with pair-construction — sits at the intersection of Layers 2 and 3: it is the machine internalization choice that produces the McCarthy correspondence.
 
@@ -228,7 +228,7 @@ No commutative magma can have two distinct left-absorbers. The proof is three li
 2. `dot(zero₂, zero₁) = zero₂` (zero₂ absorbs)
 3. Commutativity gives `zero₁ = zero₂`, contradicting distinctness.
 
-This is proved in Lean (`NoCommutativity.lean`) with zero `sorry`, zero `decide`. It requires only the absorber axioms — no Kleene wall, retraction pair, or extensionality. Self-description requires asymmetry at the most fundamental level: the existence of two distinct boundaries forces non-commutativity.
+This is proved in Lean (`NoCommutativity.lean`) with zero `sorry`, zero `decide`. It requires only the absorber axioms — no Kripke wall, retraction pair, or extensionality. Self-description requires asymmetry at the most fundamental level: the existence of two distinct boundaries forces non-commutativity.
 
 ---
 

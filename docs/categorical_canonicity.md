@@ -6,17 +6,17 @@
 
 ## The Question
 
-Define the category **DRMag** whose objects are finite magmas with two zero morphisms, extensionality, a retraction pair, and the Kleene dichotomy, and whose morphisms are operation-preserving maps that respect the distinguished elements. Is there an initial object? Does Ψ₁₆ᶠ satisfy a universal property?
+Define the category **DRMag** whose objects are finite magmas with two zero morphisms, extensionality, a retraction pair, and the Kripke dichotomy, and whose morphisms are operation-preserving maps that respect the distinguished elements. Is there an initial object? Does Ψ₁₆ᶠ satisfy a universal property?
 
 ## The Answer: No Canonical Object
 
-The minimal models (N=4, sec=ret) are not unique. **112 non-isomorphic dichotomic retract magmas exist at N=4** (SAT enumeration with isomorphism-class deduplication). The Lean witness `kleene4` is one of 112. There is no initial object.
+The minimal models (N=4, sec=ret) are not unique. **112 non-isomorphic dichotomic retract magmas exist at N=4** (SAT enumeration with isomorphism-class deduplication). The Lean witness `kripke4` is one of 112. There is no initial object.
 
-No homomorphisms exist from the minimal witnesses to Ψ₁₆ᶠ — not strict (preserving all distinguished elements) and not even weak (preserving only zeros). The obstruction is concrete: in `kleene4`, the sec=ret element maps both zeros to zero₁ (row 3: `[0, 0, 2, 3]`). In Ψ₁₆ᶠ, only the absorber row 0 sends both zero₁ and zero₂ to zero₁. No non-absorber row does this. The small models are too collapsed on the zeros to embed into the richer structure.
+No homomorphisms exist from the minimal witnesses to Ψ₁₆ᶠ — not strict (preserving all distinguished elements) and not even weak (preserving only zeros). The obstruction is concrete: in `kripke4`, the sec=ret element maps both zeros to zero₁ (row 3: `[0, 0, 2, 3]`). In Ψ₁₆ᶠ, only the absorber row 0 sends both zero₁ and zero₂ to zero₁. No non-absorber row does this. The small models are too collapsed on the zeros to embed into the richer structure.
 
-The same obstruction applies to `kleene5` (N=5, sec≠ret): zero weak homomorphisms to Ψ₁₆ᶠ.
+The same obstruction applies to `kripke5` (N=5, sec≠ret): zero weak homomorphisms to Ψ₁₆ᶠ.
 
-**Evidence:** `ds_search/kleene_canonicity.py` — enumeration of all N=4 models (112 iso classes from 224 raw models), exhaustive homomorphism search (16² = 256 candidates for N=4, 16³ = 4096 for N=5, all fail).
+**Evidence:** `ds_search/kripke_canonicity.py` — enumeration of all N=4 models (112 iso classes from 224 raw models), exhaustive homomorphism search (16² = 256 candidates for N=4, 16³ = 4096 for N=5, all fail).
 
 ## What IS Canonical: The Theory
 
@@ -43,7 +43,7 @@ DRMag is a variety (in the universal algebra sense) whose models all share a can
 
 The distinctness axiom ensures maximal articulacy within this computational structure (7 distinct roles, 49 one-step compositions).
 
-The canonicity is not "Ψ₁₆ᶠ is the unique algebra" but "**the Kleene wall is the unique minimal axiom that forces the three-class decomposition, and the Ψ axioms are the unique minimal extension that gives the space between the walls computational content.**" The walls are the discovery, not any particular table.
+The canonicity is not "Ψ₁₆ᶠ is the unique algebra" but "**the Kripke wall is the unique minimal axiom that forces the three-class decomposition, and the Ψ axioms are the unique minimal extension that gives the space between the walls computational content.**" The walls are the discovery, not any particular table.
 
 ## What Remains Open
 
@@ -59,12 +59,12 @@ These would require defining morphisms between DRMag⁺ objects and proving exis
 
 ## Relationship to Self-Simulation
 
-The canonicity of the Ψ theory acquires further support from the self-simulation analysis: the three-class decomposition and the Kleene wall are not only functorial invariants of the theory but are derivable as necessary conditions for self-simulation in any retraction-equipped magma. A self-simulator that cannot distinguish its own classifications from its own transformations cannot correctly simulate itself — this forces the Kleene dichotomy. The classifier's existence is derived from the Q-depth decoding requirement. See [`self_simulation_necessity.md`](self_simulation_necessity.md).
+The canonicity of the Ψ theory acquires further support from the self-simulation analysis: the three-class decomposition and the Kripke wall are not only functorial invariants of the theory but are derivable as necessary conditions for self-simulation in any retraction-equipped magma. A self-simulator that cannot distinguish its own classifications from its own transformations cannot correctly simulate itself — this forces the Kripke dichotomy. The classifier's existence is derived from the Q-depth decoding requirement. See [`self_simulation_necessity.md`](self_simulation_necessity.md).
 
 ---
 
 ## Reproduction
 
 ```bash
-uv run python -m ds_search.kleene_canonicity  # enumeration + homomorphism search
+uv run python -m ds_search.kripke_canonicity  # enumeration + homomorphism search
 ```

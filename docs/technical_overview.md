@@ -34,7 +34,7 @@ This is structurally identical to how {S, K} supports Turing completeness in com
 
 Because only axiom-forced elements are used, TC is a property of every Ψ algebra — any model satisfying the axiom class supports the same simulation. The free cells (192/256 at N=16) provide efficiency (fast counter arithmetic, IO), not capability. Formal Lean verification of the TC simulation remains open.
 
-**The Forced Roles Theorem.** The axioms force five behavioral categories: polarity (⊤/⊥), judgment (τ), substrate (g), composition (η), and computation (Q/E/f/ρ/Y). The Kleene barrier and inert role constraints create hard walls — judgment cannot merge with computation, substrate cannot merge with anything active (32/45 role pairs forced distinct at N=12) `[SAT]`. All instantiations of these categories, from maximally collapsed (5 role-bearing elements) to fully specialized (7+ elements), produce rigid discoverable algebras with trivial automorphism groups (verified at all 6 collapse levels) `[SAT]`. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells, 343 vs 64 2-step cells) `[Empirical]`. These seven roles correspond to McCarthy's 1960 Lisp primitives — a structural observation, not a proof of necessity. Four roles (⊤, τ, g, η) are forced by axioms alone; three (Q≠E, f≠ρ, ρ≠Y) are selected by the expressiveness principle. A formal proof that seven is uniquely optimal remains open. Full argument in [`forced_roles_theorem.md`](forced_roles_theorem.md).
+**The Forced Roles Theorem.** The axioms force five behavioral categories: polarity (⊤/⊥), judgment (τ), substrate (g), composition (η), and computation (Q/E/f/ρ/Y). The Kripke barrier and inert role constraints create hard walls — judgment cannot merge with computation, substrate cannot merge with anything active (32/45 role pairs forced distinct at N=12) `[SAT]`. All instantiations of these categories, from maximally collapsed (5 role-bearing elements) to fully specialized (7+ elements), produce rigid discoverable algebras with trivial automorphism groups (verified at all 6 collapse levels) `[SAT]`. Among tested collapses, full specialization to seven roles maximizes compositional expressiveness (49 vs 16 1-step cells, 343 vs 64 2-step cells) `[Empirical]`. These seven roles correspond to McCarthy's 1960 Lisp primitives — a structural observation, not a proof of necessity. Four roles (⊤, τ, g, η) are forced by axioms alone; three (Q≠E, f≠ρ, ρ≠Y) are selected by the expressiveness principle. A formal proof that seven is uniquely optimal remains open. Full argument in [`forced_roles_theorem.md`](forced_roles_theorem.md).
 
 ---
 
@@ -94,7 +94,7 @@ python3 examples/psi16_corrupted_host_demo.py --plain    # plain text
 
 *The following correspondences are interpretive, not part of the formal theorem set.*
 
-The structural constraints have precise phenomenological counterparts. Judgment cannot commute with synthesis (Kleene barrier) — that is a theorem, not an analogy. Tester values are axiomatically unconstrained (actuality irreducibility) — also a theorem. Eval preserves boundaries but cannot determine what the tester accepts (chirality) — again, proved. Whether these correspondences with receptivity/spontaneity, the irreducibility of givenness, and the asymmetry of observation reflect something deeper about self-description is an open question — but the structural facts themselves are theorems, not interpretations.
+The structural constraints have precise phenomenological counterparts. Judgment cannot commute with synthesis (Kripke barrier) — that is a theorem, not an analogy. Tester values are axiomatically unconstrained (actuality irreducibility) — also a theorem. Eval preserves boundaries but cannot determine what the tester accepts (chirality) — again, proved. Whether these correspondences with receptivity/spontaneity, the irreducibility of givenness, and the asymmetry of observation reflect something deeper about self-description is an open question — but the structural facts themselves are theorems, not interpretations.
 
 ---
 
@@ -299,19 +299,19 @@ kamea-rs/target/release/kamea --table=c run examples/psi_transpile_test.lisp # p
 These hold for **all** models of the axiom system — not just Ψ₁₆ᶠ, but any satisfying algebra:
 
 - **Exactly 2 absorbers.** `[Lean]` L5 forces no additional absorbers beyond ⊤ and ⊥.
-- **Separation of judgment and operation.** `[Lean]` Kleene (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
+- **Separation of judgment and operation.** `[Lean]` Kripke (C) makes this structural: non-testers *cannot* produce boolean outputs on non-absorbers. Branching must go through a tester. There is no shortcut.
 - **Actuality irreducibility.** `[Lean]` The tester row is structurally underdetermined. A twin-model construction on Fin 17 proves that two valid extensions of Ψ₁₆ᶠ can agree on all structural axioms yet disagree on tau's assignment to the surplus element. SAT analysis confirms all 40 tester free cells at N=16 can independently flip (push/pop verified at N=8, 12, 16).
 - **Rigidity.** `[Lean]` Every injective endomorphism of Ψ₁₆ᶠ is the identity (Aut = {id}). Proved via a 16-step fixing chain: idempotent constraints pin ⊤ and ⊥, then products of fixed elements propagate through the generation tree.
 - **Discoverability.** `[Lean]` All 16 elements are behaviorally identifiable. Four probes suffice: the map a ↦ (psi a ⊤, psi a ⊥, psi a τ, psi a Q) is injective on Fin 16. Testers, encoders, and the inert element are each uniquely characterized by structural properties.
 - **Chirality.** `[SAT]` E-transparency (E·⊤ = ⊤, E·⊥ = ⊥) does *not* cascade to tester cells. Eval preserves structural boundaries but cannot determine what the tester accepts — the information flows one way.
-- **Encoder-tester non-commutativity.** `[SAT]` Encoders and testers cannot commute in general. The Kleene barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
+- **Encoder-tester non-commutativity.** `[SAT]` Encoders and testers cannot commute in general. The Kripke barrier enforces an asymmetry: testers judge, encoders synthesize, and no element can do both.
 - **No right identity.** `[Lean]` Universal algebraic proof: tester boolean constraint contradicts identity on tau. Proved in `PsiUniversalBounds.lean`.
 - **Card ≥ 4 from role axioms.** `[Lean]` The four distinguished roles (⊤, ⊥, τ, encoder) must be pairwise distinct. Tight: 4-element countermodel in `PsiCountermodels.lean`.
 - **No full associativity.** `[SAT]` UNSAT. No associative sub-magma of size ≥ 4.
 - **Encoder dominance.** `[Empirical]` As N grows, encoder count grows; tester and inert counts stay bounded.
 - **Constructibility.** `[Lean]` {⊤, ⊥, Q, E} generates all N elements in ≤4 steps at N=16.
 - **Turing-completeness of Ψ∗.** `[Empirical]` The term algebra Ψ∗ over any Ψ model, equipped with constructor/destructor evaluation semantics and a stepped machine, simulates 2-counter machines (Minsky 1961) using 7 axiom-forced elements: ⊤ (zero), Q (successor), E (predecessor), g (pair), f (fst), η (snd), ρ (branch). The finite algebra is decidable; TC lives in the term algebra + eval, as with combinatory logic over {S, K}. The contribution is that the basis elements are axiom-forced rather than chosen. Universal — holds for every model of the axiom class, not just Ψ₁₆ᶠ. Formal Lean verification remains open. See above.
-- **Equational minimality.** `[Empirical]` Among the 4,694 equational laws cataloged by the [Equational Theories Project](https://github.com/teorth/equational_theories) (Tao et al., 2024), Ψ₁₆ᶠ satisfies exactly one non-trivial law: power-associativity (ETP Equation 4380). All other equational regularities — associativity, commutativity, idempotency, and 4,690 others — are violated. The structure that makes the algebra interesting (absorbers, role separation, Kleene barrier, actuality irreducibility, QE inverse pair) lives entirely in a richer logical fragment that the equational framework cannot express.
+- **Equational minimality.** `[Empirical]` Among the 4,694 equational laws cataloged by the [Equational Theories Project](https://github.com/teorth/equational_theories) (Tao et al., 2024), Ψ₁₆ᶠ satisfies exactly one non-trivial law: power-associativity (ETP Equation 4380). All other equational regularities — associativity, commutativity, idempotency, and 4,690 others — are violated. The structure that makes the algebra interesting (absorbers, role separation, Kripke barrier, actuality irreducibility, QE inverse pair) lives entirely in a richer logical fragment that the equational framework cannot express.
 
 ---
 
@@ -323,13 +323,13 @@ All 16 elements can be identified from a shuffled, opaque dot oracle — no grou
 |--------|---------------|-----|-----|----------|
 | **Behavioral** | 756.9 | 653 | 861 | 12-step axiom-driven probing (full row reads) |
 | **Generation** | 659.4 | 543 | 776 | Steps 1–7, then depth-2 generation from {⊤,⊥,Q,E} |
-| **Adaptive** | **62.5** | 59 | 66 | Absorber-probe signatures + Kleene/QE targeting + generation |
+| **Adaptive** | **62.5** | 59 | 66 | Absorber-probe signatures + Kripke/QE targeting + generation |
 
 The adaptive method never reads a full row. The 2-probe absorber signature `(x·⊤, x·⊥)` partitions all 14 non-absorbers into 5 disjoint classes:
 
 | Signature | Elements | What it reveals |
 |-----------|----------|-----------------|
-| full-preserver | τ, SEQ, E, s0 | E is here (Kleene separates it from testers) |
+| full-preserver | τ, SEQ, E, s0 | E is here (Kripke separates it from testers) |
 | semi(⊤) | g | **unique** — orients ⊤ |
 | semi(⊥) | f, ρ, Y, PAIR | — |
 | swap(⊥→⊤) | Q, INC, s1 | Q is here (QE round-trip on E identifies it) |
@@ -447,7 +447,7 @@ The compiled output is within **4x of hand-written Rust compiled with LLVM** —
 | Encoder dominance as N grows | trend | `[Empirical]` | `stacking_analysis.py` |
 | Ψ∗ Turing-completeness (term algebra + eval over 7 axiom-forced elements) | universal | `[Empirical]` | `psi_star.py` — 2CM trace-matching on 4 test programs |
 | Five behavioral categories forced (32/45 pairs UNSAT, min 5 elements) | universal | `[SAT]` | `forced_roles_test.py` — role-aliasing at N=12 |
-| Kleene wall: τ cannot merge with any encoder or inert role | universal | `[SAT]` | `forced_roles_test.py` — τ vs all 9 others UNSAT |
+| Kripke wall: τ cannot merge with any encoder or inert role | universal | `[SAT]` | `forced_roles_test.py` — τ vs all 9 others UNSAT |
 | Inert wall: g cannot merge with any other role | universal | `[SAT]` | `forced_roles_test.py` — g vs all 9 others UNSAT |
 | Rigidity survives all collapse levels (5→7 role elements) | universal | `[SAT]` | `collapse_rigidity_test.py` — all 6 levels: |Aut|=1, WL-1 rigid |
 | Distinctness axiom adds 13 requirements (32/45 already forced) | universal | `[SAT]` | `ds_search/distinctness_test.py` |

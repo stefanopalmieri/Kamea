@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Find the minimal witness for the Kleene wall structure.
+Find the minimal witness for the Kripke wall structure.
 
 Structure: exactly 2 left-zeros, extensionality (all rows distinct),
-retraction pair on core, Kleene dichotomy, at least one classifier,
+retraction pair on core, Kripke dichotomy, at least one classifier,
 at least one non-classifier non-zero element.
 
 Test N=4,5,6,7,8 in order. Stop at first SAT.
@@ -16,7 +16,7 @@ from z3 import (
 import time
 
 
-def test_kleene_magma(N):
+def test_kripke_magma(N):
     """Test if a DichotomicRetractMagma of size N is satisfiable."""
     print(f"\n{'='*60}")
     print(f"Testing N={N}")
@@ -107,7 +107,7 @@ def test_kleene_magma(N):
             s.add(Implies(cls_idx == ci, cls_dot_j == dot[ci][j]))
         s.add(Or(cls_dot_j == 0, cls_dot_j == 1))
 
-    # Kleene dichotomy: every non-zero element is either all-boolean or
+    # Kripke dichotomy: every non-zero element is either all-boolean or
     # all-non-boolean on non-zero inputs
     for a in range(2, N):
         bool_on_nonzero = And([Or(dot[a][x] == 0, dot[a][x] == 1)
@@ -196,8 +196,8 @@ def test_kleene_magma(N):
             print(f"    x={x}: sec·x={sx}, ret·(sec·x)={rsx} {'✓' if rsx == x else '✗'}"
                   f"  |  ret·x={rx}, sec·(ret·x)={srx} {'✓' if srx == x else '✗'}")
 
-        # Verify Kleene dichotomy
-        print(f"\n  Kleene dichotomy verification:")
+        # Verify Kripke dichotomy
+        print(f"\n  Kripke dichotomy verification:")
         for a in range(2, N):
             nonzero_outputs = [table[a][x] for x in range(2, N)]
             all_bool = all(v in (0, 1) for v in nonzero_outputs)
@@ -211,7 +211,7 @@ def test_kleene_magma(N):
 
 def main():
     for n in [4, 5, 6, 7, 8]:
-        result = test_kleene_magma(n)
+        result = test_kripke_magma(n)
         if result is not None:
             print(f"\n{'='*60}")
             print(f"MINIMAL WITNESS FOUND AT N={len(result)}")

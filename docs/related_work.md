@@ -98,7 +98,7 @@ The difference: Blond's swap is coarser (whole levels) but applies to the meta-i
 
 2. **A compiled tower.** The meta-circular evaluator, continuation reification, frame walking, table verification, and branch swap all compile to a single native binary (2.2 ms). LMS-Black compiles *through* the tower; Boba's Tower compiles *the tower itself*.
 
-3. **Formal verification.** 102 Lean theorems, zero `sorry`. Rigidity, discoverability, actuality irreducibility, the Kleene wall, the asymmetry theorem — all machine-checked. No other reflective system in this lineage has formal verification of its substrate.
+3. **Formal verification.** 102 Lean theorems, zero `sorry`. Rigidity, discoverability, actuality irreducibility, the Kripke wall, the asymmetry theorem — all machine-checked. No other reflective system in this lineage has formal verification of its substrate.
 
 4. **Runtime substrate verification.** The compiled tower verifies the 256-byte Cayley table at runtime before trusting the evaluator. The algebra isn't assumed — it's checked.
 

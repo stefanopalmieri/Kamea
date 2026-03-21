@@ -107,8 +107,8 @@ def axiom_L0(dot, N):
     return constraints
 
 
-def axiom_kleene(dot, N):
-    """C (Kleene): only testers produce boolean output on non-absorbers."""
+def axiom_kripke(dot, N):
+    """C (Kripke): only testers produce boolean output on non-absorbers."""
     constraints = []
     for x in range(2, N):
         is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
@@ -307,7 +307,7 @@ def build_aliased_solver(role_a, role_b, skip_axiom_groups=None):
     add_group("L0", axiom_L0(dot, N))
 
     # Behavioral axioms
-    add_group("Kleene", axiom_kleene(dot, N))
+    add_group("Kripke", axiom_kripke(dot, N))
     add_group("InertProp", axiom_inert_prop(dot, N))
     add_group("PA", axiom_pa(dot, N))
     add_group("VV", axiom_vv(dot, N))
@@ -528,7 +528,7 @@ def main():
         print(f"{'='*70}")
 
         axiom_group_names = [
-            "Kleene", "InertProp", "PA", "VV", "QE",
+            "Kripke", "InertProp", "PA", "VV", "QE",
             "E-trans", "1-Inert", "Branch", "Compose", "Y",
             "Selection", "Roles",
         ]

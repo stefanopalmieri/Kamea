@@ -31,14 +31,14 @@ All axioms act on a finite magma (N-element set with binary operation `dot`).
 
 | Axiom | Formal Statement | Plain English | What It Forces |
 |-------|-----------------|---------------|----------------|
-| **C (Kleene)** | If x is not a tester, then `x·y ≥ 2` for all `y ≥ 2` | Only testers can produce boolean outputs on non-absorbers | Separates judgment (tester) from operation (encoder). Non-testers cannot make boolean decisions. |
+| **C (Kripke)** | If x is not a tester, then `x·y ≥ 2` for all `y ≥ 2` | Only testers can produce boolean outputs on non-absorbers | Separates judgment (tester) from operation (encoder). Non-testers cannot make boolean decisions. |
 | **D (Inert Propagation)** | If x is inert, then `x·y ≥ 2` for all `y ≥ 2` | Inert elements preserve non-absorber status | Substrate doesn't collapse structure to booleans |
 | **PA (Power-Associativity)** | `(x·x)·x = x·(x·x)` for all x | Self-interaction is path-independent | Squaring map has algebraic regularity. Rules out some chaotic self-interactions. |
 | **VV (Inert Self-Application)** | If v is inert, then `v·v` is a tester or encoder | Substrate self-application yields "core" | Inert elements are not self-swallowing; they produce active structure |
 | **QE (Quote/Eval)** | `E·(Q·x) = x` and `Q·(E·x) = x` for `x ∈ core` | Q and E are mutual inverses on core elements {2,3,4,5} | Reflective pair: ability to quote and evaluate. Core is isomorphic to itself under Q;E. |
 | **1-Inert** | Exactly 1 inert element among non-absorbers | Only one substrate element | Reduces model space; forces unique substrate |
 | **E-Transparency** | `E·⊤ = ⊤` and `E·⊥ = ⊥` | Eval preserves absorbers | E is identity on structural boundaries |
-| **Branch** | `ρ·x = f·x` if `τ·x = ⊤`, else `ρ·x = g·x` (on core) | Tester-mediated conditional: ρ dispatches between f and g based on τ | Structural if/then/else. Requires C (Kleene) — only testers can branch. |
+| **Branch** | `ρ·x = f·x` if `τ·x = ⊤`, else `ρ·x = g·x` (on core) | Tester-mediated conditional: ρ dispatches between f and g based on τ | Structural if/then/else. Requires C (Kripke) — only testers can branch. |
 | **Compose** | `η·x = ρ·(g·x)` on core | η is ρ after g (composition through branch) | Function composition exists in the algebra |
 | **Y-Combinator** | `Y·ρ = ρ·(Y·ρ)`, with `Y·ρ ≥ 2` | Fixed-point combinator for branch element | Self-reference / recursion exists. Non-trivial (not an absorber). |
 | **Selection** | `η·ρ = τ` | Compose of branch equals tester; terminates | Computational termination: composing then branching yields a judgment |
@@ -109,7 +109,7 @@ These hold across all SAT models in the dominant role-signature class, verified 
 - **No associativity**: Full `(a·b)·c = a·(b·c)` is UNSAT.
 - **No Moufang, no entropic**: Both UNSAT.
 - **Encoder dominance in scaling**: As N grows, encoder count grows; tester and inert counts stay bounded.
-- **Separation of computation and judgment**: C (Kleene) forces this — non-testers cannot produce boolean outputs on non-absorbers, so branching requires a tester.
+- **Separation of computation and judgment**: C (Kripke) forces this — non-testers cannot produce boolean outputs on non-absorbers, so branching requires a tester.
 - **No associative sub-magma of size ≥ 4**: Exhaustive search on Ψ₁₆ confirms no subset of 4+ elements forms an associative sub-magma. The largest associative sub-magmas are size 3.
 
 ### Actuality Irreducibility (SAT-Verified)
@@ -269,7 +269,7 @@ Key structural changes from Ψ₁₆:
 
 ### Path 2: Tester-Mediated Branching
 
-C (Kleene) blocks operational dispatch (an encoder can't produce boolean output to control branching). Therefore branching MUST go through a tester. This is "Path 2":
+C (Kripke) blocks operational dispatch (an encoder can't produce boolean output to control branching). Therefore branching MUST go through a tester. This is "Path 2":
 
 ```
 ρ·x = f·x   if τ·x = ⊤
@@ -480,7 +480,7 @@ Verified properties:
 | Absorbers (L0) | `top_absorbs`, `bot_absorbs`, `only_two_absorbers` | `decide` |
 | Extensionality (L3) | `ext_rows`, `ext_cols` | `decide` |
 | Role classification | `tau_is_tester`, `nu_is_tester`, `exactly_two_testers`, `y_is_inert`, `exactly_one_inert` | `decide`/`native_decide` |
-| Kleene (C) | `kleene` | `native_decide` |
+| Kripke (C) | `dichotomy` | `native_decide` |
 | Power-associativity (PA) | `power_assoc` | `decide` |
 | Non-associativity | `not_associative`, `not_assoc_witness` | `decide` |
 | QE inverse | `qe_roundtrip`, `eq_roundtrip` | `decide` |
@@ -514,7 +514,7 @@ Verified properties (beyond Ψ₁₆):
 | Role classification | `exactly_3_testers`, `g_enc_is_inert`, `exactly_one_inert` | `native_decide` |
 | Idempotents | `exactly_2_idempotents` | `decide` |
 
-Full theorem list: structural axioms (5) + role classification (6) + Kleene (1) + PA/non-assoc (3) + QE (4) + Branch/Compose/Y/Selection (7) + INC cycle (8) + zero tests (8) + DEC cycle (8) + IO (3) + PAIR (4) + FST (4) + SND (4) + INC2 (4) + SWAP (5) + rigidity (2) + constructibility (2) + idempotents (3) + VV/D (2) + witness (1) = **83 theorems**.
+Full theorem list: structural axioms (5) + role classification (6) + Kripke (1) + PA/non-assoc (3) + QE (4) + Branch/Compose/Y/Selection (7) + INC cycle (8) + zero tests (8) + DEC cycle (8) + IO (3) + PAIR (4) + FST (4) + SND (4) + INC2 (4) + SWAP (5) + rigidity (2) + constructibility (2) + idempotents (3) + VV/D (2) + witness (1) = **83 theorems**.
 
 ### Other Lean Files
 

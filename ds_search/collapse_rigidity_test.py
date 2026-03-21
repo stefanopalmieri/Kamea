@@ -37,7 +37,7 @@ from ds_search.axiom_explorer import (
 )
 from ds_search.forced_roles_test import (
     is_inert_z3,
-    axiom_kleene, axiom_inert_prop, axiom_pa, axiom_vv,
+    axiom_kripke, axiom_inert_prop, axiom_pa, axiom_vv,
     axiom_qe, axiom_e_trans, axiom_1_inert,
     axiom_branch, axiom_compose, axiom_y, axiom_selection,
     role_tester, role_inert, role_encoder,
@@ -118,7 +118,7 @@ def build_collapsed_solver(merges):
             s.add(Or([dot[x][j] != dot[y][j] for j in range(N)]))
 
     # Behavioral axioms — use aliased indices
-    for c in axiom_kleene(dot, N):
+    for c in axiom_kripke(dot, N):
         s.add(c)
     for c in axiom_inert_prop(dot, N):
         s.add(c)

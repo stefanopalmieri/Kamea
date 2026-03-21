@@ -87,7 +87,7 @@ def rep {n : Nat} (q top : Fin n) (a : Fin n) : Term n :=
     function and Q-depth encoding.
 
     This is the minimal structure for the injectivity theorem. It does
-    NOT assume the Kleene dichotomy, branching, composition, or any
+    NOT assume the Kripke dichotomy, branching, composition, or any
     operational axiom. Only extensionality (faithful left regular
     representation) and compositionality of `eval` (standard for any
     evaluation strategy that reduces the function position first). -/
@@ -108,7 +108,7 @@ structure SelfSimMagma (n : Nat) where
   /-- **Extensionality**: elements with identical rows are equal.
       Equivalently, the left regular representation is faithful.
       This is a standard magma property — `FaithfulRetractMagma`
-      in `CatKleeneWallMinimal.lean` assumes it. -/
+      in `CatKripkeWallMinimal.lean` assumes it. -/
   extensional : ∀ a b : Fin n,
     (∀ x : Fin n, dot a x = dot b x) → a = b
 

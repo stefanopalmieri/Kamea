@@ -142,7 +142,7 @@
                 (bot        (if (= (length semi-a) 1) abs-b abs-a))
                 (q-cands    (if (= (length semi-a) 1) swap-a swap-b))
                 (test-pool  (filter-not-in non-abs full-pres)))
-            (status 3)  ; finding E via Kleene test
+            (status 3)  ; finding E via Kripke test
             (let ((big-E (find-E full-pres (car test-pool) top bot)))
               (status 4)  ; finding Q via QE round-trip
               (let ((big-Q (find-Q q-cands big-E)))

@@ -12,7 +12,7 @@
    abstractly forced by retraction pair, classifier, and copairing axioms).
    Includes: zero₁ ≠ zero₂ (given), plus 7 pairs for each zero.
 
-   **Wall 2 — Classifier / Kleene wall (7 pairs):**
+   **Wall 2 — Classifier / Kripke wall (7 pairs):**
    The classifier's row is all-boolean. By `cls_unique`, no other non-zero
    element has this property. So cls ≠ sec, ret, proj₁, pair_obj, copair,
    proj₂, fixpt.
@@ -37,7 +37,7 @@
 -/
 
 import DistinctionStructures.CategoricalFoundation
-import DistinctionStructures.CatKleeneWall
+import DistinctionStructures.CatKripkeWall
 import DistinctionStructures.CatWitness
 
 set_option maxHeartbeats 800000
@@ -60,12 +60,12 @@ variable {n : Nat} (M : CatEndoMagma n)
 theorem zero₁_ne_zero₂ : M.zero₁ ≠ M.zero₂ :=
   M.zeros_distinct
 
-/-- **Kleene wall (abstract):** if an element has a non-boolean output
+/-- **Kripke wall (abstract):** if an element has a non-boolean output
     on a non-zero input, it cannot be the classifier. -/
-theorem kleene_wall_abstract (y : Fin n) (x : Fin n)
+theorem kripke_wall_abstract (y : Fin n) (x : Fin n)
     (hnonbool : M.dot y x ≠ M.zero₁ ∧ M.dot y x ≠ M.zero₂) :
     y ≠ M.cls :=
-  CatKleeneWall.kleene_wall M y x hnonbool
+  CatKripkeWall.kripke_wall M y x hnonbool
 
 end AbstractProofs
 
@@ -132,10 +132,10 @@ theorem w_zero₂_ne_fixpt : psi16_cat.zero₂ ≠ psi16_cat.fixpt := by native_
 
 end ZeroDistinctness
 
-/-! ## Wall 2: Classifier / Kleene Wall (7 pairs)
+/-! ## Wall 2: Classifier / Kripke Wall (7 pairs)
 
     The classifier has an all-boolean row (outputs only zero₁, zero₂).
-    By the Kleene wall (`cls_unique`), no other non-zero element has
+    By the Kripke wall (`cls_unique`), no other non-zero element has
     this property. Since sec, ret, proj₁, pair_obj, copair, proj₂, fixpt
     all have non-boolean outputs, they cannot equal cls.
 
@@ -257,7 +257,7 @@ theorem all_32_forced_pairs :
     psi16_cat.zero₂ ≠ psi16_cat.copair ∧
     psi16_cat.zero₂ ≠ psi16_cat.proj₂ ∧
     psi16_cat.zero₂ ≠ psi16_cat.fixpt ∧
-    -- Wall 2: Classifier / Kleene wall (7 pairs)
+    -- Wall 2: Classifier / Kripke wall (7 pairs)
     psi16_cat.cls ≠ psi16_cat.sec ∧
     psi16_cat.cls ≠ psi16_cat.ret ∧
     psi16_cat.cls ≠ psi16_cat.proj₁ ∧

@@ -20,12 +20,12 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 | Level | What's added | What it gives | Evidence |
 |-------|-------------|---------------|----------|
 | **Self-simulating** | Retraction pair (Q/E) | Computes own Cayley table. Partial application injectivity forced. | `[Lean]` `SelfSimulation.lean` — 4 universal theorems; `[Empirical]` universal self-simulator verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ |
-| **Self-describing** | + Kleene dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | `[Lean]` `CatKleeneWallMinimal.lean` — 19 universal theorems; `[SAT]` Kleene independent of self-simulation (N=8 non-Kleene magma self-simulates, 64/64 cells) |
+| **Self-describing** | + Kripke dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | `[Lean]` `CatKripkeWallMinimal.lean` — 19 universal theorems; `[SAT]` Kripke independent of self-simulation (N=8 non-dichotomic magma self-simulates, 64/64 cells) |
 | **Self-hosting** | + Compose + Inert | Evaluator internalized. Smith's tower terminates at 256 bytes. | `[SAT]` Compose and Inert independent of both self-simulation and self-description; `[Empirical]` compiled reflective tower in 2.2 ms |
 
-**The boundaries are real.** A retraction magma can compute its own table without the Kleene wall — a concrete 8-element counterexample with mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly. The Kleene wall is not about computing the table; it is the architectural axiom that organizes the algebra into coherent roles. Composition and substrate are not about roles; they internalize the machine, eliminating the external evaluator that self-simulation requires.
+**The boundaries are real.** A retraction magma can compute its own table without the Kripke wall — a concrete 8-element counterexample with mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly. The Kripke wall is not about computing the table; it is the architectural axiom that organizes the algebra into coherent roles. Composition and substrate are not about roles; they internalize the machine, eliminating the external evaluator that self-simulation requires.
 
-The Ψ₁₆ᶠ table is all three levels at once. The demo below exercises all of them: the table computes itself (level 1), the Kleene wall gives elements interpretable roles (level 2), and the meta-circular evaluator runs within the algebra with no external machine (level 3).
+The Ψ₁₆ᶠ table is all three levels at once. The demo below exercises all of them: the table computes itself (level 1), the Kripke wall gives elements interpretable roles (level 2), and the meta-circular evaluator runs within the algebra with no external machine (level 3).
 
 ## Quick Start
 
@@ -121,17 +121,17 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 The contribution is not "a small table implements Lisp." It is the **independence structure**: self-simulation, self-description, and self-hosting are three distinct capabilities, each requiring its own irreducible axiom, and nobody has separated them before.
 
-Self-simulation (computing your own table) requires only a retraction pair. Self-description (having coherent roles — judgment distinct from computation) additionally requires the Kleene dichotomy. Self-hosting (running the simulation without an external evaluator) additionally requires composition and substrate. Each boundary is inhabited by a concrete counterexample: a non-Kleene retraction magma self-simulates but has no clean roles; a dichotomic retract magma without composition has roles but needs an external machine. The Ψ₁₆ᶠ table is all three at once.
+Self-simulation (computing your own table) requires only a retraction pair. Self-description (having coherent roles — judgment distinct from computation) additionally requires the Kripke dichotomy. Self-hosting (running the simulation without an external evaluator) additionally requires composition and substrate. Each boundary is inhabited by a concrete counterexample: a non-dichotomic retraction magma self-simulates but has no clean roles; a dichotomic retract magma without composition has roles but needs an external machine. The Ψ₁₆ᶠ table is all three at once.
 
-This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kleene wall (one architectural axiom), and machine internalization (two operational axioms). Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kripke wall (one architectural axiom), and machine internalization (two operational axioms). Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
 
 ### Frequently Asked Questions
 
 **Did you just encode Lisp in a lookup table?** No. A lookup table stores data; this table *computes*. The seven roles (quote, eval, cons, car, cdr, cond, nil) are not encoded — they emerge from axiom interaction. Nobody axiomatized "there must be a pair constructor." The pair structure falls out of the interaction between branching and substrate. The non-circular evidence: five independent formalizations of self-description (phenomenological, information-theoretic, category-theoretic, game-theoretic, self-simulation) all produce the same three categories and the same walls. The roles are consequences, not inputs.
 
-**Are the axioms natural or engineered?** The retraction pair and extensionality are standard category theory. The Kleene dichotomy is one new property — and it is exactly the property that separates self-simulation from self-description (proved independent by counterexample). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator. But they are also the most clearly justified: without them, you need an external machine, and Smith's tower doesn't terminate. The distinctness axiom (all role-bearing elements are different) is standard algebraic practice, independently justified by expressiveness analysis (49 vs 16 one-step compositions).
+**Are the axioms natural or engineered?** The retraction pair and extensionality are standard category theory. The Kripke dichotomy is one new property — and it is exactly the property that separates self-simulation from self-description (proved independent by counterexample). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator. But they are also the most clearly justified: without them, you need an external machine, and Smith's tower doesn't terminate. The distinctness axiom (all role-bearing elements are different) is standard algebraic practice, independently justified by expressiveness analysis (49 vs 16 one-step compositions).
 
-**What's the contribution?** Three things. (1) The three-level independence result: self-simulation, self-description, and self-hosting are separable, with concrete counterexamples at each boundary. (2) Machine-checked proofs: 23 universal algebraic theorems (zero `decide`, zero `sorry`) from two independent sources — Kleene axioms and self-simulation. (3) A working artifact: a compiled reflective tower (2.2 ms native) where a program verifies its own algebraic substrate, reifies its continuation, and rewrites its own control flow.
+**What's the contribution?** Three things. (1) The three-level independence result: self-simulation, self-description, and self-hosting are separable, with concrete counterexamples at each boundary. (2) Machine-checked proofs: 23 universal algebraic theorems (zero `decide`, zero `sorry`) from two independent sources — Kripke axioms and self-simulation. (3) A working artifact: a compiled reflective tower (2.2 ms native) where a program verifies its own algebraic substrate, reifies its continuation, and rewrites its own control flow.
 
 ## The Seven Roles
 
@@ -140,7 +140,7 @@ This matters because every reflective system — every runtime with a reflection
 | ⊤ | NIL | Empty / base case | Level 1 (retraction pair) |
 | Q | QUOTE | Freeze a term (constructor) | Level 1 (retraction pair) |
 | E | EVAL | Unwrap / interpret (destructor) | Level 1 (retraction pair) |
-| ρ | COND | Conditional branch | Level 2 (Kleene wall) |
+| ρ | COND | Conditional branch | Level 2 (Kripke wall) |
 | g | CONS | Build a pair | Level 3 (machine: substrate) |
 | f | CAR | First projection | Level 2 (Branch axiom) |
 | η | CDR | Second projection | Level 3 (machine: Compose) |
@@ -157,10 +157,10 @@ The canonicity lies in the theory, not any model: every finite dichotomic retrac
 
 Proved for ALL finite magmas satisfying the relevant axioms — not just one table. Pure algebraic proofs, no `decide`, no `sorry`. Two independent sources:
 
-**From axioms** ([`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)) — assume Kleene axioms, derive consequences:
+**From axioms** ([`CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)) — assume Kripke axioms, derive consequences:
 
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
-- Kleene wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
+- Kripke wall: classifier class and non-classifier class are disjoint `[Lean, universal]`
 - No right identity in any model `[Lean, universal]`
 - Card ≥ 4, tight; card ≥ 5 when sec ≠ ret, tight `[Lean, universal]`
 - Retraction pair members are non-classifiers `[Lean, universal]`
@@ -198,7 +198,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 
 ### SAT and Empirical Results
 
-- Kleene wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
+- Kripke wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
 - Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) `[SAT]`
 - TC forces 3 distinctions: Q≠E (lazy/eager), Q≠f (lazy/eager), f≠η (projection uniqueness) `[Empirical]`
 - Reflective tower forces 0 additional distinctions: all 10 nontriviality pairs survive full tower `[Empirical]`
@@ -213,7 +213,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
-- Kleene dichotomy independent of self-simulation: N=8 non-Kleene retraction magma self-simulates (64/64 cells) `[SAT + Empirical]`
+- Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma self-simulates (64/64 cells) `[SAT + Empirical]`
 - Machine boundary: composition and substrate are independent of self-simulation — SAT counterexamples exist `[Empirical + Argument]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
@@ -244,7 +244,7 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 | Axiom | What It Forces |
 |-------|----------------|
-| **C (Kleene)** | Only testers can produce boolean outputs on non-absorbers |
+| **C (Kripke)** | Only testers can produce boolean outputs on non-absorbers |
 | **D (Inert Propagation)** | Inert elements preserve non-absorber status |
 | **PA (Power-Associativity)** | `(x·x)·x = x·(x·x)` for all x |
 | **VV (Inert Self-Application)** | Inert self-application yields a tester or encoder |
@@ -265,9 +265,9 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
-The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
+The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kripke dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
-The axioms correspond to the three levels: the retraction pair (level 1) enables self-simulation, the Kleene dichotomy (level 2) creates clean roles, and compose + inert (level 3) internalize the evaluator. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+The axioms correspond to the three levels: the retraction pair (level 1) enables self-simulation, the Kripke dichotomy (level 2) creates clean roles, and compose + inert (level 3) internalize the evaluator. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 Results fall into four tiers:
 
@@ -287,7 +287,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
 
 **The proofs**
-- [`DistinctionStructures/CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
+- [`DistinctionStructures/CatKripkeWallMinimal.lean`](DistinctionStructures/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean))
 - [`DistinctionStructures/Psi16Full.lean`](DistinctionStructures/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
 - [`DistinctionStructures/SelfSimulation.lean`](DistinctionStructures/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
@@ -315,9 +315,9 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
-- **Self-simulation derivation (resolved).** Self-simulation (one program computes the Cayley table) forces partial application injectivity (Lean-proved) and is sufficient for any model satisfying the axioms (verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ). The **Kleene dichotomy is independent**: a concrete N=8 non-Kleene retraction magma with mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells correct. The universal self-simulator never classifies outputs by type; it decodes Q-depth and looks up the table. The Kleene wall is not about computing the table — it is the architectural choice that organizes the algebra into coherent roles (classifiers vs transformers), lifting self-simulation into self-*description*. Compose and inert are also independent (SAT counterexamples). See [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
-- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kleene magmas — 112 non-isomorphic models exist at N=4, and no homomorphisms exist from the minimal witnesses to Ψ₁₆ᶠ. The canonicity of the project's results lies at the theory level (the three-class decomposition is a functorial invariant shared by all models) rather than the object level. Whether a natural universal property characterizes Ψ₁₆ᶠ within the subvariety DRMag⁺ (with products, copairing, fixed points, and distinctness) remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-- **Categorical formalization (partially complete).** The Kleene wall layer is now Lean-formalized: `CatKleeneWallMinimal.lean` defines the minimal `DichotomicRetractMagma` structure (zero morphisms, retraction pair, Kleene dichotomy) and proves 16 universal theorems purely algebraically; `NoCommutativity.lean` adds 3 more (asymmetry). The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kleene wall, three-category decomposition, non-classifier membership, asymmetry) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Self-simulation derivation (resolved).** Self-simulation (one program computes the Cayley table) forces partial application injectivity (Lean-proved) and is sufficient for any model satisfying the axioms (verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ). The **Kripke dichotomy is independent**: a concrete N=8 non-dichotomic retraction magma with mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells correct. The universal self-simulator never classifies outputs by type; it decodes Q-depth and looks up the table. The Kripke wall is not about computing the table — it is the architectural choice that organizes the algebra into coherent roles (classifiers vs transformers), lifting self-simulation into self-*description*. Compose and inert are also independent (SAT counterexamples). See [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4, and no homomorphisms exist from the minimal witnesses to Ψ₁₆ᶠ. The canonicity of the project's results lies at the theory level (the three-class decomposition is a functorial invariant shared by all models) rather than the object level. Whether a natural universal property characterizes Ψ₁₆ᶠ within the subvariety DRMag⁺ (with products, copairing, fixed points, and distinctness) remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
+- **Categorical formalization (partially complete).** The Kripke wall layer is now Lean-formalized: `CatKripkeWallMinimal.lean` defines the minimal `DichotomicRetractMagma` structure (zero morphisms, retraction pair, Kripke dichotomy) and proves 16 universal theorems purely algebraically; `NoCommutativity.lean` adds 3 more (asymmetry). The full three-layer inevitability argument (categorical → distinctness → Ψ-specific) has Lean support for the categorical layer (Kripke wall, three-category decomposition, non-classifier membership, asymmetry) and the model-specific layer (rigidity, discoverability, forced distinctness on the 16-element witness). The intermediate distinctness layer — proving that the 13 non-forced pairs are independently justified by expressiveness — remains supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -399,8 +399,8 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
 │   ├── SelfSimulation.lean              # Self-simulation: partial application injectivity (4 universal theorems)
 │   ├── CategoricalFoundation.lean       # CatEndoMagma: categorical vocabulary for full N=16
-│   ├── CatKleeneWall.lean               # Abstract Kleene wall + dichotomy theorems
-│   ├── CatKleeneWallMinimal.lean        # FaithfulRetractMagma + DichotomicRetractMagma: N=4/5 witnesses + 16 universal theorems
+│   ├── CatKripkeWall.lean               # Abstract Kripke wall + dichotomy theorems
+│   ├── CatKripkeWallMinimal.lean        # FaithfulRetractMagma + DichotomicRetractMagma: N=4/5 witnesses + 16 universal theorems
 │   ├── NoCommutativity.lean             # Asymmetry: two left-absorbers ⇒ non-commutative (3-line proof)
 │   ├── CatWitness.lean                  # N=16 witness as CatEndoMagma (satisfiability)
 │   ├── CatForcedDistinctness.lean       # 32 forced-distinct pairs on N=16 witness
@@ -480,7 +480,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── composition_closure_test.py    # Composition closure: compatible but kills 0/10 pairs
 │   ├── reflection_distinctness_test.py # Reflective tower test on 10 nontriviality pairs (0/10 killed)
-│   ├── kleene_canonicity.py           # DRMag enumeration + homomorphism search (112 iso classes at N=4)
+│   ├── kripke_canonicity.py           # DRMag enumeration + homomorphism search (112 iso classes at N=4)
 │   ├── rigid_census.py               # Small rigid magma census
 │   └── counterexamples/              # Saved counterexample tables (.npy)
 ├── docs/
@@ -518,7 +518,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 
 ## Building
 
-`lake build` compiles all Lean files — the categorical foundation (19 universal theorems from axioms in `CatKleeneWallMinimal.lean` + `NoCommutativity.lean`), the self-simulation foundation (4 universal theorems from definition in `SelfSimulation.lean`), and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
+`lake build` compiles all Lean files — the categorical foundation (19 universal theorems from axioms in `CatKripkeWallMinimal.lean` + `NoCommutativity.lean`), the self-simulation foundation (4 universal theorems from definition in `SelfSimulation.lean`), and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)
@@ -559,7 +559,7 @@ python3 -m http.server 8080 --directory www                    # serve debugger 
 # → open http://localhost:8080
 ```
 
-Lean proofs use two techniques: universal theorems (`CatKleeneWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning — no `decide`, no `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
+Lean proofs use two techniques: universal theorems (`CatKripkeWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning — no `decide`, no `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
 
 All Mini-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
 

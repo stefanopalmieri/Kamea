@@ -474,7 +474,7 @@ def recover_generation(domain, dot):
 #   swap(⊤→⊥)       x·⊤=⊥, x·⊥=other  {η, DEC}
 #
 # Then: E is the only full-preserver that's an encoder (one probe separates
-# it from the 3 testers via Kleene). Q is the only swap(⊥→⊤) element with
+# it from the 3 testers via Kripke). Q is the only swap(⊥→⊤) element with
 # E·(Q·E) = Q (QE round-trip on E itself).
 
 def recover_adaptive(domain, dot):
@@ -530,7 +530,7 @@ def recover_adaptive(domain, dot):
         q_candidates = swap_to_b
 
     # Phase 4: Find E among full preservers (1-4 calls)
-    # Kleene axiom: only testers produce boolean output on non-absorbers.
+    # Kripke axiom: only testers produce boolean output on non-absorbers.
     # E is the unique encoder among {τ, SEQ, E, s0} — one non-boolean probe finds it.
     test_pool = [x for x in domain if x not in abs_set and x not in full_preservers]
     z = test_pool[0]

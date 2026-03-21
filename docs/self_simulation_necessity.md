@@ -82,10 +82,10 @@ For each axiom, we test whether a retraction-equipped magma can exist WITHOUT th
 | Test | Axiom removed | N | Result | Properties of counterexample |
 |------|--------------|---|--------|------------------------------|
 | A | No classifier | 8 | **SAT** | 0 testers, 2 encoders, 4 inerts. QE core = 6. Injective Q. Has discriminator. |
-| B | No Kleene dichotomy | 8 | **SAT** | 1 tester, 5 encoders (mixed), 0 inerts |
-| C | No branch element | 10 | **SAT** | 1 tester, 7 encoders, 0 inerts. Kleene holds. |
-| D | No compose element | 10 | **SAT** | 3 testers, 5 encoders, 0 inerts. Kleene holds. |
-| E | No inert element | 10 | **SAT** | 1 tester, 7 encoders, 0 inerts. Kleene holds. |
+| B | No Kripke dichotomy | 8 | **SAT** | 1 tester, 5 encoders (mixed), 0 inerts |
+| C | No branch element | 10 | **SAT** | 1 tester, 7 encoders, 0 inerts. Kripke holds. |
+| D | No compose element | 10 | **SAT** | 3 testers, 5 encoders, 0 inerts. Kripke holds. |
+| E | No inert element | 10 | **SAT** | 1 tester, 7 encoders, 0 inerts. Kripke holds. |
 | F | Only one absorber | 8 | **SAT** | 1 tester, 3 encoders, 2 inerts. Classifier uses {0,1}. |
 | G | No E-transparency | 10 | **SAT** | 6 testers, 2 encoders, 0 inerts. E·⊤=4, E·⊥=4. |
 
@@ -93,7 +93,7 @@ For each axiom, we test whether a retraction-equipped magma can exist WITHOUT th
 
 ### Interpretation
 
-The SAT tests show that **no axiom is algebraically forced by the retraction pair alone**. Models exist without classifiers, without Kleene dichotomy, without branching, without composition, without inert elements, with only one absorber, and without E-transparency.
+The SAT tests show that **no axiom is algebraically forced by the retraction pair alone**. Models exist without classifiers, without Kripke dichotomy, without branching, without composition, without inert elements, with only one absorber, and without E-transparency.
 
 This means the axioms cannot be derived from the algebraic structure of retraction-equipped magmas. They can only be derived from the **computational requirement** of self-simulation.
 
@@ -183,7 +183,7 @@ Binary classification needs two distinct target values. Absorbers are natural ca
 | **Two absorbers** | INDEPENDENT (Test F: SAT) | Step 7: MODERATE | **LIKELY DERIVED** — binary classification needs two targets |
 | **Extensionality** | PRESUPPOSED | PRESUPPOSED | **PRESUPPOSED** |
 | **Classifier exists** | INDEPENDENT (Test A: SAT) | Step 1: TIGHT (but term-level) | **PARTIALLY DERIVED** — discrimination yes, full classifier no |
-| **Kleene dichotomy** | INDEPENDENT (Test B: SAT) | N=8 counterexample self-simulates | **INDEPENDENT** — non-Kleene magma self-simulates (64/64 cells) |
+| **Kripke dichotomy** | INDEPENDENT (Test B: SAT) | N=8 counterexample self-simulates | **INDEPENDENT** — non-dichotomic magma self-simulates (64/64 cells) |
 | **Branch exists** | INDEPENDENT (Test C: SAT) | Step 2: TIGHT | **DERIVED** at term level; algebraic Branch is convenience |
 | **Compose exists** | INDEPENDENT (Test D: SAT) | Step 3: LOOSE | **INDEPENDENT** — machine provides sequencing |
 | **Y-combinator** | Not testable (SAT) | Step 4: SIZE-DEPENDENT | **DERIVED** (universal) / **INDEPENDENT** (bounded) |
@@ -206,7 +206,7 @@ The investigation reveals a clean separation:
 
 ### Independent of Self-Simulation (concrete counterexamples)
 
-- **Kleene dichotomy**: A concrete N=8 non-Kleene retraction magma with two mixed elements (rows with both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells correct. The universal self-simulator decodes Q-depth and looks up the table; it never classifies outputs by type. The Kleene wall is not about computing the table — it is the architectural choice that organizes the algebra into coherent roles.
+- **Kripke dichotomy**: A concrete N=8 non-dichotomic retraction magma with two mixed elements (rows with both boolean and non-boolean outputs on the core) self-simulates perfectly — 64/64 cells correct. The universal self-simulator decodes Q-depth and looks up the table; it never classifies outputs by type. The Kripke wall is not about computing the table — it is the architectural choice that organizes the algebra into coherent roles.
 - **Algebraic composition** (Compose): The machine sequences operations. SAT counterexample at N=10.
 - **Algebraic storage** (Inert/g): The machine provides non-destructive variable binding. SAT counterexample at N=10.
 
@@ -219,9 +219,9 @@ The investigation reveals a clean separation:
 
 ## Key Finding: Self-Simulation ≠ Self-Description
 
-Self-simulation (computing the table) and self-description (having clean internal roles) are different requirements. Self-simulation forces injectivity — the encoding can't be compressed. But it does NOT force the Kleene wall, because the self-simulator doesn't need to classify elements by row type. It just decodes and looks up.
+Self-simulation (computing the table) and self-description (having clean internal roles) are different requirements. Self-simulation forces injectivity — the encoding can't be compressed. But it does NOT force the Kripke wall, because the self-simulator doesn't need to classify elements by row type. It just decodes and looks up.
 
-The Kleene dichotomy is the axiom that bridges the gap: it says every non-absorber either fully classifies or fully transforms, never both. This creates the three-class decomposition (zeros, classifiers, non-classifiers) with hard walls between classes. Without it, the algebra can still compute its own table — but its elements don't have coherent roles, and the algebra is not interpretable as a computational system.
+The Kripke dichotomy is the axiom that bridges the gap: it says every non-absorber either fully classifies or fully transforms, never both. This creates the three-class decomposition (zeros, classifiers, non-classifiers) with hard walls between classes. Without it, the algebra can still compute its own table — but its elements don't have coherent roles, and the algebra is not interpretable as a computational system.
 
 Three levels of finite magma:
 
@@ -229,20 +229,20 @@ Three levels of finite magma:
 Self-simulating magma:     computes its own table (retraction pair suffices)
                            no clean roles, no walls
 
-Self-describing magma:     + Kleene dichotomy (three clean categories)
+Self-describing magma:     + Kripke dichotomy (three clean categories)
                            roles are coherent, walls are hard
 
 Self-hosting magma (Ψ):    + compose + inert (evaluator internalized)
                            no external machine needed
 ```
 
-The Ψ axiom system contributes two things beyond self-simulation: the Kleene wall (which creates structure) and machine internalization (which creates grounding). Both are genuine axioms, not derived. The Kleene wall is the more fundamental — it's what makes the algebra interpretable as a language rather than a table.
+The Ψ axiom system contributes two things beyond self-simulation: the Kripke wall (which creates structure) and machine internalization (which creates grounding). Both are genuine axioms, not derived. The Kripke wall is the more fundamental — it's what makes the algebra interpretable as a language rather than a table.
 
 This boundary corresponds to the separation in the Ψ system between:
 - **The instruction set** (Q/E for data, τ/ρ for control): DERIVED from self-simulation
 - **The machine** (step loop, registers, heap): PROVIDED externally
 
-The Ψ axiom system's unique contribution is not in deriving ALL axioms from self-simulation, but in showing that the **Kleene wall** — the clean separation between judgment and computation — is a structural consequence of self-simulation. A system that can't tell its own classifications from its own transformations can't correctly simulate itself. This is the irreducible core that self-simulation forces.
+The Ψ axiom system's unique contribution is not in deriving ALL axioms from self-simulation, but in showing that the **Kripke wall** — the clean separation between judgment and computation — is a structural consequence of self-simulation. A system that can't tell its own classifications from its own transformations can't correctly simulate itself. This is the irreducible core that self-simulation forces.
 
 ---
 

@@ -5,7 +5,7 @@ Axiom Archaeology — Direction 1 from AXIOM_PROMPT.md
 For each behavioral axiom: remove it, run SAT at N=12, and characterize
 what changes. Not just "is it still SAT?" but:
   - Do the five forced categories survive?
-  - Do the three hard walls (Kleene, Substrate, Composition) survive?
+  - Do the three hard walls (Kripke, Substrate, Composition) survive?
   - How many cells become free vs. the baseline?
   - Which role merges become newly possible?
 
@@ -27,7 +27,7 @@ from ds_search.axiom_explorer import (
     print_table, print_model_summary,
 )
 from ds_search.forced_roles_test import (
-    axiom_L0, axiom_kleene, axiom_inert_prop, axiom_pa, axiom_vv,
+    axiom_L0, axiom_kripke, axiom_inert_prop, axiom_pa, axiom_vv,
     axiom_qe, axiom_e_trans, axiom_1_inert, axiom_branch, axiom_compose,
     axiom_y, axiom_selection, role_tester, role_inert, role_encoder,
     is_inert_z3,
@@ -49,7 +49,7 @@ ROLES = {
 
 # The three walls to test
 WALL_PAIRS = {
-    "Kleene (τ isolated)": [
+    "Kripke (τ isolated)": [
         ("τ", "⊤"), ("τ", "⊥"), ("τ", "Q"), ("τ", "E"),
         ("τ", "f"), ("τ", "g"), ("τ", "ρ"), ("τ", "η"), ("τ", "Y"),
     ],
@@ -65,7 +65,7 @@ WALL_PAIRS = {
 
 # Axiom names (excluding L0 which is always present)
 AXIOM_NAMES = [
-    "Kleene", "InertProp", "PA", "VV", "QE",
+    "Kripke", "InertProp", "PA", "VV", "QE",
     "E-trans", "1-Inert", "Branch", "Compose", "Y", "Selection",
 ]
 
@@ -103,7 +103,7 @@ def build_solver(skip_axioms=None, role_a=None, role_b=None):
 
     # Behavioral axioms — skip as requested
     axiom_map = {
-        "Kleene": lambda: axiom_kleene(dot, N),
+        "Kripke": lambda: axiom_kripke(dot, N),
         "InertProp": lambda: axiom_inert_prop(dot, N),
         "PA": lambda: axiom_pa(dot, N),
         "VV": lambda: axiom_vv(dot, N),
@@ -226,7 +226,7 @@ def phase2_wall_survival():
 
     # For each axiom removal, test critical wall pairs
     # Focus on the UNSAT pairs — do they become SAT?
-    print(f"\n{'Removed':<13} {'Kleene':>10} {'Substrate':>10} {'Compose':>10}")
+    print(f"\n{'Removed':<13} {'Kripke':>10} {'Substrate':>10} {'Compose':>10}")
     print("-" * 50)
 
     for axiom in AXIOM_NAMES:
@@ -249,7 +249,7 @@ def phase2_wall_survival():
             else:
                 wall_status[wall_name] = f"{broken}/{tested} BROKE"
 
-        k = wall_status.get("Kleene (τ isolated)", "?")
+        k = wall_status.get("Kripke (τ isolated)", "?")
         sub = wall_status.get("Substrate (g isolated)", "?")
         comp = wall_status.get("Composition (η partial)", "?")
         print(f"  {axiom:<11} {k:>10} {sub:>10} {comp:>10}")

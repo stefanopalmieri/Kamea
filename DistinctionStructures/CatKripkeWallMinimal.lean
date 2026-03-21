@@ -1,8 +1,8 @@
-/- # CatKleeneWallMinimal — The Kleene Wall
+/- # CatKripkeWallMinimal — The Kripke Wall
 
    ## Summary
 
-   We study a property — the **Kleene dichotomy** — of a standard algebraic
+   We study a property — the **Kripke dichotomy** — of a standard algebraic
    object: a finite faithful extensional magma on a 2-pointed set with
    a retraction pair. All ingredients are textbook:
 
@@ -15,30 +15,30 @@
      inverses on the core S \ B, with ret preserving zero₁. Standard
      categorical concept (cf. `CategoryTheory.RetractOf`).
 
-   The **Kleene dichotomy** is the one new property: every non-constant
+   The **Kripke dichotomy** is the one new property: every non-constant
    transformation either maps the core entirely into B (a "classifier") or
    maps the core entirely into S \ B (a "non-classifier"). No mixing.
 
    This clean separation between classification and computation is the
-   **Kleene wall**.
+   **Kripke wall**.
 
    ## Results
 
    In any finite faithful extensional magma on (S, B) with a retraction
-   pair satisfying the Kleene dichotomy:
+   pair satisfying the Kripke dichotomy:
 
    1. The carrier decomposes into three disjoint classes (Z, C, N).
    2. No right identity exists.
    3. The retraction pair belongs to the non-classifier class N.
-   4. |S| ≥ 4, tight (`kleene4`, with sec = ret).
-   5. |S| ≥ 5 if sec ≠ ret, tight (`kleene5`).
+   4. |S| ≥ 4, tight (`kripke4`, with sec = ret).
+   5. |S| ≥ 5 if sec ≠ ret, tight (`kripke5`).
 
    All proofs are purely algebraic — no `decide`, no `native_decide`.
 
    ## Structure of this file
 
    **Part 1a:** `FaithfulRetractMagma` — the standard setup.
-   **Part 1b:** `DichotomicRetractMagma` — extends the setup with the Kleene dichotomy.
+   **Part 1b:** `DichotomicRetractMagma` — extends the setup with the Kripke dichotomy.
    **Part 2a:** The 4-element witness (minimum, sec = ret).
    **Part 2b:** The 5-element witness (minimum with sec ≠ ret).
    **Part 3:** Universal theorems.
@@ -50,7 +50,7 @@ import Mathlib.Data.Finset.Card
 
 set_option autoImplicit false
 
-namespace KleeneWall
+namespace KripkeWall
 
 -- ══════════════════════════════════════════════════════════════════════
 -- Part 1a: The Standard Setup
@@ -107,20 +107,20 @@ structure FaithfulRetractMagma (n : Nat) where
   ret_zero₁ : dot ret zero₁ = zero₁
 
 -- ══════════════════════════════════════════════════════════════════════
--- Part 1b: The Kleene Dichotomy
+-- Part 1b: The Kripke Dichotomy
 -- ══════════════════════════════════════════════════════════════════════
 
-/-- A faithful retract magma satisfying the **Kleene dichotomy**: every
+/-- A faithful retract magma satisfying the **Kripke dichotomy**: every
     non-constant transformation either maps the core entirely into B
     (a "classifier") or maps the core entirely into S \ B (a
     "non-classifier"). No mixing.
 
-    The setup (`FaithfulRetractMagma`) is standard. The Kleene dichotomy
+    The setup (`FaithfulRetractMagma`) is standard. The Kripke dichotomy
     is the one new property. The classifier and non-degeneracy conditions
     ensure both sides of the dichotomy are inhabited.
 
-    Minimum carrier size: N ≥ 4 (tight, `kleene4`).
-    With sec ≠ ret: N ≥ 5 (tight, `kleene5`). -/
+    Minimum carrier size: N ≥ 4 (tight, `kripke4`).
+    With sec ≠ ret: N ≥ 5 (tight, `kripke5`). -/
 structure DichotomicRetractMagma (n : Nat) extends FaithfulRetractMagma n where
   /-- A classifier: a non-constant transformation whose row is
       entirely in B. -/
@@ -132,7 +132,7 @@ structure DichotomicRetractMagma (n : Nat) extends FaithfulRetractMagma n where
   /-- The classifier is not zero₂ (non-degeneracy). -/
   cls_ne_zero₂ : cls ≠ zero₂
 
-  -- === The Kleene dichotomy ===
+  -- === The Kripke dichotomy ===
 
   /-- Every non-constant transformation is either all-B or all-non-B
       on the core. This is the single new property. -/
@@ -187,9 +187,9 @@ private theorem rawK4_bound (a b : Fin 4) : rawK4 a.val b.val < 4 := by
 /-- The binary operation of the 4-element witness. -/
 def dotK4 (a b : Fin 4) : Fin 4 := ⟨rawK4 a.val b.val, rawK4_bound a b⟩
 
-/-- **The minimal 4-element Kleene-dichotomic magma.** The smallest possible,
+/-- **The minimal 4-element dichotomic magma.** The smallest possible,
     achieved with sec = ret. -/
-def kleene4 : DichotomicRetractMagma 4 where
+def kripke4 : DichotomicRetractMagma 4 where
   dot := dotK4
   zero₁ := 0
   zero₂ := 1
@@ -255,9 +255,9 @@ private theorem rawK5_bound (a b : Fin 5) : rawK5 a.val b.val < 5 := by
 /-- The binary operation of the 5-element witness. -/
 def dotK5 (a b : Fin 5) : Fin 5 := ⟨rawK5 a.val b.val, rawK5_bound a b⟩
 
-/-- **The minimal 5-element Kleene-dichotomic magma with sec ≠ ret.**
+/-- **The minimal 5-element dichotomic magma with sec ≠ ret.**
     N = 4 with sec ≠ ret is unsatisfiable. -/
-def kleene5 : DichotomicRetractMagma 5 where
+def kripke5 : DichotomicRetractMagma 5 where
   dot := dotK5
   zero₁ := 0
   zero₂ := 1
@@ -283,7 +283,7 @@ def kleene5 : DichotomicRetractMagma 5 where
 -- Part 3: Universal Theorems
 --
 -- All proofs are purely algebraic. No `decide` or `native_decide`.
--- Every theorem holds for ALL Kleene-dichotomic magma instances.
+-- Every theorem holds for ALL dichotomic magma instances.
 -- ══════════════════════════════════════════════════════════════════════
 
 section UniversalTheorems
@@ -340,7 +340,7 @@ def IsNonClassifier (a : Fin n) : Prop :=
   ∀ x : Fin n, x ≠ M.zero₁ → x ≠ M.zero₂ → M.dot a x ≠ M.zero₁ ∧ M.dot a x ≠ M.zero₂
 
 /-- **Three-category exhaustion**: every element is a zero, classifier,
-    or non-classifier. Follows directly from the Kleene dichotomy. -/
+    or non-classifier. Follows directly from the Kripke dichotomy. -/
 theorem three_categories (a : Fin n) :
     IsZero M a ∨ IsClassifier M a ∨ IsNonClassifier M a := by
   by_cases h1 : a = M.zero₁
@@ -362,7 +362,7 @@ theorem classifier_not_non_classifier (a : Fin n)
 -- Theorem 4: No right identity
 -- ─────────────────────────────────────────────────────────────────────
 
-/-- **No right identity** exists in any Kleene-dichotomic magma.
+/-- **No right identity** exists in any dichotomic magma.
 
     Proof: if `e` is right identity, `dot cls e = cls`. But `cls_boolean`
     forces `dot cls e ∈ {zero₁, zero₂}`, so `cls ∈ {zero₁, zero₂}`.
@@ -400,10 +400,10 @@ private theorem nc_ne_cls_aux (y : Fin n)
 
 end UniversalTheorems
 
-/-- **Minimum cardinality**: every Kleene-dichotomic magma has at least 4 elements.
+/-- **Minimum cardinality**: every dichotomic magma has at least 4 elements.
 
     Proof: {zero₁, zero₂, cls, nc} are 4 pairwise-distinct elements.
-    The bound is tight: `kleene4` achieves it with sec = ret. -/
+    The bound is tight: `kripke4` achieves it with sec = ret. -/
 theorem card_ge_four {n : Nat} (M : DichotomicRetractMagma n) : 4 ≤ Fintype.card (Fin n) := by
   obtain ⟨nc, _, _, wit⟩ := M.has_non_classifier
   have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
@@ -493,7 +493,7 @@ theorem sec_ne_zero₂ : M.sec ≠ M.zero₂ := by
     2. Show `sec · nc` is non-zero using `ret_zero₁`, injectivity, and `nc ≠ cls`.
     3. Since `sec · nc` is non-zero, `ret · (sec · nc) = nc` (non-boolean)
        witnesses a non-boolean output of ret on a non-zero input.
-    4. Kleene dichotomy places ret in the non-classifier class. -/
+    4. Kripke dichotomy places ret in the non-classifier class. -/
 theorem ret_is_non_classifier : IsNonClassifier M M.ret := by
   have hrnz1 := ret_ne_zero₁ M
   have hrnz2 := ret_ne_zero₂ M
@@ -564,7 +564,7 @@ theorem sec_is_non_classifier : IsNonClassifier M M.sec := by
   -- sec · (ret · nc) = nc (by sec_ret, since nc is non-zero)
   have hsec := M.sec_ret nc hnc1 hnc2
   -- sec maps (ret · nc) to nc. nc is non-boolean. ret · nc is non-zero.
-  -- So sec has non-boolean output on a non-zero input → non-classifier by Kleene.
+  -- So sec has non-boolean output on a non-zero input → non-classifier by Kripke.
   rcases M.dichotomy M.sec hsnz1 hsnz2 with hbool | hcomp
   · exfalso
     rcases hbool (M.dot M.ret nc) hrnc.1 hrnc.2 with h | h
@@ -584,7 +584,7 @@ end UniversalTheorems2
     Proof: {zero₁, zero₂, cls, sec, ret} are 5 pairwise-distinct elements.
     sec and ret are each distinct from zero₁, zero₂, and cls by the universal
     theorems, and distinct from each other by hypothesis.
-    The bound is tight: `kleene5` achieves it. -/
+    The bound is tight: `kripke5` achieves it. -/
 theorem card_ge_five_of_sec_ne_ret {n : Nat} (M : DichotomicRetractMagma n)
     (h_sr : M.sec ≠ M.ret) : 5 ≤ Fintype.card (Fin n) := by
   have h12 : M.zero₁ ≠ M.zero₂ := M.zeros_distinct
@@ -604,4 +604,4 @@ theorem card_ge_five_of_sec_ne_ret {n : Nat} (M : DichotomicRetractMagma n)
     _ ≤ Finset.univ.card := Finset.card_le_card hsub
     _ = Fintype.card (Fin n) := Finset.card_univ
 
-end KleeneWall
+end KripkeWall

@@ -21,7 +21,7 @@ The 10 TC roles {⊤, ⊥, τ, Q, E, f, g, ρ, η, Y} partition into 5 behaviora
 | Category | Roles | Characterization |
 |----------|-------|-----------------|
 | **Polarity** | ⊤, ⊥ | Absorbers. Fungible: no behavioral axiom distinguishes them. |
-| **Judgment** | τ | Maximally isolated. The Kleene barrier forbids merger with any other role. |
+| **Judgment** | τ | Maximally isolated. The Kripke barrier forbids merger with any other role. |
 | **Substrate** | g | Maximally isolated. The inert role constraint forbids merger with any active role. |
 | **Composition** | η | Partially isolated. Selection + Compose interaction forbids merger with Q, E, ρ. Can merge only with f and Y. |
 | **Computation** | Q, E, f, ρ, Y | Internally fungible. All 10 pairwise merges within this group are SAT. |
@@ -52,13 +52,13 @@ The minimum number of distinct elements required is the chromatic number of the 
 
 Each wall is a theorem — an UNSAT result with identified necessary axioms.
 
-**Wall 1: The Kleene Barrier (τ isolated)**
+**Wall 1: The Kripke Barrier (τ isolated)**
 
-τ cannot merge with any other role (9/9 pairs UNSAT). The Kleene axiom (C) enforces a structural separation: a row is either all-boolean (tester) or has non-boolean outputs on non-absorbers (encoder/inert). No row can be both. This is the wall between judgment and everything else.
+τ cannot merge with any other role (9/9 pairs UNSAT). The Kripke axiom (C) enforces a structural separation: a row is either all-boolean (tester) or has non-boolean outputs on non-absorbers (encoder/inert). No row can be both. This is the wall between judgment and everything else.
 
 - τ vs all encoders (Q, E, f, ρ, η, Y): UNSAT. Necessity: **Roles** — tester and encoder constraints are mutually exclusive on any row. A tester row has all outputs in {0,1}; an encoder row requires ≥2 distinct non-boolean outputs.
 - τ vs g (inert): UNSAT. Necessity: **Roles** — tester and inert constraints are mutually exclusive. A tester row is all-boolean; an inert row has no pair of distinct non-boolean outputs but is also not all-boolean (since it's not a tester).
-- τ vs ⊤, ⊥: UNSAT. Necessity: **Kleene + Roles** — absorber rows are constant; tester rows are boolean but non-constant.
+- τ vs ⊤, ⊥: UNSAT. Necessity: **Kripke + Roles** — absorber rows are constant; tester rows are boolean but non-constant.
 
 **Wall 2: The Substrate Barrier (g isolated)**
 
@@ -74,7 +74,7 @@ g cannot merge with any other role (9/9 pairs UNSAT). The 1-Inert axiom forces e
 
 - η vs Q: UNSAT. Necessity: **QE, Compose, Roles** — three independent paths to UNSAT.
 - η vs E: UNSAT. Necessity: **QE, Compose, Roles** — same three paths.
-- η vs ρ: UNSAT. Necessity: **Kleene, PA, Selection, Roles** — four independent paths; the most over-determined forced distinction among encoders.
+- η vs ρ: UNSAT. Necessity: **Kripke, PA, Selection, Roles** — four independent paths; the most over-determined forced distinction among encoders.
 - η vs f: SAT. η vs Y: SAT. These merges are compatible because f and Y have no axioms that directly conflict with Compose or Selection when aliased to η's index.
 
 ### Branch Discrimination (f ≠ g)
@@ -91,8 +91,8 @@ For each UNSAT pair, axiom groups were removed one at a time to identify which a
 | Cross-category (absorber vs encoder/inert) | **Roles** | ⊤=f, ⊤=g, ⊥=f, ⊥=g |
 | Encoder vs inert | **Roles** | Q=g, E=g, g=ρ, g=η, g=Y |
 | η vs Q/E | **QE, Compose, Roles** | Q=η, E=η |
-| η vs ρ | **Kleene, PA, Selection, Roles** | ρ=η |
-| Absorber vs τ | **Kleene, Selection** | ⊤=τ, ⊥=τ |
+| η vs ρ | **Kripke, PA, Selection, Roles** | ρ=η |
+| Absorber vs τ | **Kripke, Selection** | ⊤=τ, ⊥=τ |
 | Various absorber-encoder | **(interaction)** | ⊤=Q, ⊤=E, ⊤=ρ, ⊤=η, ⊤=Y, etc. |
 
 **Roles** (the tester/encoder/inert classification) is the most common necessity. It creates the primary barrier. The behavioral axioms (QE, Compose, Selection, Branch) create secondary barriers within the encoder category.
@@ -257,7 +257,7 @@ The seven roles selected by the distinctness axiom correspond to McCarthy's 1960
 Four roles are forced by axioms alone — they occupy isolated categories:
 
 - **⊤** (NIL): the absorber, forced by L0. There is no other element that absorbs all inputs.
-- **τ** (the judgment element, not in the TC7 but structurally necessary): forced by Kleene. No computation element can serve as judge.
+- **τ** (the judgment element, not in the TC7 but structurally necessary): forced by Kripke. No computation element can serve as judge.
 - **g** (CONS): the substrate element, forced by 1-Inert + Branch discrimination. No encoder can serve as inert substrate.
 - **η** (CDR): the composition element, forced by Selection + Compose interaction. Cannot merge with Q, E, or ρ.
 
@@ -281,13 +281,13 @@ Several roles emerge from axiom interaction without being directly axiomatized. 
 | f as first projection | Extracts first component of a pair | Branch (f is the if-path) + tester τ (selects which path) | **NO** — f is axiomatized as Branch if-path. That this corresponds to first projection follows from the curried pairing structure of g. |
 | η as second projection | Extracts second component | Compose (η·x = ρ·(g·x)) + Branch + Selection (η·ρ = τ) | **NO** — η is axiomatized via Compose and Selection. The second-projection behavior emerges from the interaction. |
 
-This is the non-circular part of the result. The axioms specify structural properties (absorbers, extensionality, Kleene separation, QE inverse, branching, composition, fixed points). The pair/fst/snd structure — which is what makes the system computationally useful — is an emergent consequence, not an input.
+This is the non-circular part of the result. The axioms specify structural properties (absorbers, extensionality, Kripke separation, QE inverse, branching, composition, fixed points). The pair/fst/snd structure — which is what makes the system computationally useful — is an emergent consequence, not an input.
 
 ---
 
 ## Relationship to Self-Simulation
 
-The forced roles theorem assumes the Ψ axioms. The self-simulation analysis ([`self_simulation_necessity.md`](self_simulation_necessity.md)) provides independent justification for several of these axioms: discrimination, branching, and recursion are derived from the requirement that the term algebra can compute the Cayley table. Compose and inert are shown to be independent of self-simulation — they internalize the evaluation machine, enabling self-hosted simulation rather than externally-hosted simulation. The forced roles theorem's three walls (Kleene, substrate, composition) thus have two different sources of support: algebraic (this document) and computational (the self-simulation derivation).
+The forced roles theorem assumes the Ψ axioms. The self-simulation analysis ([`self_simulation_necessity.md`](self_simulation_necessity.md)) provides independent justification for several of these axioms: discrimination, branching, and recursion are derived from the requirement that the term algebra can compute the Cayley table. Compose and inert are shown to be independent of self-simulation — they internalize the evaluation machine, enabling self-hosted simulation rather than externally-hosted simulation. The forced roles theorem's three walls (Kripke, substrate, composition) thus have two different sources of support: algebraic (this document) and computational (the self-simulation derivation).
 
 ---
 
@@ -337,12 +337,12 @@ The forced roles theorem (5 categories, 3 walls, 7 roles under expressiveness) h
 
 The forced roles theorem as originally stated remains correct. It just now has a finer-grained explanation of why each part holds:
 
-**Layer 1 (categorical):** Three behavioral categories (absorbers, classifiers, transformers), the Kleene wall, rigidity, and discoverability are structurally universal — they emerge from standard finite category theory (retraction pairs, subobject classifiers, products, conditional copairing) without any self-description axioms. Verified across five independent axiom systems: Ψ, information-theoretic, category-theoretic, game-theoretic, and categorical topos.
+**Layer 1 (categorical):** Three behavioral categories (absorbers, classifiers, transformers), the Kripke wall, rigidity, and discoverability are structurally universal — they emerge from standard finite category theory (retraction pairs, subobject classifiers, products, conditional copairing) without any self-description axioms. Verified across five independent axiom systems: Ψ, information-theoretic, category-theoretic, game-theoretic, and categorical topos.
 
 **Layer 2 (distinctness):** The distinctness axiom forces all named roles apart (13 new requirements beyond 32 already forced), yielding 7 specialized roles. This is standard algebraic practice, independently justified by expressiveness (49 vs 16 cells). Substrate existence (g distinct from all encoders) is forced here. The g-as-CONS fusion is also forced at this layer by the interaction of Branch + Compose: composition is packaging-then-branching (η·x = ρ·(g·x)), which forces the packager g to hold without transforming — i.e., to be inert. This completes the McCarthy correspondence.
 
 **Layer 3 (1-Inert):** Substrate uniqueness — exactly one inert element, not two or more. Expressiveness does not distinguish inert=1 from inert=2 (both tie on all metrics). This is the irreducible philosophical commitment: "the ground is unique."
 
-**Redundant axioms:** InertProp (D), VV, and 1-Inert are implied by {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection} — eight independent axioms.
+**Redundant axioms:** InertProp (D), VV, and 1-Inert are implied by {Kripke, PA, QE, E-trans, Branch, Compose, Y, Selection} — eight independent axioms.
 
-**Composition wall:** Two independent sub-walls (η vs Q/E defended by QE + Compose; η vs ρ defended by Kleene + PA + Selection). Requires ≥ 5 axioms in concert — a genuinely emergent multi-axiom interaction.
+**Composition wall:** Two independent sub-walls (η vs Q/E defended by QE + Compose; η vs ρ defended by Kripke + PA + Selection). Requires ≥ 5 axioms in concert — a genuinely emergent multi-axiom interaction.

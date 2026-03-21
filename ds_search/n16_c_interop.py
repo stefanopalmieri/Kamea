@@ -82,8 +82,8 @@ NAMES = {
 # Axiom encoding helpers (same as n16_freedom.py)
 # ═══════════════════════════════════════════════════════════════════════
 
-def add_kleene_c(s, dot, N):
-    """Kleene: only testers produce boolean output on non-absorbers."""
+def add_kripke_c(s, dot, N):
+    """Kripke: only testers produce boolean output on non-absorbers."""
     for x in range(2, N):
         is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
         for y in range(2, N):
@@ -179,7 +179,7 @@ def build_solver():
     s, dot = encode_level(8, N, timeout_seconds=600)
 
     # ── Base axioms (same as Ψ₁₆ᶠ) ──────────────────────────────────
-    add_kleene_c(s, dot, N)
+    add_kripke_c(s, dot, N)
     add_inert_propagation(s, dot, N)
     add_pa(s, dot, N)
     add_vv(s, dot, N)

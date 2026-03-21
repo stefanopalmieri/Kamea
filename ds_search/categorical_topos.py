@@ -10,7 +10,7 @@ Axioms (all standard categorical concepts):
   2. Extensionality: all morphisms distinct (faithful action)
   3. Retraction pair: r ∘ s = id and s ∘ r = id on core (section/retraction)
   4. Subobject classifier: unique non-zero morphism with image in {0,1}
-     (Kleene barrier as uniqueness of the classifier)
+     (Kripke barrier as uniqueness of the classifier)
   5. Binary product: non-commuting projection pair + pairing morphism
   6. Conditional (copairing): ρ dispatches based on τ
 
@@ -108,7 +108,7 @@ def axiom_retraction_pair(s, dot):
 def axiom_subobject_classifier(s, dot):
     """There exists exactly one non-zero morphism whose image ⊆ {0,1}.
 
-    This is the Kleene barrier stated categorically: the subobject
+    This is the Kripke barrier stated categorically: the subobject
     classifier is unique. Any non-zero morphism that factors through
     Bool IS the classifier.
 
@@ -462,16 +462,16 @@ def run_categorical_search(num_models=20):
     print(f"  Discoverable:   {discoverable_count}/{n_models} "
           f"({100*discoverable_count/n_models:.0f}%)")
 
-    # Kleene wall verification
-    print(f"\n  Kleene wall (subobject classifier uniqueness):")
-    kleene_holds = 0
+    # Kripke wall verification
+    print(f"\n  Kripke wall (subobject classifier uniqueness):")
+    kripke_holds = 0
     for m in models:
         # Check: exactly 1 non-zero boolean morphism
         bool_count = sum(1 for x in range(2, N)
                          if all(m['table'][x][j] in (0, 1) for j in range(N)))
         if bool_count == 1:
-            kleene_holds += 1
-    print(f"    Holds in {kleene_holds}/{n_models} models "
+            kripke_holds += 1
+    print(f"    Holds in {kripke_holds}/{n_models} models "
           f"(should be {n_models}/{n_models} by axiom)")
 
     # ── Comparison ───────────────────────────────────────────────────
@@ -479,7 +479,7 @@ def run_categorical_search(num_models=20):
     print("COMPARISON WITH Ψ AND PREVIOUS APPROACH B")
     print(f"{'='*70}")
     print()
-    print(f"  {'System':<30} {'Dist':<15} {'Inert?':<10} {'Kleene':<10} "
+    print(f"  {'System':<30} {'Dist':<15} {'Inert?':<10} {'Kripke':<10} "
           f"{'Rigid':<10} {'Disc':<10}")
     print(f"  {'-'*85}")
     print(f"  {'Ψ (full axioms)':<30} {'2-1-8-1':<15} {'YES':<10} {'YES':<10} "

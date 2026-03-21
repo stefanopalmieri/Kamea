@@ -15,7 +15,7 @@ Emerged from all four independent axiom systems tested (phenomenological, inform
 - **Absorbers** (boundaries/ground). Two constant rows. Present in every system with extensionality.
 - **Testers** (judgment/classification). Boolean rows that partition elements into two classes.
 - **Encoders** (synthesis/transformation). Rows with multiple distinct non-boolean outputs.
-- **Kleene wall**: judgment cannot merge with computation. A row cannot be simultaneously all-boolean and have multiple non-boolean outputs. This is a definitional impossibility, not an axiom — it follows from the definitions of tester and encoder.
+- **Kripke wall**: judgment cannot merge with computation. A row cannot be simultaneously all-boolean and have multiple non-boolean outputs. This is a definitional impossibility, not an axiom — it follows from the definitions of tester and encoder.
 
 ### Layer 2: Computationally Inevitable
 
@@ -37,7 +37,7 @@ Specific to axiom systems that include a substrate commitment.
 
 ## The Four Axiom Systems Tested
 
-| System | Motivation | Distribution | Kleene Wall | Substrate Wall |
+| System | Motivation | Distribution | Kripke Wall | Substrate Wall |
 |--------|-----------|-------------|-------------|----------------|
 | Ψ (phenomenological) | self-description | 2-1-8-1 | YES | YES |
 | Info-theoretic (A) | information flow | 2-1-9-0 | YES | NO (no inert) |
@@ -47,7 +47,7 @@ Specific to axiom systems that include a substrate commitment.
 
 ### Ψ — Phenomenological
 
-Axiom vocabulary: absorbers, extensionality, Kleene separation, QE inverse pair, Branch dispatch, Compose, Y-combinator, Selection, 1-Inert. Motivated by self-description: a structure that identifies its own components through its own operation.
+Axiom vocabulary: absorbers, extensionality, Kripke separation, QE inverse pair, Branch dispatch, Compose, Y-combinator, Selection, 1-Inert. Motivated by self-description: a structure that identifies its own components through its own operation.
 
 Result: 2 absorbers, 1 tester, 8 encoders, 1 inert. Both walls hold.
 
@@ -55,7 +55,7 @@ Result: 2 absorbers, 1 tester, 8 encoders, 1 inert. Both walls hold.
 
 Axiom vocabulary: constant rows (information-destroying), binary classifiers (information-partitioning), injective rows (information-preserving), non-injective non-boolean rows (lossy), inverse pair on a core, full discoverability. No reference to Ψ roles.
 
-Result: 2 absorbers, 1 tester, 9 encoders, **0 inert**. Kleene wall holds. Substrate wall absent.
+Result: 2 absorbers, 1 tester, 9 encoders, **0 inert**. Kripke wall holds. Substrate wall absent.
 
 ### Approach B — Category-Theoretic
 
@@ -92,7 +92,7 @@ When pinned to exactly 1 inert element (Ψ-like 2-1-8-1 distribution), all 10 sa
 
 Evidence: `ds_search/categorical_topos.py`.
 
-| System | Dist (free) | Inert forced? | Kleene | Rigid | Discoverable |
+| System | Dist (free) | Inert forced? | Kripke | Rigid | Discoverable |
 |---|---|---|---|---|---|
 | Ψ (full axioms) | 2-1-8-1 | YES (1-Inert) | YES | YES | YES |
 | Info-theoretic (A) | 2-1-9-0 | NO (absent) | YES | ? | ? |
@@ -118,7 +118,7 @@ This is interpretive context, not part of the formal claim. The formal claim is:
 | Role | McCarthy | Forced by | Layer |
 |------|----------|-----------|-------|
 | ⊤ | NIL | L0 (absorber) | Universal |
-| τ | — | Kleene (tester/encoder incompatibility) | Universal |
+| τ | — | Kripke (tester/encoder incompatibility) | Universal |
 | Q | QUOTE | QE axiom | Computationally inevitable |
 | E | EVAL | QE axiom | Computationally inevitable |
 | f | CAR | Branch (if-path) | Computationally inevitable |
@@ -136,13 +136,13 @@ Three of the eleven behavioral axioms are redundant — implied by the remaining
 
 | Axiom | Status | Explanation |
 |-------|--------|-------------|
-| InertProp (D) | Redundant | Implied by Kleene + role constraints |
+| InertProp (D) | Redundant | Implied by Kripke + role constraints |
 | VV | Redundant | Implied by remaining axioms |
 | 1-Inert | Redundant | Implied by Branch + Compose + role constraints |
 
-The minimal independent behavioral axiom set is: **{Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}** — eight axioms.
+The minimal independent behavioral axiom set is: **{Kripke, PA, QE, E-trans, Branch, Compose, Y, Selection}** — eight axioms.
 
-This strengthens the non-circularity argument. Fewer axioms means less opportunity for indirect encoding. The eight independent axioms each have clear, distinct motivations: Kleene enforces judgment/computation separation, PA ensures power-associativity, QE provides representation, E-trans makes eval transparent to absorbers, Branch provides conditional dispatch, Compose provides function composition, Y provides recursion, Selection connects composition to judgment.
+This strengthens the non-circularity argument. Fewer axioms means less opportunity for indirect encoding. The eight independent axioms each have clear, distinct motivations: Kripke enforces judgment/computation separation, PA ensures power-associativity, QE provides representation, E-trans makes eval transparent to absorbers, Branch provides conditional dispatch, Compose provides function composition, Y provides recursion, Selection connects composition to judgment.
 
 ---
 
@@ -159,7 +159,7 @@ The Composition wall (η cannot merge with Q, E, or ρ) is the only wall that de
 
 The Composition wall requires **at least 5 of 11 behavioral axioms** working in concert. No small axiom subset reproduces it. This makes the Composition wall a genuinely emergent property of the axiom system — it arises from the interaction of multiple independent constraints, not from any single axiom or small group.
 
-Recall from the detailed breakdown that the wall has two independent sub-walls (η vs Q/E defended by QE + Compose; η vs ρ defended by Kleene + PA + Selection). Even these sub-walls individually require their respective axiom groups plus the Roles constraints — neither sub-wall can be sustained by fewer than its required axioms.
+Recall from the detailed breakdown that the wall has two independent sub-walls (η vs Q/E defended by QE + Compose; η vs ρ defended by Kripke + PA + Selection). Even these sub-walls individually require their respective axiom groups plus the Roles constraints — neither sub-wall can be sustained by fewer than its required axioms.
 
 ---
 

@@ -87,7 +87,7 @@ def axiom_L0(dot, N):
     return constraints
 
 
-def axiom_kleene(dot, N):
+def axiom_kripke(dot, N):
     constraints = []
     for x in range(2, N):
         is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(N)])
@@ -281,7 +281,7 @@ def build_solver(role_overrides=None, extra_constraints=None,
 
     # Core axioms
     add_group("L0", axiom_L0(dot, n))
-    add_group("Kleene", axiom_kleene(dot, n))
+    add_group("Kripke", axiom_kripke(dot, n))
     add_group("InertProp", axiom_inert_prop(dot, n))
     add_group("PA", axiom_pa(dot, n))
     add_group("VV", axiom_vv(dot, n))
@@ -604,7 +604,7 @@ def task2_symmetry():
         print("\n  Identifying conflicting axioms (remove one at a time)...")
 
         axiom_groups = [
-            "Kleene", "InertProp", "PA", "VV", "QE",
+            "Kripke", "InertProp", "PA", "VV", "QE",
             "E-trans", "1-Inert", "Branch", "Compose", "Y",
             "Selection", "Roles",
         ]
@@ -630,7 +630,7 @@ def task2_symmetry():
 
     for test_n in [5, 6, 7, 8]:
         t0 = time.time()
-        s, dot = build_kleene_solver(test_n, commutative=True, timeout_s=300)
+        s, dot = build_kripke_solver(test_n, commutative=True, timeout_s=300)
         result = s.check()
         elapsed = time.time() - t0
         print(f"  DichotomicRetractMagma + commutativity at N={test_n}: "
@@ -643,21 +643,21 @@ def task2_symmetry():
     print(f"\n  Sanity check: DichotomicRetractMagma without commutativity")
     for test_n in [4, 5]:
         t0 = time.time()
-        s, dot = build_kleene_solver(test_n, commutative=False, timeout_s=60)
+        s, dot = build_kripke_solver(test_n, commutative=False, timeout_s=60)
         result = s.check()
         elapsed = time.time() - t0
         print(f"    DichotomicRetractMagma at N={test_n}: {str(result).upper()} ({elapsed:.1f}s)")
 
 
-def build_kleene_solver(n, commutative=False, timeout_s=120):
+def build_kripke_solver(n, commutative=False, timeout_s=120):
     """
-    Encode the DichotomicRetractMagma axioms from CatKleeneWallMinimal.lean.
+    Encode the DichotomicRetractMagma axioms from CatKripkeWallMinimal.lean.
 
     Structure:
     - zero₁, zero₂: left-absorbers (indices 0, 1)
     - sec, ret: retraction pair
     - cls: classifier
-    - Kleene dichotomy
+    - Kripke dichotomy
     - has_non_classifier
     """
     s = Solver()
@@ -776,7 +776,7 @@ def build_kleene_solver(n, commutative=False, timeout_s=120):
 
     # cls_ne_zero₁, cls_ne_zero₂ (cls ≥ 2 already handles this)
 
-    # Kleene dichotomy: for all y with y ≠ 0, y ≠ 1:
+    # Kripke dichotomy: for all y with y ≠ 0, y ≠ 1:
     #   either all core outputs are in {0,1}, or all core outputs are NOT in {0,1}
     for y in range(2, n):
         # All-boolean on core

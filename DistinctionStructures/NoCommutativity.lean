@@ -5,7 +5,7 @@
    No commutative magma can have two distinct left-absorbers.
 
    In particular, no commutative magma satisfies the axioms of
-   `FaithfulRetractMagma` or `DichotomicRetractMagma` from `CatKleeneWallMinimal.lean`.
+   `FaithfulRetractMagma` or `DichotomicRetractMagma` from `CatKripkeWallMinimal.lean`.
 
    ## Proof
 
@@ -15,18 +15,18 @@
    - Commutativity: `dot zero₁ zero₂ = dot zero₂ zero₁`
    - Therefore `zero₁ = zero₂`, contradiction.
 
-   This is the simplest possible impossibility: no Kleene wall, no
+   This is the simplest possible impossibility: no Kripke wall, no
    retraction pair, no extensionality. Just two distinct absorbers
    and commutativity.
 
    Self-description requires asymmetry at the most fundamental level.
 -/
 
-import DistinctionStructures.CatKleeneWallMinimal
+import DistinctionStructures.CatKripkeWallMinimal
 
 set_option autoImplicit false
 
-namespace KleeneWall
+namespace KripkeWall
 
 -- ══════════════════════════════════════════════════════════════════════
 -- The No-Commutativity Theorem
@@ -40,7 +40,7 @@ variable {n : Nat}
     left-absorbers and is commutative, we get a contradiction.
 
     This is the weakest possible statement — it doesn't need extensionality,
-    retraction pairs, or the Kleene dichotomy. Just the two absorbers. -/
+    retraction pairs, or the Kripke dichotomy. Just the two absorbers. -/
 theorem no_comm_two_absorbers
     (dot : Fin n → Fin n → Fin n)
     (zero₁ zero₂ : Fin n)
@@ -71,4 +71,4 @@ theorem DichotomicRetractMagma.no_commutativity (M : DichotomicRetractMagma n)
 
 end NoCommutativity
 
-end KleeneWall
+end KripkeWall

@@ -118,7 +118,7 @@ structure CatEndoMagma (n : Nat) where
 
   /-- The classifier's row is boolean-valued: every output is zero₁ or zero₂. -/
   cls_boolean : ∀ x : Fin n, dot cls x = zero₁ ∨ dot cls x = zero₂
-  /-- **Kleene dichotomy**: every non-zero element is either a "classifier"
+  /-- **Kripke dichotomy**: every non-zero element is either a "classifier"
       (all outputs on non-zero inputs are boolean) or "computational"
       (all outputs on non-zero inputs are non-boolean). No mixing.
 
@@ -127,7 +127,7 @@ structure CatEndoMagma (n : Nat) where
       always factors through the subobject classifier's image {zero₁, zero₂}
       or never does (on non-zero inputs).
 
-      This is the Kleene wall stated as a structural dichotomy. -/
+      This is the Kripke wall stated as a structural dichotomy. -/
   dichotomy : ∀ a : Fin n, a ≠ zero₁ → a ≠ zero₂ →
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot a x = zero₁ ∨ dot a x = zero₂) ∨
     (∀ x : Fin n, x ≠ zero₁ → x ≠ zero₂ → dot a x ≠ zero₁ ∧ dot a x ≠ zero₂)

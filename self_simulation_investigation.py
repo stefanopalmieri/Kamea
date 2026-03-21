@@ -542,8 +542,8 @@ def run_sat_tests():
         for j in range(n):
             s.add(Or(dot[tau_idx][j] == 0, dot[tau_idx][j] == 1))
 
-    def add_kleene(s, dot, n):
-        """Kleene dichotomy: non-absorber rows are either all-boolean or all-non-boolean on core."""
+    def add_kripke(s, dot, n):
+        """Kripke dichotomy: non-absorber rows are either all-boolean or all-non-boolean on core."""
         for x in range(2, n):
             is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(n)])
             for y in range(2, n):
@@ -605,14 +605,14 @@ def run_sat_tests():
                 else:
                     inerts.append(x)
 
-        has_kleene = True
+        has_kripke = True
         for x in range(2, n):
             row = table[x]
             core_vals = row[2:]
             all_bool = all(v in (0, 1) for v in core_vals)
             all_nonbool = all(v >= 2 for v in core_vals)
             if not (all_bool or all_nonbool):
-                has_kleene = False
+                has_kripke = False
                 break
 
         return {
@@ -620,7 +620,7 @@ def run_sat_tests():
             'encoders': encoders,
             'inerts': inerts,
             'has_classifier': len(testers) > 0,
-            'has_kleene': has_kleene,
+            'has_kripke': has_kripke,
             'has_inert': len(inerts) > 0,
             'n_testers': len(testers),
             'n_encoders': len(encoders),
@@ -762,8 +762,8 @@ def run_sat_tests():
     else:
         results['A'] = ('UNSAT', None)
 
-    # Test B: No Kleene dichotomy (allow mixed elements)
-    print("\n  Test B: No Kleene dichotomy (allow mixed classifier/encoder rows)")
+    # Test B: No Kripke dichotomy (allow mixed elements)
+    print("\n  Test B: No Kripke dichotomy (allow mixed classifier/encoder rows)")
     n_test = 8
     s, dot = base_solver(n_test)
     add_retraction(s, dot, n_test, 2, 3, core_lo=2, core_hi=n_test)
@@ -780,7 +780,7 @@ def run_sat_tests():
     print(f"    N={n_test}: {r}")
     if r == sat:
         tab = extract_table(s, dot, n_test)
-        props = analyze_model(tab, "No Kleene")
+        props = analyze_model(tab, "No Kripke")
         print(f"    Properties: {props}")
         results['B'] = ('SAT', props)
     else:
@@ -793,7 +793,7 @@ def run_sat_tests():
     add_retraction(s, dot, n_test, 2, 3, core_lo=2, core_hi=n_test)
     add_e_transparency(s, dot, 3)
     add_classifier(s, dot, n_test, 4)  # τ at index 4
-    add_kleene(s, dot, n_test)
+    add_kripke(s, dot, n_test)
     # No element satisfies Branch: ρ·x = f·x if τ·x=⊤ else g·x
     # For each candidate ρ (index 5-9), require Branch fails
     for rho_i in range(2, n_test):
@@ -828,7 +828,7 @@ def run_sat_tests():
     add_retraction(s, dot, n_test, 2, 3, core_lo=2, core_hi=n_test)
     add_e_transparency(s, dot, 3)
     add_classifier(s, dot, n_test, 4)
-    add_kleene(s, dot, n_test)
+    add_kripke(s, dot, n_test)
     add_branch(s, dot, 4, 5, 6, 7, core_lo=2, core_hi=n_test)  # τ=4, f=5, g=6, ρ=7
     # No element satisfies η·x = ρ·(g·x)
     for eta_i in range(2, n_test):
@@ -854,7 +854,7 @@ def run_sat_tests():
     add_retraction(s, dot, n_test, 2, 3, core_lo=2, core_hi=n_test)
     add_e_transparency(s, dot, 3)
     add_classifier(s, dot, n_test, 4)
-    add_kleene(s, dot, n_test)
+    add_kripke(s, dot, n_test)
     # Every non-absorber is either tester or encoder (no inerts)
     for x in range(2, n_test):
         is_tst = And([Or(dot[x][j] == 0, dot[x][j] == 1) for j in range(n_test)])
@@ -925,7 +925,7 @@ def run_sat_tests():
     s, dot = base_solver(n_test)
     add_retraction(s, dot, n_test, 2, 3, core_lo=2, core_hi=n_test)
     add_classifier(s, dot, n_test, 4)
-    add_kleene(s, dot, n_test)
+    add_kripke(s, dot, n_test)
     # E is NOT transparent: E·⊤ ≠ ⊤ or E·⊥ ≠ ⊥
     s.add(Or(dot[3][0] != 0, dot[3][1] != 1))  # E is at index 3
     r = s.check()
@@ -1158,7 +1158,7 @@ def summary_table(sat_results):
         'Two absorbers':     'LIKELY DERIVED — binary classification needs two targets',
         'Extensionality':    'PRESUPPOSED',
         'Classifier exists': 'DERIVED — decoding Q-depth requires binary discrimination',
-        'Kleene dichotomy':  'LIKELY DERIVED — mixed elements confuse dispatch logic',
+        'Kripke dichotomy':  'LIKELY DERIVED — mixed elements confuse dispatch logic',
         'Branch exists':     'DERIVED — dispatch on input identity requires conditional',
         'Compose exists':    'INDEPENDENT — machine provides sequencing',
         'Y-combinator':      'DERIVED (universal) / INDEPENDENT (bounded)',
@@ -1172,7 +1172,7 @@ def summary_table(sat_results):
         ('Two absorbers',     'F', 'Step 7'),
         ('Extensionality',    'presupposed', 'presupposed'),
         ('Classifier exists', 'A', 'Step 1'),
-        ('Kleene dichotomy',  'B', 'ambiguity arg'),
+        ('Kripke dichotomy',  'B', 'ambiguity arg'),
         ('Branch exists',     'C', 'Step 2'),
         ('Compose exists',    'D', 'Step 3'),
         ('Y-combinator',      'not testable', 'Step 4'),
@@ -1384,7 +1384,7 @@ def main():
 
   LIKELY DERIVED (strong but not airtight argument):
   ──────────────────────────────────────────────────
-  • Kleene dichotomy: If elements can be both classifiers and
+  • Kripke dichotomy: If elements can be both classifiers and
     transformers (mixed rows), the self-simulator can't reliably
     determine whether an output is a classification or a transformation.
     Ambiguity prevents correct dispatch.
@@ -1418,7 +1418,7 @@ def main():
   inputs and DISPATCH to the right behavior — that's discrimination and
   control flow. Storage and sequencing are provided by the machine.
 
-  The Ψ axiom system's deepest contribution is the KLEENE WALL: the
+  The Ψ axiom system's deepest contribution is the KRIPKE WALL: the
   clean separation between judgment (classification) and computation
   (transformation). Self-simulation derives this separation because a
   self-simulator that can't distinguish its own classification from its

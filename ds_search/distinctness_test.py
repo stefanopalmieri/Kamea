@@ -33,7 +33,7 @@ from ds_search.forced_roles_test import (
     ROLES, ROLE_NAMES, N as DEFAULT_N,
     CORE_LO, CORE_HI,
     TESTER_ROLES, INERT_ROLES, ABSORBER_ROLES, ENCODER_ROLES,
-    axiom_L0, axiom_kleene, axiom_inert_prop, axiom_pa, axiom_vv,
+    axiom_L0, axiom_kripke, axiom_inert_prop, axiom_pa, axiom_vv,
     axiom_qe, axiom_e_trans, axiom_1_inert, axiom_branch,
     axiom_compose, axiom_y, axiom_selection,
     role_tester, role_inert, role_encoder,
@@ -79,7 +79,7 @@ def build_full_solver(N, extra_distinct_pairs=None):
     # All axioms
     for c in axiom_L0(dot, N):
         s.add(c)
-    for c in axiom_kleene(dot, N):
+    for c in axiom_kripke(dot, N):
         s.add(c)
     for c in axiom_inert_prop(dot, N):
         s.add(c)
@@ -152,7 +152,7 @@ def verify_known_table(table, N, label):
     idx = dict(ROLES)
     for c in axiom_L0(dot, N):
         s.add(c)
-    for c in axiom_kleene(dot, N):
+    for c in axiom_kripke(dot, N):
         s.add(c)
     for c in axiom_inert_prop(dot, N):
         s.add(c)

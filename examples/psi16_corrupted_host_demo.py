@@ -118,7 +118,7 @@ _STATUS_SNIPPETS = {
     0: "(find-idempotents domain)      ; x where x\u00b7x = x",
     1: "(classify-loop non-abs abs-a abs-b \u2026)",
     2: "(if (= (length semi-a) 1) abs-a abs-b)  ; orient \u22a4/\u22a5",
-    3: "(find-E full-pres z top bot)   ; Kleene test",
+    3: "(find-E full-pres z top bot)   ; Kripke test",
     4: "(find-Q q-cands E)             ; E\u00b7(Q\u00b7E) = Q",
     5: "(probe E E) (probe E Q) (probe Q Q) (probe Q \u22a4)",
     6: "(probe f s1) (probe PAIR DEC) \u2026 ; depth-2 tree",

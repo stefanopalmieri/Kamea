@@ -13,7 +13,7 @@ This corrects the previous claim of "21/21 pairs UNSAT" in `tc_merge_test.py`, w
 For each pair (R1, R2) of the 10 TC roles {⊤, ⊥, τ, Q, E, f, g, ρ, η, Y}:
 
 1. Assign both roles to **the same element index** (R2 gets R1's default index)
-2. Apply **all** base axioms faithfully: L0–L8, C (Kleene), D (Inert Propagation), PA, VV, QE, E-transparency, 1-Inert, Branch, Compose, Y, Selection
+2. Apply **all** base axioms faithfully: L0–L8, C (Kripke), D (Inert Propagation), PA, VV, QE, E-transparency, 1-Inert, Branch, Compose, Y, Selection
 3. Apply **both** role constraints to the shared index (e.g., if one role is a tester and the other is an encoder, the shared index must satisfy both — which is impossible)
 4. Check SAT/UNSAT at N=12 (minimum size for all axioms)
 
@@ -70,12 +70,12 @@ X = forced distinct (UNSAT), · = can merge (SAT)
 
 **Layer 1: Tester (τ)**
 - τ ≠ {⊤, ⊥}: UNSAT — tester requires boolean row but non-absorber.
-- τ ≠ {all encoders}: UNSAT — Kleene barrier: a row cannot be simultaneously all-boolean (tester) and have ≥2 distinct non-boolean outputs (encoder).
+- τ ≠ {all encoders}: UNSAT — Kripke barrier: a row cannot be simultaneously all-boolean (tester) and have ≥2 distinct non-boolean outputs (encoder).
 - τ ≠ g: UNSAT — tester vs inert role constraints are incompatible.
 - τ is forced distinct from **all** other roles.
 
 **Layer 2: Encoder/Inert Separation (Q, E vs g)**
-- Q ≠ g, E ≠ g: UNSAT — encoder requires ≥2 distinct non-boolean outputs; inert has no such pair. The Kleene barrier applies.
+- Q ≠ g, E ≠ g: UNSAT — encoder requires ≥2 distinct non-boolean outputs; inert has no such pair. The Kripke barrier applies.
 - Q=E: **SAT** — QE cancellation (`E·(Q·x)=x` and `Q·(E·x)=x` on core) is satisfiable with a single element acting as its own inverse.
 - g ≠ {all encoders}: UNSAT — g is forced into its own category.
 
@@ -109,7 +109,7 @@ For each UNSAT pair, removing axiom groups one at a time identifies which are ne
 
 | Pair | Necessary Group(s) | Notes |
 |------|-------------------|-------|
-| ⊤=τ | Kleene, Selection, Roles | Multiple groups each sufficient |
+| ⊤=τ | Kripke, Selection, Roles | Multiple groups each sufficient |
 | ⊤=Q | (interaction) | No single group — requires combination |
 | ⊤=E | (interaction) | No single group |
 | ⊤=f | Roles | Absorber can't be encoder |
@@ -117,7 +117,7 @@ For each UNSAT pair, removing axiom groups one at a time identifies which are ne
 | ⊤=ρ | (interaction) | No single group |
 | ⊤=η | (interaction) | No single group |
 | ⊤=Y | (interaction) | No single group |
-| ⊥=τ | Kleene, Selection | |
+| ⊥=τ | Kripke, Selection | |
 | ⊥=Q | (interaction) | |
 | ⊥=E | (interaction) | |
 | ⊥=f | Roles | |
@@ -140,7 +140,7 @@ For each UNSAT pair, removing axiom groups one at a time identifies which are ne
 | g=ρ | Roles | |
 | g=η | Roles | |
 | g=Y | Roles | |
-| ρ=η | Kleene, PA, Selection, Roles | Four independent paths |
+| ρ=η | Kripke, PA, Selection, Roles | Four independent paths |
 
 Key observations:
 - **Roles** is the most common necessity — the tester/encoder/inert classification creates a hard barrier
@@ -154,7 +154,7 @@ Key observations:
 
 2. **The inert element (g) is maximally isolated.** It cannot merge with any other role. This reflects its unique algebraic status: the only non-absorber whose row has no pair of distinct non-boolean values.
 
-3. **τ (tester) is also maximally isolated.** The Kleene barrier creates an absolute wall between tester and encoder/inert roles.
+3. **τ (tester) is also maximally isolated.** The Kripke barrier creates an absolute wall between tester and encoder/inert roles.
 
 4. **Encoder roles are highly fungible.** {Q, E, f, ρ, Y} can all potentially share a single element, with η being the only encoder forced somewhat apart (can only merge with f or Y).
 

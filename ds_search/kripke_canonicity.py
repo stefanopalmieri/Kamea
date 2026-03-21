@@ -9,7 +9,7 @@ DRMag Canonicity Analysis
    - Weak: preserve only zeros (zero₁, zero₂)
 
 Usage:
-  uv run python -m ds_search.kleene_canonicity
+  uv run python -m ds_search.kripke_canonicity
 """
 
 import time
@@ -53,7 +53,7 @@ PSI_CLS = 3     # τ (classifier)
 # DichotomicRetractMagma model enumeration via Z3
 # ═══════════════════════════════════════════════════════════════════════
 
-def enumerate_kleene_models(n, sec_idx, ret_idx, cls_idx, max_models=1000,
+def enumerate_kripke_models(n, sec_idx, ret_idx, cls_idx, max_models=1000,
                             timeout_s=300):
     """
     Enumerate all DichotomicRetractMagma models at size n with given element assignments.
@@ -112,7 +112,7 @@ def enumerate_kleene_models(n, sec_idx, ret_idx, cls_idx, max_models=1000,
 
         # cls is not absorber (ensured by index >= 2)
 
-        # Kleene dichotomy
+        # Kripke dichotomy
         for y in range(2, n):
             all_bool = And([Or(dot[y][x] == 0, dot[y][x] == 1)
                            for x in range(2, n)])
@@ -272,9 +272,9 @@ def main():
     # At N=4: elements {0,1,2,3}. Fix sec=ret=2, cls=3.
     # (Swapping 2↔3 gives isomorphic models.)
     t0 = time.time()
-    models4_a = enumerate_kleene_models(4, sec_idx=2, ret_idx=2, cls_idx=3)
+    models4_a = enumerate_kripke_models(4, sec_idx=2, ret_idx=2, cls_idx=3)
     # Also try sec=ret=3, cls=2
-    models4_b = enumerate_kleene_models(4, sec_idx=3, ret_idx=3, cls_idx=2)
+    models4_b = enumerate_kripke_models(4, sec_idx=3, ret_idx=3, cls_idx=2)
     elapsed = time.time() - t0
 
     # Combine and deduplicate by isomorphism
@@ -306,7 +306,7 @@ def main():
     for sec, ret, cls in permutations([2, 3, 4]):
         if sec == ret:
             continue
-        models = enumerate_kleene_models(5, sec_idx=sec, ret_idx=ret, cls_idx=cls)
+        models = enumerate_kripke_models(5, sec_idx=sec, ret_idx=ret, cls_idx=cls)
         assignment_counts.append((sec, ret, cls, len(models)))
         all_models5.extend(models)
 
@@ -331,22 +331,22 @@ def main():
     print(f"{'─'*70}")
 
     # Use the Lean witnesses
-    kleene4_table = [
+    kripke4_table = [
         [0, 0, 0, 0],
         [1, 1, 1, 1],
         [0, 1, 0, 1],  # cls
         [0, 0, 2, 3],  # sec = ret
     ]
-    kleene4_sec, kleene4_ret, kleene4_cls = 3, 3, 2
+    kripke4_sec, kripke4_ret, kripke4_cls = 3, 3, 2
 
-    kleene5_table = [
+    kripke5_table = [
         [0, 0, 0, 0, 0],
         [1, 1, 1, 1, 1],
         [1, 0, 3, 4, 2],  # sec
         [0, 2, 4, 2, 3],  # ret
         [0, 1, 1, 0, 0],  # cls
     ]
-    kleene5_sec, kleene5_ret, kleene5_cls = 2, 3, 4
+    kripke5_sec, kripke5_ret, kripke5_cls = 2, 3, 4
 
     # Identify Ψ₁₆ᶠ's classifiers (all-boolean rows on non-zeros)
     psi_classifiers = []
@@ -384,8 +384,8 @@ def main():
     # 3a: Strict homomorphisms (preserve all distinguished elements)
     print(f"\n  3a. Strict homomorphisms (preserve zeros + sec + ret + cls)")
     for label, src_table, src_n, src_sec, src_ret, src_cls in [
-        ("kleene4", kleene4_table, 4, kleene4_sec, kleene4_ret, kleene4_cls),
-        ("kleene5", kleene5_table, 5, kleene5_sec, kleene5_ret, kleene5_cls),
+        ("kripke4", kripke4_table, 4, kripke4_sec, kripke4_ret, kripke4_cls),
+        ("kripke5", kripke5_table, 5, kripke5_sec, kripke5_ret, kripke5_cls),
     ]:
         # Try all retraction pairs and classifiers in Ψ₁₆ᶠ
         total_found = 0
@@ -411,8 +411,8 @@ def main():
     # 3b: Weak homomorphisms (preserve zeros only)
     print(f"\n  3b. Weak homomorphisms (preserve zeros only)")
     for label, src_table, src_n in [
-        ("kleene4", kleene4_table, 4),
-        ("kleene5", kleene5_table, 5),
+        ("kripke4", kripke4_table, 4),
+        ("kripke5", kripke5_table, 5),
     ]:
         t0 = time.time()
         homos = find_homomorphisms(

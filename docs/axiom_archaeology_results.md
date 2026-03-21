@@ -15,7 +15,7 @@
 | Removed | Status | Abs | Tst | Enc | Inr | Change |
 |---------|--------|-----|-----|-----|-----|--------|
 | Baseline | SAT | 2 | 1 | 8 | 1 | — |
-| Kleene | SAT | 2 | 1 | 8 | 1 | SAME |
+| Kripke | SAT | 2 | 1 | 8 | 1 | SAME |
 | InertProp | SAT | 2 | 1 | 8 | 1 | SAME |
 | PA | SAT | 2 | 1 | 8 | 1 | SAME |
 | VV | SAT | 2 | 1 | 8 | 1 | SAME |
@@ -31,9 +31,9 @@
 
 ### Phase 2: Wall Survival Under Axiom Removal
 
-| Removed | Kleene Wall (τ) | Substrate Wall (g) | Composition Wall (η) |
+| Removed | Kripke Wall (τ) | Substrate Wall (g) | Composition Wall (η) |
 |---------|----------------|-------------------|---------------------|
-| Kleene | HOLDS | HOLDS | **1/3 BROKE** |
+| Kripke | HOLDS | HOLDS | **1/3 BROKE** |
 | InertProp | HOLDS | HOLDS | HOLDS |
 | PA | HOLDS | HOLDS | **1/3 BROKE** |
 | VV | HOLDS | HOLDS | HOLDS |
@@ -46,9 +46,9 @@
 | Selection | HOLDS | HOLDS | **1/3 BROKE** |
 
 **Key findings**:
-- **Kleene wall (τ isolated)**: Completely robust — survives removal of ANY axiom
+- **Kripke wall (τ isolated)**: Completely robust — survives removal of ANY axiom
 - **Substrate wall (g isolated)**: Completely robust — survives removal of ANY axiom
-- **Composition wall (η partial)**: Fragile — breaks under removal of Kleene, PA, QE, Compose, or Selection
+- **Composition wall (η partial)**: Fragile — breaks under removal of Kripke, PA, QE, Compose, or Selection
   - QE and Compose are most critical (2/3 UNSAT pairs become SAT)
   - The η isolation depends on a web of interacting axioms, not a single one
 
@@ -59,7 +59,7 @@
 | Removed | η=Q | η=E | η=ρ | η=f | η=Y |
 |---------|-----|-----|-----|-----|-----|
 | Baseline | UNSAT | UNSAT | UNSAT | SAT | SAT |
-| -Kleene | UNSAT | UNSAT | **→SAT** | SAT | SAT |
+| -Kripke | UNSAT | UNSAT | **→SAT** | SAT | SAT |
 | -PA | UNSAT | UNSAT | **→SAT** | SAT | SAT |
 | -QE | **→SAT** | **→SAT** | UNSAT | SAT | SAT |
 | -Compose | **→SAT** | **→SAT** | UNSAT | SAT | SAT |
@@ -67,7 +67,7 @@
 
 **Pattern**: Two distinct failure modes:
 - **QE, Compose removal** → η can merge with Q or E (but NOT ρ)
-- **Kleene, PA, Selection removal** → η can merge with ρ (but NOT Q or E)
+- **Kripke, PA, Selection removal** → η can merge with ρ (but NOT Q or E)
 
 This reveals that the Composition wall has two independent sub-walls defended by different axiom subsets.
 
@@ -75,7 +75,7 @@ This reveals that the Composition wall has two independent sub-walls defended by
 
 | Axiom | Status |
 |-------|--------|
-| Kleene | **INDEPENDENT** (violated in model without it) |
+| Kripke | **INDEPENDENT** (violated in model without it) |
 | InertProp | **REDUNDANT** (implied by other axioms) |
 | PA | **INDEPENDENT** |
 | VV | **REDUNDANT** (implied by other axioms) |
@@ -87,7 +87,7 @@ This reveals that the Composition wall has two independent sub-walls defended by
 | Y | **INDEPENDENT** |
 | Selection | **INDEPENDENT** |
 
-**Three redundant axioms**: InertProp, VV, and 1-Inert are implied by the rest. The minimal independent set has 8 axioms: {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}.
+**Three redundant axioms**: InertProp, VV, and 1-Inert are implied by the rest. The minimal independent set has 8 axioms: {Kripke, PA, QE, E-trans, Branch, Compose, Y, Selection}.
 
 ### Phase 3: Maximum Removable Set
 
@@ -110,18 +110,18 @@ This reveals that the Composition wall has two independent sub-walls defended by
 
 | Wall | Result |
 |------|--------|
-| Kleene: τ vs non-absorber roles (7 pairs) | **ALL HOLD** (7/7 UNSAT) |
-| Kleene: τ vs absorbers (2 pairs) | BROKE (τ=⊤, τ=⊥ now SAT) |
+| Kripke: τ vs non-absorber roles (7 pairs) | **ALL HOLD** (7/7 UNSAT) |
+| Kripke: τ vs absorbers (2 pairs) | BROKE (τ=⊤, τ=⊥ now SAT) |
 | Substrate: g vs non-absorber roles (6 pairs) | **ALL HOLD** (6/6 UNSAT) |
 | Substrate: g vs absorbers (2 pairs) | BROKE (g=⊤, g=⊥ now SAT) |
 | Composition: η vs all roles (5 pairs) | **ALL BROKE** (5/5 SAT) |
 
 **Key insight**: With zero behavioral axioms:
-- Kleene wall: 7/9 pairs still UNSAT (only absorber merges break)
+- Kripke wall: 7/9 pairs still UNSAT (only absorber merges break)
 - Substrate wall: 6/8 pairs still UNSAT (only absorber merges break)
 - Composition wall: completely gone (0/5 UNSAT)
 
-The absorber merges (τ=⊤, g=⊤) break because without behavioral axioms, nothing prevents a tester or inert row from also being absorbing. The behavioral axioms (especially Kleene) close this gap.
+The absorber merges (τ=⊤, g=⊤) break because without behavioral axioms, nothing prevents a tester or inert row from also being absorbing. The behavioral axioms (especially Kripke) close this gap.
 
 ### Phase 4: Candidate New Axioms (Direction 3)
 
@@ -155,7 +155,7 @@ The Roles constraints (forcing specific indices to be tester/encoder/inert types
 
 **L0 + Roles** alone is sufficient for:
 - 5 categories (absorber, tester, encoder, inert)
-- Kleene wall (τ isolated)
+- Kripke wall (τ isolated)
 - Substrate wall (g isolated)
 
 The behavioral axioms are needed ONLY for the Composition wall and for the specific functional relationships (quote/eval, branch, compose, Y-combinator) that give the algebra its computational character.
@@ -262,7 +262,7 @@ The central question from AXIOM_PROMPT.md: are the roles forced by self-descript
 But they achieve this through DIFFERENT mechanisms:
 
 - **Roles** directly type-forces specific indices as tester/encoder/inert. This is definitional — it encodes the answer.
-- **Behavioral axioms** produce 5 categories through the interaction of 1-Inert (forces inert existence), Kleene (forces tester/encoder separation), and the named-role axioms (Branch uses τ as a tester, forcing it to have boolean outputs). **Without 1-Inert, the inert category vanishes.** Without Branch (which references τ as a tester), nothing forces a tester to exist.
+- **Behavioral axioms** produce 5 categories through the interaction of 1-Inert (forces inert existence), Kripke (forces tester/encoder separation), and the named-role axioms (Branch uses τ as a tester, forcing it to have boolean outputs). **Without 1-Inert, the inert category vanishes.** Without Branch (which references τ as a tester), nothing forces a tester to exist.
 
 ### The honest answer to "did we encode Lisp?"
 
@@ -280,14 +280,14 @@ These constraints are SUFFICIENT to produce 5 categories even without explicit t
 
 2. **The behavioral axioms produce categories through computational necessity**: Branch forces τ to be a tester (it must classify). QE forces Q/E to be encoders (they must biject). 1-Inert forces an inert element. Remove 1-Inert → inert vanishes. Remove Branch → tester vanishes from named roles.
 
-3. **The Kleene and Substrate walls follow from row-profile typing** — they hold with zero behavioral axioms for non-absorber merges (7/9 and 6/8 pairs). They are structural consequences of the tester/encoder/inert definitions.
+3. **The Kripke and Substrate walls follow from row-profile typing** — they hold with zero behavioral axioms for non-absorber merges (7/9 and 6/8 pairs). They are structural consequences of the tester/encoder/inert definitions.
 
 4. **The Composition wall is genuinely axiom-dependent** with two independent sub-walls:
    - η vs Q/E: defended by QE and Compose
-   - η vs ρ: defended by Kleene, PA, and Selection
+   - η vs ρ: defended by Kripke, PA, and Selection
    - With zero behavioral axioms, the wall vanishes entirely.
 
-5. **Three axioms are redundant**: InertProp, VV, and 1-Inert are implied by the remaining 8. The minimal independent set is {Kleene, PA, QE, E-trans, Branch, Compose, Y, Selection}.
+5. **Three axioms are redundant**: InertProp, VV, and 1-Inert are implied by the remaining 8. The minimal independent set is {Kripke, PA, QE, E-trans, Branch, Compose, Y, Selection}.
 
 6. **Encoder non-associativity theorem (refined)**: Full encoder associativity is UNSAT. The minimal obstruction is the **{ρ, η} pair** — branch and compose cannot be mutually associative. This follows from the Compose axiom (η·x = ρ·(g·x)) which creates a non-associative dependency. All 14 other encoder pairs CAN be associative. Every triple containing both ρ and η is UNSAT.
 
