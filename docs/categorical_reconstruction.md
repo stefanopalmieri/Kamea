@@ -109,4 +109,4 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 | Cross-formalism universality | Conjectured |
 | Kripke = finite subobject classifier decidability | Conjectured |
 | Role uniqueness (McCarthy correspondence) | Open |
-| Functorial naturality of decomposition | Open |
+| Functorial naturality of decomposition (DRM isos) | Lean-proved |
