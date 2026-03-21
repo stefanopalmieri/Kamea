@@ -1,8 +1,8 @@
-// lisp-stepper.js — Generator-based stepping Lisp evaluator
+// lisp-stepper.js — Iterative stepping Lisp evaluator
 //
-// A minimal Lisp evaluator that yields at each reduction step,
-// producing tree snapshots suitable for the existing TreeRenderer.
-// Uses the Cayley table from WASM for the `dot` builtin.
+// Uses an explicit continuation stack (trampoline) instead of recursive
+// generators to avoid blowing the JS call stack on deeply nested programs
+// like the reflective tower (~4 levels of meta-circular interpretation).
 
 // ── Parser ──
 
@@ -17,7 +17,10 @@ function tokenize(src) {
         if (c === "'") { toks.push("'"); i++; continue; }
         if (c === '"') {
             let j = i + 1;
-            while (j < src.length && src[j] !== '"') j++;
+            while (j < src.length && src[j] !== '"') {
+                if (src[j] === '\\') j++;
+                j++;
+            }
             toks.push(src.slice(i, j + 1)); i = j + 1; continue;
         }
         let j = i;
@@ -42,7 +45,6 @@ function parse(toks, pos) {
         return [items, pos + 1];
     }
     if (t === ')') throw new Error('unexpected )');
-    // String literal
     if (t.startsWith('"') && t.endsWith('"')) {
         return [{ _str: t.slice(1, -1).replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\\\/g, '\\') }, pos + 1];
     }
@@ -65,9 +67,6 @@ const NIL = null;
 const T = true;
 
 function isTruthy(v) { return v !== NIL; }
-function isNum(v) { return typeof v === 'number'; }
-function isSym(v) { return typeof v === 'string'; }
-function isList(v) { return Array.isArray(v) && v._pair; }
 
 function cons(a, b) { const p = [a, b]; p._pair = true; return p; }
 function car(p) { return Array.isArray(p) ? p[0] : null; }
@@ -95,17 +94,13 @@ function displayVal(v) {
     if (v && typeof v === 'object' && '_str' in v) return '"' + v._str + '"';
     if (Array.isArray(v) && v._pair) {
         const items = listToArray(v);
+        if (items.length > 6) return '(' + items.slice(0, 5).map(displayVal).join(' ') + ' ...)';
         return '(' + items.map(displayVal).join(' ') + ')';
     }
     return String(v);
 }
 
-// ── Call stack → tree visualization ──
-//
-// The call stack is the evaluation state. Each frame represents a
-// pending function call or expression evaluation. The stack renders
-// as a nested tree: the outermost call at the root, inner calls as
-// children, with the active frame highlighted.
+// ── Tree snapshot (for Preact call tree) ──
 
 function valToTree(v) {
     if (v === NIL) return { kind: 'atom', value: 'NIL' };
@@ -116,110 +111,55 @@ function valToTree(v) {
     if (v && v._lambda) return { kind: 'atom', value: '#<lambda>' };
     if (Array.isArray(v) && v._pair) {
         const items = listToArray(v);
-        return {
-            kind: 'list',
-            list_items: items.map(valToTree),
-            value: '(' + items.map(displayVal).join(' ') + ')'
-        };
+        return { kind: 'list', list_items: items.slice(0, 8).map(valToTree), value: displayVal(v) };
     }
     return { kind: 'atom', value: String(v) };
 }
 
-function exprToTree(expr) {
-    if (expr === NIL || expr === null || expr === undefined)
-        return { kind: 'atom', value: 'NIL' };
-    if (expr === T) return { kind: 'atom', value: 'T' };
-    if (typeof expr === 'number')
-        return { kind: 'int', value: String(expr), int_value: expr };
-    if (typeof expr === 'string')
-        return { kind: 'atom', value: expr };
-    if (expr && typeof expr === 'object' && '_str' in expr)
-        return { kind: 'atom', value: '"' + expr._str + '"' };
-    if (Array.isArray(expr) && !expr._pair) {
-        return {
-            kind: 'list',
-            list_items: expr.map(exprToTree),
-            value: sexprToString(expr),
-        };
-    }
-    return { kind: 'atom', value: displayVal(expr) };
-}
-
-function sexprToString(expr) {
-    if (expr === NIL || expr === null) return 'NIL';
-    if (expr === T) return 'T';
-    if (typeof expr === 'number') return String(expr);
-    if (typeof expr === 'string') return expr;
-    if (expr && typeof expr === 'object' && '_str' in expr) return '"' + expr._str + '"';
-    if (Array.isArray(expr) && !expr._pair)
-        return '(' + expr.map(sexprToString).join(' ') + ')';
-    return displayVal(expr);
-}
-
-// Build tree from the call stack. Each frame becomes a nested node.
-// The deepest frame is the active one (highlighted).
 function stackToTree(stack) {
     if (stack.length === 0) return { kind: 'atom', value: '\u2014' };
-
-    // Build bottom-up: deepest frame is innermost
-    let tree = null;
+    let node = null;
     for (let i = stack.length - 1; i >= 0; i--) {
         const frame = stack[i];
         const isActive = (i === stack.length - 1);
-
         const items = [];
-
-        // Frame label
-        const label = { kind: 'atom', value: frame.name || frame.rule || 'eval' };
-        if (isActive) label.value = '\u25b6 ' + label.value;  // ▶ marker
+        const label = { kind: 'atom', value: (isActive ? '\u25b6 ' : '') + (frame.name || 'eval') };
         items.push(label);
-
-        // Frame arguments / details
         if (frame.args) {
             for (const a of frame.args) {
-                items.push({ kind: 'int', value: String(a), int_value: typeof a === 'number' ? a : 0 });
+                items.push(typeof a === 'number'
+                    ? { kind: 'int', value: String(a), int_value: a }
+                    : { kind: 'atom', value: String(a) });
             }
         }
-        if (frame.expr) {
-            items.push(exprToTree(frame.expr));
-        }
-
-        // If there's a result, show it
         if (frame.result !== undefined) {
-            items.push({ kind: 'atom', value: '\u2192' });  // →
+            items.push({ kind: 'atom', value: '\u2192' });
             items.push(valToTree(frame.result));
         }
-
-        // Nest previous tree as child (the inner computation)
-        if (tree) items.push(tree);
-
-        tree = {
-            kind: 'list',
-            list_items: items,
-            value: frame.name || frame.rule || 'eval',
-        };
+        if (node) items.push(node);
+        node = { kind: 'list', list_items: items, value: frame.name || 'eval' };
     }
-    return tree;
+    return node;
 }
 
-// ── Stepping evaluator ──
+// ── Atom names ──
 
-// Atom names matching psi-core NAMES
 const ATOM_NAMES = [
     '\u22a4', '\u22a5', 'f', '\u03c4', 'g', '5',
     'Q', 'E', '\u03c1', '\u03b7', 'Y', '11',
     '12', '13', '14', '15',
 ];
 
+// ── Stepper (iterative trampoline) ──
+
 export function createStepper(source, cayleyTable) {
     const exprs = parseAll(source);
     const io = { output: '' };
-    const stack = [];  // call stack for visualization
+    const callStack = [];
     const env = makeBuiltins(cayleyTable, io);
     return {
-        steps: evalProgram(exprs, env, io, stack),
-        stack,
-        source,
+        steps: runStepper(exprs, env, io, callStack),
+        stack: callStack,
         io,
     };
 }
@@ -252,36 +192,22 @@ function makeBuiltins(table, io) {
         'print': (a) => { io.output += displayVal(a) + '\n'; return a; },
         'display': (a) => { io.output += displayVal(a); return a; },
         'terpri': () => { io.output += '\n'; return NIL; },
-        'write-char': (a) => {
-            if (typeof a === 'number') io.output += String.fromCharCode(a);
-            return a;
-        },
+        'write-char': (a) => { if (typeof a === 'number') io.output += String.fromCharCode(a); return a; },
         'write-string': (a) => {
-            if (typeof a === 'string') {
-                io.output += a;
-            } else if (Array.isArray(a) && a._pair) {
-                // List of char codes
+            if (typeof a === 'string') { io.output += a; }
+            else if (Array.isArray(a) && a._pair) {
                 const chars = listToArray(a);
                 io.output += chars.map(c => typeof c === 'number' ? String.fromCharCode(c) : '').join('');
             }
             return a;
         },
         'atom-name': (a) => {
-            if (typeof a === 'number' && a >= 0 && a < 16) {
-                const name = ATOM_NAMES[a];
-                return toList([...name].map(c => c.charCodeAt(0)));
-            }
+            if (typeof a === 'number' && a >= 0 && a < 16)
+                return toList([...ATOM_NAMES[a]].map(c => c.charCodeAt(0)));
             return NIL;
         },
-        'length': (lst) => {
-            let n = 0;
-            while (lst !== NIL && Array.isArray(lst) && lst._pair) { n++; lst = lst[1]; }
-            return n;
-        },
-        'nth': (n, lst) => {
-            for (let i = 0; i < n && lst !== NIL && Array.isArray(lst); i++) lst = lst[1];
-            return (lst !== NIL && Array.isArray(lst)) ? lst[0] : NIL;
-        },
+        'length': (lst) => { let n = 0; while (lst !== NIL && Array.isArray(lst) && lst._pair) { n++; lst = lst[1]; } return n; },
+        'nth': (n, lst) => { for (let i = 0; i < n && lst !== NIL && Array.isArray(lst); i++) lst = lst[1]; return (lst !== NIL && Array.isArray(lst)) ? lst[0] : NIL; },
         'assoc': (key, alist) => {
             while (alist !== NIL && Array.isArray(alist) && alist._pair) {
                 const pair = alist[0];
@@ -303,27 +229,193 @@ function makeBuiltins(table, io) {
     return env;
 }
 
-function* evalProgram(exprs, env, io, stack) {
-    let result = NIL;
-    for (const expr of exprs) {
-        result = yield* evalExpr(expr, env, 0, io, stack);
+// ── Iterative evaluator with explicit continuation stack ──
+//
+// Instead of recursive generator calls (yield* evalExpr(...)), we use
+// an explicit stack of continuations. Each step pops one continuation,
+// processes it, and pushes new ones. This keeps the JS call stack flat
+// regardless of Lisp nesting depth.
+//
+// Continuation types (what to do with a value):
+//   ['done']                      — final result
+//   ['expr', expr, env]           — evaluate this expression
+//   ['progn', exprs, idx, env]    — evaluate exprs[idx], then next
+//   ['if-test', expr, env]        — test evaluated, decide branch
+//   ['if-branch', expr, env, taking] — evaluate chosen branch
+//   ['args', head, exprs, idx, acc, env] — evaluate args one by one
+//   ['apply', head, fn, args, env] — apply fn to args
+//   ['let-binds', binds, idx, newEnv, origEnv, body] — eval let bindings
+//   ['let-body', body, newEnv]     — eval let body
+//   ['setq', name, env]           — assign result to name
+//   ['return-call', name]         — pop call stack after return
+
+function* runStepper(exprs, env, io, callStack) {
+    // Continuation stack: each entry is a continuation frame
+    const K = [];
+    let val = NIL;  // current value being threaded through continuations
+
+    // Seed: evaluate each top-level expression in sequence
+    for (let i = exprs.length - 1; i >= 0; i--) {
+        K.push(['expr', exprs[i], env]);
     }
-    yield { type: 'done', result, display: displayVal(result), tree: valToTree(result), io: io.output };
+
+    while (K.length > 0) {
+        const frame = K.pop();
+        const type = frame[0];
+
+        if (type === 'expr') {
+            const [, expr, env] = frame;
+            val = evalAtom(expr, env, io, K, callStack);
+            if (val !== NEED_MORE) continue;
+            // evalAtom pushed continuations onto K; loop will process them
+            continue;
+        }
+
+        if (type === 'if-decide') {
+            const [, expr, env] = frame;
+            const test = val;
+            const branch = isTruthy(test) ? 'then' : 'else';
+            const branchExpr = branch === 'then' ? expr[2] : (expr[3] !== undefined ? expr[3] : NIL);
+            callStack.push({ name: 'if', rule: 'if-' + branch });
+            yield { type: 'branch', rule: 'if-' + branch, test: displayVal(test), taking: branch, depth: callStack.length, tree: stackToTree(callStack) };
+            callStack.pop();
+            if (branchExpr === NIL || branchExpr === undefined) { val = NIL; continue; }
+            K.push(['expr', branchExpr, env]);
+            continue;
+        }
+
+        if (type === 'cond-test') {
+            const [, clauses, idx, env] = frame;
+            if (isTruthy(val)) {
+                K.push(['expr', clauses[idx][1], env]);
+            } else if (idx + 1 < clauses.length) {
+                K.push(['cond-test', clauses, idx + 1, env]);
+                K.push(['expr', clauses[idx + 1][0], env]);
+            } else {
+                val = NIL;
+            }
+            continue;
+        }
+
+        if (type === 'args') {
+            const [, headName, exprs, idx, acc, env] = frame;
+            acc.push(val);
+            if (idx < exprs.length) {
+                K.push(['args', headName, exprs, idx + 1, acc, env]);
+                K.push(['expr', exprs[idx], env]);
+            } else {
+                // All args evaluated. Now evaluate head.
+                K.push(['apply', headName, null, acc, env]);
+                K.push(['expr', headName, env]);
+            }
+            continue;
+        }
+
+        if (type === 'apply') {
+            const [, headName, , args, env] = frame;
+            const fn = val;
+            if (typeof fn === 'function') {
+                const fnName = typeof headName === 'string' ? headName : '?';
+                val = fn(...args);
+                callStack.push({ name: fnName, args: args.map(displayVal), result: val });
+                yield { type: 'result', rule: 'builtin', display: displayVal(val),
+                    call: fnName + '(' + args.map(displayVal).join(', ') + ')',
+                    depth: callStack.length, tree: stackToTree(callStack) };
+                callStack.pop();
+                continue;
+            }
+            if (fn && fn._lambda) {
+                const callEnv = { ...fn.env };
+                for (let i = 0; i < fn.params.length; i++) callEnv[fn.params[i]] = args[i];
+                const name = fn.name || '#<lambda>';
+                callStack.push({ name, args: args.map(displayVal) });
+                yield { type: 'call', rule: 'call ' + name, depth: callStack.length, tree: stackToTree(callStack) };
+                K.push(['return-call', name]);
+                K.push(['expr', fn.body, callEnv]);
+                continue;
+            }
+            throw new Error('not callable: ' + displayVal(fn));
+        }
+
+        if (type === 'return-call') {
+            const [, name] = frame;
+            if (callStack.length > 0) {
+                callStack[callStack.length - 1].result = val;
+                yield { type: 'return', rule: name + ' \u2192 ' + displayVal(val), display: displayVal(val), depth: callStack.length, tree: stackToTree(callStack) };
+                callStack.pop();
+            }
+            continue;
+        }
+
+        if (type === 'progn') {
+            const [, exprs, idx, env] = frame;
+            // val has result of previous expr (ignored except for last)
+            if (idx < exprs.length) {
+                K.push(['progn', exprs, idx + 1, env]);
+                K.push(['expr', exprs[idx], env]);
+            }
+            // else val stays as the last result
+            continue;
+        }
+
+        if (type === 'let-binds') {
+            const [, binds, idx, newEnv, origEnv, body] = frame;
+            if (idx > 0) newEnv[binds[idx - 1][0]] = val;  // store previous binding result
+            if (idx < binds.length) {
+                K.push(['let-binds', binds, idx + 1, newEnv, origEnv, body]);
+                K.push(['expr', binds[idx][1], origEnv]);
+            } else {
+                K.push(['expr', body, newEnv]);
+            }
+            continue;
+        }
+
+        if (type === 'setq') {
+            const [, name, env] = frame;
+            env[name] = val;
+            continue;
+        }
+
+        if (type === 'and-next') {
+            const [, exprs, idx, env] = frame;
+            if (!isTruthy(val)) { val = NIL; continue; }
+            if (idx < exprs.length) {
+                K.push(['and-next', exprs, idx + 1, env]);
+                K.push(['expr', exprs[idx], env]);
+            }
+            // else val stays as the last truthy result
+            continue;
+        }
+
+        if (type === 'or-next') {
+            const [, exprs, idx, env] = frame;
+            if (isTruthy(val)) continue; // val is the result
+            if (idx < exprs.length) {
+                K.push(['or-next', exprs, idx + 1, env]);
+                K.push(['expr', exprs[idx], env]);
+            } else {
+                val = NIL;
+            }
+            continue;
+        }
+    }
+
+    yield { type: 'done', result: val, display: displayVal(val), tree: valToTree(val), io: io.output };
 }
 
-function yieldStep(stack, type, rule, extra) {
-    return { type, rule, depth: stack.length, tree: stackToTree(stack), ...extra };
-}
+// Sentinel: evalAtom returns this when it pushed continuations
+const NEED_MORE = Symbol('NEED_MORE');
 
-function* evalExpr(expr, env, depth, io, stack) {
-    // String literals
-    if (expr && typeof expr === 'object' && '_str' in expr) {
-        return expr._str;
-    }
+// Evaluate atomic expressions or push continuations for compound ones.
+// Returns the value directly for atoms, or NEED_MORE if continuations were pushed.
+function evalAtom(expr, env, io, K, callStack) {
+    // String literal
+    if (expr && typeof expr === 'object' && '_str' in expr) return expr._str;
 
-    // Atoms
+    // Number
     if (typeof expr === 'number') return expr;
 
+    // Symbol
     if (typeof expr === 'string') {
         const upper = expr.toUpperCase();
         if (upper === 'NIL') return NIL;
@@ -332,6 +424,7 @@ function* evalExpr(expr, env, depth, io, stack) {
         throw new Error('unbound: ' + expr);
     }
 
+    // Empty list
     if (!Array.isArray(expr) || expr.length === 0) return NIL;
 
     const head = expr[0];
@@ -346,40 +439,26 @@ function* evalExpr(expr, env, depth, io, stack) {
     }
 
     if (head === 'if') {
-        stack.push({ name: 'if', rule: 'if-test', expr: expr });
-        yield yieldStep(stack, 'eval', 'if-test');
-        const test = yield* evalExpr(expr[1], env, depth + 1, io, stack);
-        const branch = isTruthy(test) ? 'then' : 'else';
-        const branchExpr = branch === 'then' ? expr[2] : (expr[3] || NIL);
-        stack[stack.length - 1].rule = 'if-' + branch;
-        stack[stack.length - 1].result = test;
-        yield yieldStep(stack, 'branch', 'if-' + branch, { test: displayVal(test), taking: branch });
-        stack.pop();
-        if (branchExpr === undefined || branchExpr === NIL) return NIL;
-        return yield* evalExpr(branchExpr, env, depth + 1, io, stack);
+        K.push(['if-decide', expr, env]);
+        K.push(['expr', expr[1], env]);
+        return NEED_MORE;
     }
 
     if (head === 'cond') {
-        for (let i = 1; i < expr.length; i++) {
-            const clause = expr[i];
-            const test = yield* evalExpr(clause[0], env, depth + 1, io, stack);
-            if (isTruthy(test)) {
-                return yield* evalExpr(clause[1], env, depth + 1, io, stack);
-            }
-        }
-        return NIL;
+        const clauses = expr.slice(1);
+        if (clauses.length === 0) return NIL;
+        K.push(['cond-test', clauses, 0, env]);
+        K.push(['expr', clauses[0][0], env]);
+        return NEED_MORE;
     }
 
     if (head === 'defun') {
         const name = expr[1];
         const params = expr[2];
         const body = expr.length === 4 ? expr[3] : ['progn', ...expr.slice(3)];
-        // Capture env by reference (not copy) so mutually recursive
-        // defuns at the same scope level can see each other.
-        // This matches the Python evaluator: env=env, not env=dict(env).
         const fn = { _lambda: true, params, body, env, name };
         env[name] = fn;
-        yield yieldStep(stack, 'define', 'defun ' + name);
+        // Don't yield for defuns to reduce noise — too many in metacircular evaluator
         return NIL;
     }
 
@@ -390,12 +469,11 @@ function* evalExpr(expr, env, depth, io, stack) {
             const body = expr.length === 3 ? expr[2] : ['progn', ...expr.slice(2)];
             const fn = { _lambda: true, params, body, env, name };
             env[name] = fn;
-            yield yieldStep(stack, 'define', 'define ' + name);
             return NIL;
         }
-        const val = yield* evalExpr(expr[2], env, depth + 1, io, stack);
-        env[expr[1]] = val;
-        return NIL;
+        K.push(['setq', expr[1], env]);
+        K.push(['expr', expr[2], env]);
+        return NEED_MORE;
     }
 
     if (head === 'lambda') {
@@ -408,84 +486,57 @@ function* evalExpr(expr, env, depth, io, stack) {
         const bindings = expr[1];
         const body = expr.length === 3 ? expr[2] : ['progn', ...expr.slice(2)];
         const newEnv = { ...env };
-        for (const [name, valExpr] of bindings) {
-            newEnv[name] = yield* evalExpr(valExpr, env, depth + 1, io, stack);
+        if (bindings.length === 0) {
+            K.push(['expr', body, newEnv]);
+        } else {
+            K.push(['let-binds', bindings, 0, newEnv, env, body]);
         }
-        return yield* evalExpr(body, newEnv, depth + 1, io, stack);
+        return NEED_MORE;
     }
 
     if (head === 'setq') {
-        const val = yield* evalExpr(expr[2], env, depth + 1, io, stack);
-        env[expr[1]] = val;
-        return val;
+        K.push(['setq', expr[1], env]);
+        K.push(['expr', expr[2], env]);
+        return NEED_MORE;
     }
 
     if (head === 'progn' || head === 'begin') {
-        let result = NIL;
-        for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1, io, stack);
-        }
-        return result;
+        const body = expr.slice(1);
+        if (body.length === 0) return NIL;
+        if (body.length === 1) { K.push(['expr', body[0], env]); return NEED_MORE; }
+        K.push(['progn', body, 1, env]);
+        K.push(['expr', body[0], env]);
+        return NEED_MORE;
     }
 
     if (head === 'and') {
-        let result = T;
-        for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1, io, stack);
-            if (!isTruthy(result)) return NIL;
-        }
-        return result;
+        const parts = expr.slice(1);
+        if (parts.length === 0) return T;
+        K.push(['and-next', parts, 1, env]);
+        K.push(['expr', parts[0], env]);
+        return NEED_MORE;
     }
 
     if (head === 'or') {
-        for (let i = 1; i < expr.length; i++) {
-            const r = yield* evalExpr(expr[i], env, depth + 1, io, stack);
-            if (isTruthy(r)) return r;
-        }
-        return NIL;
+        const parts = expr.slice(1);
+        if (parts.length === 0) return NIL;
+        K.push(['or-next', parts, 1, env]);
+        K.push(['expr', parts[0], env]);
+        return NEED_MORE;
     }
 
-    // ── Application ──
-
-    const fn = yield* evalExpr(head, env, depth + 1, io, stack);
-    const args = [];
-    for (let i = 1; i < expr.length; i++) {
-        args.push(yield* evalExpr(expr[i], env, depth + 1, io, stack));
+    // ── Application: evaluate args first, then head, then apply ──
+    const argExprs = expr.slice(1);
+    if (argExprs.length === 0) {
+        // No args — just evaluate head and apply
+        K.push(['apply', head, null, [], env]);
+        K.push(['expr', head, env]);
+    } else {
+        // Evaluate first arg, then continue with rest
+        K.push(['args', head, argExprs, 1, [], env]);
+        K.push(['expr', argExprs[0], env]);
     }
-
-    // Builtin
-    if (typeof fn === 'function') {
-        const fnName = typeof head === 'string' ? head : '?';
-        stack.push({ name: fnName, args: args.map(displayVal) });
-        const result = fn(...args);
-        stack[stack.length - 1].result = result;
-        yield yieldStep(stack, 'result', 'builtin', {
-            display: displayVal(result),
-            call: fnName + '(' + args.map(displayVal).join(', ') + ')',
-        });
-        stack.pop();
-        return result;
-    }
-
-    // Lambda / defun
-    if (fn && fn._lambda) {
-        const callEnv = { ...fn.env };
-        for (let i = 0; i < fn.params.length; i++) {
-            callEnv[fn.params[i]] = args[i];
-        }
-        const name = fn.name || '#<lambda>';
-        stack.push({ name, args: args.map(displayVal), expr: fn.body });
-        yield yieldStep(stack, 'call', 'call ' + name);
-        const result = yield* evalExpr(fn.body, callEnv, depth + 1, io, stack);
-        stack[stack.length - 1].result = result;
-        yield yieldStep(stack, 'return', name + ' \u2192 ' + displayVal(result), {
-            display: displayVal(result),
-        });
-        stack.pop();
-        return result;
-    }
-
-    throw new Error('not callable: ' + displayVal(fn));
+    return NEED_MORE;
 }
 
 function quoteDatum(expr) {
@@ -494,7 +545,7 @@ function quoteDatum(expr) {
         const u = expr.toUpperCase();
         if (u === 'NIL') return NIL;
         if (u === 'T') return T;
-        return expr; // symbol
+        return expr;
     }
     if (Array.isArray(expr)) return toList(expr.map(quoteDatum));
     return NIL;
