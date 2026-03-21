@@ -2,16 +2,16 @@
 
 A self-describing finite algebra that recovers McCarthy's Lisp primitives from axioms, with machine-checked proofs.
 
-**Three walls. Seven roles. One table that knows itself. Zero `sorry`.**
+**Three levels. Three walls. Seven roles. Zero `sorry`.**
 
-*A retraction pair and the Kleene dichotomy force three categories with hard walls. Internalizing the evaluator adds composition and substrate — grounding Smith's infinite tower at 256 bytes. A distinctness axiom yields seven roles: McCarthy's Lisp primitives.*
+*Self-simulation, self-description, and self-hosting are three independent capabilities of reflective computation. Each requires its own irreducible axiom. Each boundary is inhabited by a concrete counterexample. A 16×16 Cayley table is the witness — all three at once, with machine-checked proofs.*
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Lambda calculus gave functions a foundation. Turing machines gave computation a foundation. Kamea asks whether reflective computation — programs that inspect and modify their own execution — has a finite algebraic foundation. The answer is a 16×16 Cayley table.
+Lambda calculus gave functions a foundation. Turing machines gave computation a foundation. Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and self-hosting — and shows each requires its own irreducible axiom. A 16×16 Cayley table is the witness: a finite algebra that exercises all three.
 
 ## The Three Levels
 
