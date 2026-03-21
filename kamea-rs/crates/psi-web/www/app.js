@@ -565,6 +565,7 @@ async function startStepping() {
             }
             const stepper = createStepper(expr, cayleyTableData);
             lispStepper = stepper.steps;
+            lispStepper._stepper_io = stepper.io;
             lispStepCount = 0;
             addTraceEntry(0, 'start', expr.split('\n')[0] + (expr.includes('\n') ? '...' : ''));
             setStatus('Lisp stepping \u2014 ready');
@@ -643,7 +644,9 @@ async function doStep() {
                 displayText = step.rule;
             } else if (step.type === 'done') {
                 displayText = step.display || '';
-                output.textContent = displayText;
+                // Show IO output if any
+                const ioText = step.io || '';
+                output.textContent = ioText + (ioText && displayText ? '\n' : '') + displayText;
                 outputInfo.textContent = 'final result';
                 if (step.tree) treeRenderer.render(step.tree);
                 lispStepper = null;
@@ -663,6 +666,12 @@ async function doStep() {
             statusSteps.textContent = 'Steps: ' + lispStepCount;
             statusDepth.textContent = 'Depth: ' + (step.depth || 0);
             statusRule.textContent = ruleText;
+
+            // Show IO output incrementally
+            if (lispStepper && lispStepper._stepper_io) {
+                const ioText = lispStepper._stepper_io.output;
+                if (ioText) output.textContent = ioText;
+            }
 
             // Show result tree if available
             if (step.tree) {

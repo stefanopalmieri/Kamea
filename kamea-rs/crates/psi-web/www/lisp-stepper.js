@@ -42,6 +42,10 @@ function parse(toks, pos) {
         return [items, pos + 1];
     }
     if (t === ')') throw new Error('unexpected )');
+    // String literal
+    if (t.startsWith('"') && t.endsWith('"')) {
+        return [{ _str: t.slice(1, -1).replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\\\/g, '\\') }, pos + 1];
+    }
     const n = Number(t);
     if (!isNaN(n) && t !== '') return [n, pos + 1];
     return [t, pos + 1];
@@ -85,9 +89,10 @@ function displayVal(v) {
     if (v === NIL) return 'NIL';
     if (v === T) return 'T';
     if (typeof v === 'number') return String(v);
-    if (typeof v === 'string') return v;
+    if (typeof v === 'string') return '"' + v + '"';
     if (typeof v === 'function') return '#<builtin>';
     if (v && v._lambda) return '#<lambda>';
+    if (v && typeof v === 'object' && '_str' in v) return '"' + v._str + '"';
     if (Array.isArray(v) && v._pair) {
         const items = listToArray(v);
         return '(' + items.map(displayVal).join(' ') + ')';
@@ -141,16 +146,25 @@ function exprToTree(expr, activeId, nextId) {
 
 // ── Stepping evaluator ──
 
+// Atom names matching psi-core NAMES
+const ATOM_NAMES = [
+    '\u22a4', '\u22a5', 'f', '\u03c4', 'g', '5',
+    'Q', 'E', '\u03c1', '\u03b7', 'Y', '11',
+    '12', '13', '14', '15',
+];
+
 export function createStepper(source, cayleyTable) {
     const exprs = parseAll(source);
-    const env = makeBuiltins(cayleyTable);
+    const io = { output: '' };
+    const env = makeBuiltins(cayleyTable, io);
     return {
-        steps: evalProgram(exprs, env),
+        steps: evalProgram(exprs, env, io),
         source,
+        io,
     };
 }
 
-function makeBuiltins(table) {
+function makeBuiltins(table, io) {
     const env = {
         '+': (a, b) => a + b,
         '-': (a, b) => Math.max(0, a - b),
@@ -158,6 +172,8 @@ function makeBuiltins(table) {
         '/': (a, b) => Math.floor(a / b),
         'mod': (a, b) => a % b,
         '=': (a, b) => a === b ? T : NIL,
+        'eq': (a, b) => a === b ? T : NIL,
+        'equal': (a, b) => a === b ? T : NIL,
         '<': (a, b) => a < b ? T : NIL,
         '>': (a, b) => a > b ? T : NIL,
         '<=': (a, b) => a <= b ? T : NIL,
@@ -167,15 +183,38 @@ function makeBuiltins(table) {
         'cdr': (a) => cdr(a),
         'list': (...args) => toList(args),
         'null': (a) => a === NIL ? T : NIL,
-        'atom': (a) => (typeof a === 'number' || a === T || a === NIL) ? T : NIL,
+        'atom': (a) => (typeof a === 'number' || a === T || a === NIL || typeof a === 'string') ? T : NIL,
         'zerop': (a) => a === 0 ? T : NIL,
         'not': (a) => a === NIL ? T : NIL,
         '1+': (a) => a + 1,
         '1-': (a) => Math.max(0, a - 1),
         'numberp': (a) => typeof a === 'number' ? T : NIL,
-        'print': (a) => { /* output handled separately */ return a; },
-        'display': (a) => a,
-        'terpri': () => NIL,
+        'print': (a) => { io.output += displayVal(a) + '\n'; return a; },
+        'display': (a) => { io.output += displayVal(a); return a; },
+        'terpri': () => { io.output += '\n'; return NIL; },
+        'write-char': (a) => {
+            if (typeof a === 'number') io.output += String.fromCharCode(a);
+            return a;
+        },
+        'write-string': (a) => {
+            if (typeof a === 'string') {
+                io.output += a;
+            } else if (Array.isArray(a) && a._pair) {
+                // List of char codes
+                const chars = listToArray(a);
+                io.output += chars.map(c => typeof c === 'number' ? String.fromCharCode(c) : '').join('');
+            }
+            return a;
+        },
+        'atom-name': (a) => {
+            if (typeof a === 'number' && a >= 0 && a < 16) {
+                const name = ATOM_NAMES[a];
+                return toList([...name].map(c => c.charCodeAt(0)));
+            }
+            return NIL;
+        },
+        'env-size': () => Object.keys(env).length,
+        'env-keys': () => toList(Object.keys(env).map(k => toList([...k].map(c => c.charCodeAt(0))))),
     };
     if (table) {
         env['dot'] = (a, b) => {
@@ -187,15 +226,20 @@ function makeBuiltins(table) {
     return env;
 }
 
-function* evalProgram(exprs, env) {
+function* evalProgram(exprs, env, io) {
     let result = NIL;
     for (const expr of exprs) {
-        result = yield* evalExpr(expr, env, 0);
+        result = yield* evalExpr(expr, env, 0, io);
     }
-    yield { type: 'done', result, display: displayVal(result), tree: valToTree(result) };
+    yield { type: 'done', result, display: displayVal(result), tree: valToTree(result), io: io.output };
 }
 
-function* evalExpr(expr, env, depth) {
+function* evalExpr(expr, env, depth, io) {
+    // String literals
+    if (expr && typeof expr === 'object' && '_str' in expr) {
+        return expr._str;
+    }
+
     // Atoms
     if (typeof expr === 'number') {
         return expr;
@@ -219,21 +263,21 @@ function* evalExpr(expr, env, depth) {
 
     if (head === 'if') {
         yield { type: 'eval', rule: 'if-test', expr: expr, depth, focus: expr[1] };
-        const test = yield* evalExpr(expr[1], env, depth + 1);
+        const test = yield* evalExpr(expr[1], env, depth + 1, io);
         const branch = isTruthy(test) ? 'then' : 'else';
         const branchExpr = branch === 'then' ? expr[2] : (expr[3] || NIL);
         yield { type: 'branch', rule: 'if-' + branch, test: displayVal(test), expr: expr, depth, taking: branch };
         if (branchExpr === undefined || branchExpr === NIL) return NIL;
-        return yield* evalExpr(branchExpr, env, depth + 1);
+        return yield* evalExpr(branchExpr, env, depth + 1, io);
     }
 
     if (head === 'cond') {
         for (let i = 1; i < expr.length; i++) {
             const clause = expr[i];
-            const test = yield* evalExpr(clause[0], env, depth + 1);
+            const test = yield* evalExpr(clause[0], env, depth + 1, io);
             if (isTruthy(test)) {
                 yield { type: 'branch', rule: 'cond-match', depth, taking: i };
-                return yield* evalExpr(clause[1], env, depth + 1);
+                return yield* evalExpr(clause[1], env, depth + 1, io);
             }
         }
         return NIL;
@@ -261,7 +305,7 @@ function* evalExpr(expr, env, depth) {
             yield { type: 'define', rule: 'define-fn', name, depth };
             return NIL;
         }
-        const val = yield* evalExpr(expr[2], env, depth + 1);
+        const val = yield* evalExpr(expr[2], env, depth + 1, io);
         env[expr[1]] = val;
         return NIL;
     }
@@ -277,14 +321,14 @@ function* evalExpr(expr, env, depth) {
         const body = expr.length === 3 ? expr[2] : ['progn', ...expr.slice(2)];
         const newEnv = { ...env };
         for (const [name, valExpr] of bindings) {
-            newEnv[name] = yield* evalExpr(valExpr, env, depth + 1);
+            newEnv[name] = yield* evalExpr(valExpr, env, depth + 1, io);
         }
         yield { type: 'eval', rule: 'let-body', depth };
-        return yield* evalExpr(body, newEnv, depth + 1);
+        return yield* evalExpr(body, newEnv, depth + 1, io);
     }
 
     if (head === 'setq') {
-        const val = yield* evalExpr(expr[2], env, depth + 1);
+        const val = yield* evalExpr(expr[2], env, depth + 1, io);
         env[expr[1]] = val;
         return val;
     }
@@ -292,7 +336,7 @@ function* evalExpr(expr, env, depth) {
     if (head === 'progn' || head === 'begin') {
         let result = NIL;
         for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1);
+            result = yield* evalExpr(expr[i], env, depth + 1, io);
         }
         return result;
     }
@@ -300,7 +344,7 @@ function* evalExpr(expr, env, depth) {
     if (head === 'and') {
         let result = T;
         for (let i = 1; i < expr.length; i++) {
-            result = yield* evalExpr(expr[i], env, depth + 1);
+            result = yield* evalExpr(expr[i], env, depth + 1, io);
             if (!isTruthy(result)) return NIL;
         }
         return result;
@@ -308,7 +352,7 @@ function* evalExpr(expr, env, depth) {
 
     if (head === 'or') {
         for (let i = 1; i < expr.length; i++) {
-            const r = yield* evalExpr(expr[i], env, depth + 1);
+            const r = yield* evalExpr(expr[i], env, depth + 1, io);
             if (isTruthy(r)) return r;
         }
         return NIL;
@@ -317,10 +361,10 @@ function* evalExpr(expr, env, depth) {
     // ── Application ──
 
     yield { type: 'eval', rule: 'apply', expr, depth, focus: head };
-    const fn = yield* evalExpr(head, env, depth + 1);
+    const fn = yield* evalExpr(head, env, depth + 1, io);
     const args = [];
     for (let i = 1; i < expr.length; i++) {
-        args.push(yield* evalExpr(expr[i], env, depth + 1));
+        args.push(yield* evalExpr(expr[i], env, depth + 1, io));
     }
 
     // Builtin
@@ -347,7 +391,7 @@ function* evalExpr(expr, env, depth) {
             args: args.map(displayVal),
             depth,
         };
-        return yield* evalExpr(fn.body, callEnv, depth + 1);
+        return yield* evalExpr(fn.body, callEnv, depth + 1, io);
     }
 
     throw new Error('not callable: ' + displayVal(fn));
