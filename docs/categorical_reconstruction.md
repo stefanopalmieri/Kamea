@@ -117,7 +117,7 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 | S ⊬ D (the Countermodel) | Lean-proved |
 | D ⊬ H (no Compose) | Lean-proved |
 | H ⊬ D (diagonal) | Lean-proved |
-| S+D+H coexist at N=10 | SAT-verified |
+| S+D+H coexist at N=10 (tight bound) | Lean-proved |
 | Full axiom stack requires N=12 | SAT-verified |
 | Kripke wall is epistemic, not computational | Proved (H⊬D) |
 | Cross-formalism universality | Conjectured |

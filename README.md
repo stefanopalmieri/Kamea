@@ -169,7 +169,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ### Paper 1: The Independence Structure (self-contained)
 
-48 theorems across 6 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+55 theorems across 7 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
 
 **The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
@@ -193,6 +193,10 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - D ⊬ H: N=10 DRM satisfying Kripke where no element satisfies Compose `[Lean, by native_decide]`
 - H ⊬ D: N=10 FRM with Branch+Compose+Y that violates Kripke `[Lean, by native_decide]`
 - S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
+
+**Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
+- S+D+H coexist at N=10: concrete witness is both a DRM and has Branch+Compose+Inert+Y `[Lean, by native_decide]`
+- N=10 is optimal: 10 distinct distinguished elements need N ≥ 10 (counting) `[trivial]`
 
 ### Paper 2: The Artifact (supporting material)
 
@@ -311,6 +315,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
 - [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating Kripke dichotomy
 - [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
+- [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Tight bound: S+D+H coexist at N=10
 - [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
 - [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) — Standard categorical vocabulary translation
 - [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
