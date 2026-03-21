@@ -1,23 +1,18 @@
-// editor.js — Code editor enhancements (line numbers, tab, paren matching)
+// editor.js — Code editor with Lisp syntax highlighting
 
 const textarea = () => document.getElementById('source');
 const lineNums = () => document.getElementById('line-numbers');
+const highlight = () => document.getElementById('highlight-layer');
 
 export function initEditor() {
     const ta = textarea();
-    const ln = lineNums();
 
-    ta.addEventListener('input', () => updateLineNumbers());
+    ta.addEventListener('input', () => { updateLineNumbers(); updateHighlight(); });
     ta.addEventListener('scroll', syncScroll);
     ta.addEventListener('keydown', handleKeydown);
-    ta.addEventListener('click', () => highlightMatchingParen());
-    ta.addEventListener('keyup', (e) => {
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
-            highlightMatchingParen();
-        }
-    });
 
     updateLineNumbers();
+    updateHighlight();
 }
 
 export function getSource() {
@@ -27,7 +22,7 @@ export function getSource() {
 export function setSource(code) {
     textarea().value = code;
     updateLineNumbers();
-    clearParenHighlight();
+    updateHighlight();
 }
 
 function updateLineNumbers() {
@@ -40,7 +35,10 @@ function updateLineNumbers() {
 }
 
 function syncScroll() {
-    lineNums().scrollTop = textarea().scrollTop;
+    const ta = textarea();
+    lineNums().scrollTop = ta.scrollTop;
+    highlight().scrollTop = ta.scrollTop;
+    highlight().scrollLeft = ta.scrollLeft;
 }
 
 function handleKeydown(e) {
@@ -70,6 +68,7 @@ function handleKeydown(e) {
             ta.selectionStart = ta.selectionEnd = start + 2;
         }
         updateLineNumbers();
+        updateHighlight();
     }
 
     // Auto-close parens
@@ -87,26 +86,117 @@ function handleKeydown(e) {
             ta.selectionStart = ta.selectionEnd = start + 1;
         }
         updateLineNumbers();
+        updateHighlight();
     }
 }
 
-// ── Paren matching ──
+// ── Syntax highlighting ──
 
-let parenHighlightEls = [];
+const KEYWORDS = new Set([
+    'if', 'cond', 'and', 'or', 'not', 'progn', 'begin',
+    'let', 'lambda', 'quote',
+]);
+const SPECIALS = new Set([
+    'defun', 'define', 'setq',
+]);
+const BUILTINS = new Set([
+    '+', '-', '*', '/', 'mod', '=', '<', '>', '<=', '>=',
+    'eq', 'equal', 'cons', 'car', 'cdr', 'list', 'null', 'atom',
+    'zerop', 'numberp', '1+', '1-', 'print', 'display', 'terpri',
+    'write-char', 'write-string', 'atom-name', 'dot',
+    'bound?', 'env-size', 'env-keys',
+]);
+const ATOMS = new Set(['T', 'NIL']);
 
-function clearParenHighlight() {
-    // We don't use overlay elements — paren matching is conceptual.
-    // Could add a CSS overlay later.
+function highlightLisp(src) {
+    const out = [];
+    let i = 0;
+    while (i < src.length) {
+        const c = src[i];
+
+        // Comment
+        if (c === ';') {
+            let j = i;
+            while (j < src.length && src[j] !== '\n') j++;
+            out.push('<span class="hl-comment">' + esc(src.slice(i, j)) + '</span>');
+            i = j;
+            continue;
+        }
+
+        // String
+        if (c === '"') {
+            let j = i + 1;
+            while (j < src.length && src[j] !== '"') {
+                if (src[j] === '\\') j++;
+                j++;
+            }
+            if (j < src.length) j++; // include closing "
+            out.push('<span class="hl-string">' + esc(src.slice(i, j)) + '</span>');
+            i = j;
+            continue;
+        }
+
+        // Parens
+        if (c === '(' || c === ')') {
+            out.push('<span class="hl-paren">' + c + '</span>');
+            i++;
+            continue;
+        }
+
+        // Quote shorthand
+        if (c === "'") {
+            out.push('<span class="hl-keyword">' + c + '</span>');
+            i++;
+            continue;
+        }
+
+        // Whitespace
+        if (' \t\n\r'.includes(c)) {
+            out.push(c);
+            i++;
+            continue;
+        }
+
+        // Token (symbol or number)
+        let j = i;
+        while (j < src.length && !' \t\n\r();'.includes(src[j])) j++;
+        const tok = src.slice(i, j);
+
+        if (/^-?\d+$/.test(tok)) {
+            out.push('<span class="hl-number">' + esc(tok) + '</span>');
+        } else if (ATOMS.has(tok.toUpperCase())) {
+            out.push('<span class="hl-atom">' + esc(tok) + '</span>');
+        } else if (KEYWORDS.has(tok)) {
+            out.push('<span class="hl-keyword">' + esc(tok) + '</span>');
+        } else if (SPECIALS.has(tok)) {
+            out.push('<span class="hl-special">' + esc(tok) + '</span>');
+        } else if (BUILTINS.has(tok)) {
+            out.push('<span class="hl-builtin">' + esc(tok) + '</span>');
+        } else {
+            // Check if this token follows a defun/define — it's a function name
+            const before = src.slice(0, i).trimEnd();
+            if (before.endsWith('defun') || before.endsWith('define')) {
+                out.push('<span class="hl-define">' + esc(tok) + '</span>');
+            } else {
+                out.push(esc(tok));
+            }
+        }
+        i = j;
+    }
+    // Trailing newline ensures highlight layer matches textarea height
+    return out.join('') + '\n';
+}
+
+function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function updateHighlight() {
+    const hl = highlight();
+    if (!hl) return;
+    hl.innerHTML = highlightLisp(textarea().value);
 }
 
 export function highlightMatchingParen() {
-    // Simple paren match: find matching paren at cursor
-    const ta = textarea();
-    const pos = ta.selectionStart;
-    const text = ta.value;
-    const ch = text[pos - 1];
-
-    // This is a no-op for now — full overlay-based paren matching
-    // requires a contenteditable or overlay div, which adds complexity.
-    // The auto-close on '(' provides the essential paren assistance.
+    // Handled visually by the highlight layer now
 }

@@ -278,22 +278,53 @@ body {
     flex-shrink: 0;
 }
 
-#source {
-    flex: 1;
+/* Highlight layer sits behind the textarea, showing colored syntax.
+   The textarea has transparent text so the highlight shows through,
+   but the caret remains visible (caret-color). */
+#highlight-layer, #source {
     font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.6;
     padding: 8px 10px;
-    background: transparent;
-    color: var(--text);
-    border: none;
-    resize: none;
-    outline: none;
     tab-size: 2;
     white-space: pre;
     overflow: auto;
     min-width: 0;
+    border: none;
 }
+#highlight-layer {
+    position: absolute;
+    top: 0; left: 36px; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    color: var(--text);
+    z-index: 0;
+    border-left: 1px solid var(--border);
+}
+#source {
+    position: relative;
+    flex: 1;
+    background: transparent;
+    color: transparent;
+    caret-color: var(--text);
+    resize: none;
+    outline: none;
+    z-index: 1;
+}
+/* Selection highlight visible on transparent text */
+#source::selection { background: rgba(122, 162, 247, 0.25); }
+#source::-moz-selection { background: rgba(122, 162, 247, 0.25); }
+
+/* Syntax token colors */
+.hl-comment  { color: #565f89; font-style: italic; }
+.hl-string   { color: #9ece6a; }
+.hl-number   { color: #bb86fc; }
+.hl-keyword  { color: #7aa2f7; }
+.hl-special  { color: #e0a0e0; }
+.hl-builtin  { color: #4ecda3; }
+.hl-paren    { color: #636d8a; }
+.hl-atom     { color: #ff9e64; }
+.hl-define   { color: #c0caf5; font-weight: 600; }
 
 /* ── Tree Panel ── */
 
