@@ -32,6 +32,8 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 
 A retraction magma can compute its own table without the Kripke wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the Kripke wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The Kripke wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
 
+(The dichotomy is named after Kripke's "Outline of a Theory of Truth" (1975), where a language that can express its own truth predicate partitions sentences into *grounded* (those that resolve to true or false) and *ungrounded* (those that don't). The finite analog: every non-zero element is either entirely truth-valued on the core or entirely non-truth-valued — grounded classifier or computational transformer, no mixing. The three-category decomposition {zeros, classifiers, non-classifiers} is the finite algebraic version of Kripke's {paradoxical, grounded-true/false, ungrounded}.)
+
 The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the Kripke wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
 
 ## Quick Start
