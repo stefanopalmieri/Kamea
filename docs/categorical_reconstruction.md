@@ -110,17 +110,21 @@ The computational primitives of Lisp fall out of the capability layer alone at N
 
 ## What Is Proved vs. What Is Open
 
-| Claim | Status |
-|---|---|
-| Three-category decomposition universal | Lean-proved |
-| Kripke wall universal (C ∩ N = ∅) | Lean-proved |
-| S ⊬ D (the Countermodel) | Lean-proved |
-| D ⊬ H (no Compose) | Lean-proved |
-| H ⊬ D (diagonal) | Lean-proved |
-| S+D+H coexist at N=10 (tight bound) | Lean-proved |
-| Full axiom stack requires N=12 | SAT-verified |
-| Kripke wall is epistemic, not computational | Proved (H⊬D) |
-| Cross-formalism universality | Conjectured |
-| Kripke = finite subobject classifier decidability | Conjectured |
-| Role uniqueness (McCarthy correspondence) | Open |
-| Decomposition is an algebraic invariant (DRM isos) | Lean-proved |
+55 Lean theorems, 7 files, zero `sorry`.
+
+| Claim | Status | File |
+|---|---|---|
+| Three-category decomposition universal | Lean-proved | `CatKripkeWallMinimal.lean` |
+| Kripke wall (C ∩ N = ∅) | Lean-proved | `CatKripkeWallMinimal.lean` |
+| Asymmetry (non-commutative) | Lean-proved | `NoCommutativity.lean` |
+| Decomposition is algebraic invariant | Lean-proved | `Functoriality.lean` |
+| Self-simulation → encoding injectivity | Lean-proved | `SelfSimulation.lean` |
+| S ⊬ D (N=8 Countermodel) | Lean-proved | `Countermodel.lean` |
+| D ⊬ H (N=10, no Compose) | Lean-proved | `Countermodels10.lean` |
+| H ⊬ D (N=10, diagonal) | Lean-proved | `Countermodels10.lean` |
+| S+D+H coexist at N=10 (tight bound) | Lean-proved | `Witness10.lean` |
+| Kripke wall is epistemic, not computational | Proved (H⊬D) | `Countermodels10.lean` |
+| Full axiom stack requires N=12 | SAT-verified | `minimal_sdh_test.py` |
+| Cross-formalism universality | Conjectured | — |
+| Kripke ↔ subobject classifier decidability | Conjectured | — |
+| Role uniqueness (McCarthy correspondence) | Open | — |
