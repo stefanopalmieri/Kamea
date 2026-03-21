@@ -218,6 +218,7 @@ export function createStepper(source, cayleyTable) {
     const env = makeBuiltins(cayleyTable, io);
     return {
         steps: evalProgram(exprs, env, io, stack),
+        stack,
         source,
         io,
     };

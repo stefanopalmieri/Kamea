@@ -4,6 +4,7 @@ import { initEditor, getSource, setSource } from './editor.js';
 import { TreeRenderer } from './tree-renderer.js';
 import { CayleyTable } from './cayley-table.js';
 import { createStepper } from './lisp-stepper.js';
+import { renderCallStack, clearCallStack } from './call-tree.js';
 
 // ═══════════════════════════════════════════════════════════
 // Examples
@@ -566,6 +567,7 @@ async function startStepping() {
             const stepper = createStepper(expr, cayleyTableData);
             lispStepper = stepper.steps;
             lispStepper._stepper_io = stepper.io;
+            lispStepper._stepper_stack = stepper.stack;
             lispStepCount = 0;
             addTraceEntry(0, 'start', expr.split('\n')[0] + (expr.includes('\n') ? '...' : ''));
             setStatus('Lisp stepping \u2014 ready');
@@ -673,10 +675,12 @@ async function doStep() {
                 if (ioText) output.textContent = ioText;
             }
 
-            // Show result tree if available
-            if (step.tree) {
+            // Render call stack tree via Preact (no blink)
+            if (lispStepper && lispStepper._stepper_stack) {
+                const treeContainer = document.getElementById('tree-content');
+                renderCallStack(treeContainer, lispStepper._stepper_stack);
+            } else if (step.tree) {
                 treeRenderer.render(step.tree);
-                panelGlow('#tree-panel');
             }
 
         } catch (e) {
@@ -772,6 +776,10 @@ function toggleAutoStep() {
 
 async function resetMachine() {
     stopAutoStep();
+    if (lispStepper) {
+        const treeContainer = document.getElementById('tree-content');
+        clearCallStack(treeContainer);
+    }
     lispStepper = null;
     lispStepCount = 0;
     if (workerReady) await send('reset');

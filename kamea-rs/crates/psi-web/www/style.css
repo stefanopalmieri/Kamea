@@ -881,3 +881,77 @@ body {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Call Stack Tree (Preact-rendered, no-blink diffing)
+   ═══════════════════════════════════════════════════════════ */
+
+.cs-frame {
+    margin-left: 12px;
+    border-left: 2px solid var(--border, #333);
+    padding: 2px 0 2px 8px;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.cs-frame.cs-root {
+    margin-left: 0;
+    border-left: 3px solid var(--accent, #7aa2f7);
+}
+.cs-frame.cs-active > .cs-header {
+    color: var(--accent, #7aa2f7);
+    font-weight: 600;
+}
+.cs-header {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+.cs-header:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.cs-arrow {
+    display: inline-block;
+    width: 10px;
+    font-size: 8px;
+    transition: transform 0.15s;
+    color: var(--text-dim, #666);
+    flex-shrink: 0;
+}
+.cs-arrow.open {
+    transform: rotate(90deg);
+}
+.cs-arrow.cs-leaf {
+    color: var(--text-dim, #555);
+}
+.cs-name {
+    color: var(--text, #c0caf5);
+    font-weight: 500;
+}
+.cs-arg {
+    color: var(--text-dim, #9aa5ce);
+    padding: 0 3px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+    font-size: 11px;
+}
+.cs-result-arrow {
+    color: var(--text-dim, #565f89);
+    margin: 0 2px;
+}
+.cs-result-val {
+    color: var(--green, #9ece6a);
+    font-weight: 600;
+}
+.cs-body {
+    padding-top: 1px;
+}
+.cs-empty {
+    color: var(--text-dim, #565f89);
+    font-style: italic;
+    padding: 8px;
+}
