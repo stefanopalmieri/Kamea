@@ -185,6 +185,7 @@ impl PsiDebugger {
 
         match result {
             StepResult::Done(r) => {
+                self.eval_term = Some(r);
                 let display = self.machine.arena.display_term(r, 30);
                 self.trace.push(TraceEntry {
                     step: evaluator.step_count(),
@@ -200,6 +201,7 @@ impl PsiDebugger {
                 }).unwrap_or_default()
             }
             StepResult::Continue { rule, term } => {
+                self.eval_term = Some(term);
                 let display = self.machine.arena.display_term(term, 30);
                 self.trace.push(TraceEntry {
                     step: evaluator.step_count(),

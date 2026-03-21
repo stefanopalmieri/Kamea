@@ -1,66 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ψ∗ Debugger</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <h1>Ψ∗ Debugger</h1>
-        <div class="controls">
-            <button id="btn-run" title="Run to completion (Ctrl+Enter)">▶ Run</button>
-            <button id="btn-reset" title="Reset machine">↺ Reset</button>
-            <button id="btn-table" title="Show Cayley table">Table</button>
-            <select id="examples">
-                <option value="">Load example...</option>
-                <option value="basic">Basic</option>
-                <option value="arithmetic">Arithmetic</option>
-                <option value="functions">Functions</option>
-                <option value="recursion">Recursion</option>
-                <option value="fibonacci">Fibonacci</option>
-                <option value="higher">Higher-order</option>
-                <option value="types">Types</option>
-                <option value="hello">Hello World</option>
-                <option value="tower">Reflective Tower</option>
+    <header id="header">
+        <div class="header-left">
+            <h1><span class="psi">&#x03A8;</span><span class="star">&#x2217;</span> <span class="title-text">Debugger</span></h1>
+            <select id="examples" aria-label="Load example">
+                <option value="">Examples&#x2026;</option>
+                <optgroup label="Mini-Lisp">
+                    <option value="basic">Basic</option>
+                    <option value="arithmetic">Arithmetic</option>
+                    <option value="functions">Functions</option>
+                    <option value="recursion">Recursion</option>
+                    <option value="fibonacci">Fibonacci</option>
+                    <option value="higher">Higher-order</option>
+                    <option value="types">Types</option>
+                    <option value="hello">Hello World</option>
+                    <option value="tower">Reflective Tower</option>
+                </optgroup>
+                <optgroup label="Term Stepping">
+                    <option value="step-qe">QE Round-trip</option>
+                    <option value="step-car">Pair &#x00B7; car</option>
+                    <option value="step-cdr">Pair &#x00B7; cdr</option>
+                    <option value="step-absorber">Absorber law</option>
+                </optgroup>
             </select>
+        </div>
+        <div class="header-right">
+            <div class="control-group">
+                <button id="btn-run" class="btn btn-primary" title="Run program (Ctrl+Enter)">&#x25B6; Run</button>
+                <div class="btn-divider"></div>
+                <button id="btn-step-start" class="btn" title="Begin stepping a term expression (e.g. E(Q(nat(5))))">&#x23ED; Start</button>
+                <button id="btn-step" class="btn" title="Single step (F10)" disabled>&#x23ED; Step</button>
+                <button id="btn-auto" class="btn" title="Auto-step (F5)" disabled>&#x25B6;&#x25B6;</button>
+                <input type="range" id="speed-slider" min="0" max="4" value="2" title="Step speed" aria-label="Auto-step speed">
+                <div class="btn-divider"></div>
+                <button id="btn-reset" class="btn" title="Reset (Ctrl+Shift+R)">&#x21BA;</button>
+            </div>
         </div>
     </header>
 
-    <main>
-        <div class="left-pane">
-            <section class="panel source-panel">
-                <h2>Source (Mini-Lisp)</h2>
-                <textarea id="source" spellcheck="false" placeholder="; Type Ψ∗ Mini-Lisp here...&#10;(defun fib (n)&#10;  (if (< n 2) n&#10;      (+ (fib (- n 1))&#10;         (fib (- n 2)))))&#10;(fib 10)"></textarea>
-            </section>
-        </div>
-        <div class="right-pane">
-            <section class="panel output-panel">
-                <h2>Output</h2>
-                <pre id="output"></pre>
-            </section>
-            <section class="panel tree-panel">
-                <h2>Term Tree <span id="tree-label" class="tree-label"></span></h2>
-                <div id="term-tree" class="term-tree"></div>
-            </section>
-        </div>
+    <main id="panels">
+        <section id="editor-panel" class="panel">
+            <div class="panel-header">Source</div>
+            <div id="editor-container">
+                <div id="line-numbers" aria-hidden="true"></div>
+                <textarea id="source" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="Source code editor"></textarea>
+            </div>
+        </section>
+
+        <section id="tree-panel" class="panel">
+            <div class="panel-header">
+                <span>Continuation Tree</span>
+                <span id="tree-info" class="panel-info"></span>
+            </div>
+            <div id="tree-container">
+                <div id="tree-watermark" aria-hidden="true">&#x03A8;</div>
+                <div id="tree-content"></div>
+            </div>
+        </section>
+
+        <section id="inspector-panel" class="panel">
+            <div class="panel-header">Inspector</div>
+            <div id="inspector-content">
+                <div id="cayley-section" class="inspector-section">
+                    <div class="section-header" id="cayley-toggle" role="button" tabindex="0" aria-expanded="true">
+                        <span class="toggle-arrow">&#x25BE;</span> Cayley Table
+                        <span id="cayley-operation" class="cayley-op"></span>
+                    </div>
+                    <div id="cayley-container"></div>
+                </div>
+                <div id="node-section" class="inspector-section">
+                    <div class="section-header">Selected Node</div>
+                    <div id="node-details">
+                        <span class="placeholder">Click a node in the tree</span>
+                    </div>
+                </div>
+                <div id="trace-section" class="inspector-section">
+                    <div class="section-header">
+                        Step Trace
+                        <span id="trace-count" class="panel-info"></span>
+                    </div>
+                    <div id="trace-container"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer id="stats">Ready</footer>
-
-    <!-- Cayley Table Modal -->
-    <div id="table-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Cayley Table (Ψ₁₆ᶠ)</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div id="cayley-container"></div>
+    <section id="output-panel">
+        <div class="panel-header">
+            <span>Output</span>
+            <span id="output-info" class="panel-info"></span>
         </div>
-    </div>
+        <pre id="output"></pre>
+    </section>
 
-    <script src="debugger.js"></script>
+    <footer id="status-bar">
+        <span id="status-mode" class="status-badge">IDLE</span>
+        <span id="status-steps">Steps: 0</span>
+        <span id="status-arena">Arena: 0</span>
+        <span id="status-rule">&mdash;</span>
+        <span id="status-depth">Depth: 0</span>
+        <span id="status-time"></span>
+    </footer>
+
+    <script type="module" src="app.js"></script>
 </body>
 </html>
