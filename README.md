@@ -13,6 +13,20 @@ A self-describing finite algebra that recovers McCarthy's Lisp primitives from a
 
 Lambda calculus gave functions a foundation. Turing machines gave computation a foundation. Kamea asks whether reflective computation — programs that inspect and modify their own execution — has a finite algebraic foundation. The answer is a 16×16 Cayley table.
 
+## The Three Levels
+
+Self-simulation, self-description, and self-hosting are three independent capabilities. Each boundary is inhabited by a concrete counterexample. Each level adds one irreducible axiom (or axiom group).
+
+| Level | What's added | What it gives | Evidence |
+|-------|-------------|---------------|----------|
+| **Self-simulating** | Retraction pair (Q/E) | Computes own Cayley table. Partial application injectivity forced. | `[Lean]` `SelfSimulation.lean` — 4 universal theorems; `[Empirical]` universal self-simulator verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ |
+| **Self-describing** | + Kleene dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | `[Lean]` `CatKleeneWallMinimal.lean` — 19 universal theorems; `[SAT]` Kleene independent of self-simulation (N=8 non-Kleene magma self-simulates, 64/64 cells) |
+| **Self-hosting** | + Compose + Inert | Evaluator internalized. Smith's tower terminates at 256 bytes. | `[SAT]` Compose and Inert independent of both self-simulation and self-description; `[Empirical]` compiled reflective tower in 2.2 ms |
+
+**The boundaries are real.** A retraction magma can compute its own table without the Kleene wall — a concrete 8-element counterexample with mixed elements (rows having both boolean and non-boolean outputs on the core) self-simulates perfectly. The Kleene wall is not about computing the table; it is the architectural axiom that organizes the algebra into coherent roles. Composition and substrate are not about roles; they internalize the machine, eliminating the external evaluator that self-simulation requires.
+
+The Ψ₁₆ᶠ table is all three levels at once. The demo below exercises all of them: the table computes itself (level 1), the Kleene wall gives elements interpretable roles (level 2), and the meta-circular evaluator runs within the algebra with no external machine (level 3).
+
 ## Quick Start
 
 ```bash
@@ -103,33 +117,39 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 ---
 
-## The Seven Roles
-
-| Ψ | Lisp | Role |
-|---|------|------|
-| ⊤ | NIL | Empty / base case |
-| Q | QUOTE | Freeze a term (constructor) |
-| E | EVAL | Unwrap / interpret (destructor) |
-| g | CONS | Build a pair |
-| f | CAR | First projection |
-| η | CDR | Second projection |
-| ρ | COND | Conditional branch |
-
-The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). That two systems designed for self-manipulation — one axiom-driven, one engineering-driven — converge on the same seven-role architecture is a noteworthy observation, not a proof of necessity.
-
-The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)). Self-description requires that the order of composition matters.
-
-The role structure rests on three foundations: a retraction pair plus the Kleene dichotomy forces three categories and the Kleene wall (Lean-proved); machine internalization (compose, inert) grounds the reflective tower; and a distinctness axiom forces full role specialization. Self-simulation forces partial application injectivity (Lean-proved) and is sufficient for any Ψ model, but does not force the Kleene wall itself — that is the irreducible architectural axiom. The canonicity lies in the theory, not any model: every finite Kleene magma decomposes into the same three classes with the same hard walls (112 non-isomorphic models at N=4 all share the decomposition). The Ψ axioms give the space between the walls computational meaning. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Canonicity analysis: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-
-Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **35 are derived theorems** (32 from categorical axioms + 3 from Turing completeness). The remaining **10 are the nontriviality axiom** — as 0 ≠ 1 in a nontrivial ring. These 10 survive every available test: categorical axioms, Turing completeness, composition closure, and the full reflective tower. They are the irreducible axiomatic content. Their effect is expressive, not computational: merged-role algebras still compute and reflect, but with 16 vs 49 one-step compositions. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md).
-
 ## Why It Matters
 
-Any system that can inspect and modify its own components needs a representation layer: some way to quote a piece of itself, examine it, and act on the result. In practice this is a runtime, a reflection API, a JIT compiler — machinery bolted on top, with no guarantee that the representation is faithful or complete. This matters for runtime verification (can you trust the reflective layer?), trustworthy metaprogramming (does the meta-level faithfully represent the object level?), and foundations of self-modifying code (what algebraic structure must a self-describing system have?).
+The contribution is not "a small table implements Lisp." It is the **independence structure**: self-simulation, self-description, and self-hosting are three distinct capabilities, each requiring its own irreducible axiom, and nobody has separated them before.
 
-The Ψ framework asks whether that machinery can be *intrinsic*. Can a finite algebraic structure — nothing but a set of elements and a binary operation — contain its own quote/eval pair, conditional branching, recursion, arithmetic, and IO, all realized within a single binary operation table? And can the language that emerges from this table interpret itself — can a program written in it verify the table, capture its own continuation, and modify its own future, all within the same algebra?
+Self-simulation (computing your own table) requires only a retraction pair. Self-description (having coherent roles — judgment distinct from computation) additionally requires the Kleene dichotomy. Self-hosting (running the simulation without an external evaluator) additionally requires composition and substrate. Each boundary is inhabited by a concrete counterexample: a non-Kleene retraction magma self-simulates but has no clean roles; a Kleene magma without composition has roles but needs an external machine. The Ψ₁₆ᶠ table is all three at once.
 
-The answer is yes, and it fits in a 16×16 table. Self-simulation — one program in the term algebra computes the entire Cayley table — provides a non-circular characterization of self-description. It forces partial application injectivity (Lean-proved: the self-simulator cannot compress the encoding) and suffices for any model satisfying the axioms (verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ). But self-simulation alone does not force the Kleene wall: a concrete non-Kleene retraction magma self-simulates perfectly. The Kleene dichotomy is the additional axiom that lifts self-simulation into self-*description* — organizing the algebra into clean roles where judgment and computation cannot merge. Composition and substrate are independent of both — they internalize the evaluator, grounding Smith's infinite tower. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kleene wall (one architectural axiom), and machine internalization (two operational axioms). Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
+
+### Frequently Asked Questions
+
+**Did you just encode Lisp in a lookup table?** No. A lookup table stores data; this table *computes*. The seven roles (quote, eval, cons, car, cdr, cond, nil) are not encoded — they emerge from axiom interaction. Nobody axiomatized "there must be a pair constructor." The pair structure falls out of the interaction between branching and substrate. The non-circular evidence: five independent formalizations of self-description (phenomenological, information-theoretic, category-theoretic, game-theoretic, self-simulation) all produce the same three categories and the same walls. The roles are consequences, not inputs.
+
+**Are the axioms natural or engineered?** The retraction pair and extensionality are standard category theory. The Kleene dichotomy is one new property — and it is exactly the property that separates self-simulation from self-description (proved independent by counterexample). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator. But they are also the most clearly justified: without them, you need an external machine, and Smith's tower doesn't terminate. The distinctness axiom (all role-bearing elements are different) is standard algebraic practice, independently justified by expressiveness analysis (49 vs 16 one-step compositions).
+
+**What's the contribution?** Three things. (1) The three-level independence result: self-simulation, self-description, and self-hosting are separable, with concrete counterexamples at each boundary. (2) Machine-checked proofs: 23 universal algebraic theorems (zero `decide`, zero `sorry`) from two independent sources — Kleene axioms and self-simulation. (3) A working artifact: a compiled reflective tower (2.2 ms native) where a program verifies its own algebraic substrate, reifies its continuation, and rewrites its own control flow.
+
+## The Seven Roles
+
+| Ψ | Lisp | Role | Source |
+|---|------|------|--------|
+| ⊤ | NIL | Empty / base case | Level 1 (retraction pair) |
+| Q | QUOTE | Freeze a term (constructor) | Level 1 (retraction pair) |
+| E | EVAL | Unwrap / interpret (destructor) | Level 1 (retraction pair) |
+| ρ | COND | Conditional branch | Level 2 (Kleene wall) |
+| g | CONS | Build a pair | Level 3 (machine: substrate) |
+| f | CAR | First projection | Level 2 (Branch axiom) |
+| η | CDR | Second projection | Level 3 (machine: Compose) |
+
+The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). Level 1 gives quote/eval. Level 2 gives the wall that separates judgment from transformation, enabling conditional dispatch. Level 3 gives composition and substrate, enabling pair construction and sequential evaluation. The roles fall out of the levels.
+
+The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean)).
+
+The canonicity lies in the theory, not any model: every finite Kleene magma decomposes into the same three classes with the same hard walls (112 non-isomorphic models at N=4 all share the decomposition). Of the 45 pairwise distinctness requirements among the ten role-bearing elements, **35 are derived theorems** (32 from categorical axioms + 3 from Turing completeness). The remaining **10 are the nontriviality axiom** — as 0 ≠ 1 in a nontrivial ring. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). Canonicity: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
 ## Key Results
 
@@ -245,11 +265,9 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The axiom stack admits models of size 12 supporting quote/eval, branching, and fixed points — enough for Turing completeness. The specific model Ψ₁₆ᶠ adds efficient counters, IO, product encodings, and a Y-combinator at size 16. The computational core is 7 axiom-forced elements; the rest is infrastructure. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
-These axioms decompose into three groups with different justifications. The **retraction pair** (QE) is the sole presupposition — standard category theory. **Self-simulation** (one program computes the table via Q-depth encoding) forces partial application injectivity (`SelfSimulation.lean`) and suffices with any model satisfying the axioms (`universal_self_simulator.py`, verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ). The **Kleene dichotomy** is independent of self-simulation — a concrete 8-element non-Kleene retraction magma with mixed elements self-simulates perfectly (64/64 cells). The Kleene wall is not forced by computing the table; it is the architectural choice that organizes the algebra into clean roles, lifting a self-simulating magma into a self-describing computational system. The **machine axioms** (compose, inert) internalize sequencing and storage, enabling self-hosted simulation — the engineering choice that grounds the reflective tower. Full analysis: [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md).
-
 The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kleene dichotomy. The categorical formulation and its universal theorems are in [`CatKleeneWallMinimal.lean`](DistinctionStructures/CatKleeneWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](DistinctionStructures/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](DistinctionStructures/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
-The axioms were not designed to produce Lisp. They were tested against four independent formalizations of self-description — phenomenological, information-theoretic, category-theoretic, and game-theoretic — and separately against the self-simulation requirement. Three of five behavioral categories and the Kleene wall emerge from all four formalizations. Self-simulation forces injectivity of the encoding (Lean-proved) but not the Kleene wall itself (N=8 non-Kleene counterexample). The Kleene dichotomy is the axiom that organizes self-simulation into self-description — the architectural choice that creates clean roles. The fourth category (substrate) is selected by expressiveness. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+The axioms correspond to the three levels: the retraction pair (level 1) enables self-simulation, the Kleene dichotomy (level 2) creates clean roles, and compose + inert (level 3) internalize the evaluator. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 Results fall into four tiers:
 
