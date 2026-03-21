@@ -20,7 +20,7 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 | Capability | Axioms | What it gives | Independence |
 |------------|--------|---------------|--------------|
 | **Self-simulating (S)** | Retraction pair (Q/E) | Computes own Cayley table. Partial application injectivity forced. | `[Lean]` `SelfSimulation.lean` — 4 universal theorems |
-| **Self-describing (D)** | Kripke dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | Independent of S and H: N=8 counterexample self-simulates without dichotomy; N=10 counterexample self-hosts without dichotomy `[SAT]` |
+| **Self-describing (D)** | Kripke dichotomy | Three categories (zeros, classifiers, non-classifiers) with hard walls. Judgment cannot merge with computation. | Independent of S: N=8 Palmieri's Countermodel `[Lean]`; independent of H: N=10 diagonal counterexample `[SAT]` |
 | **Self-hosting (H)** | Compose + Inert | Evaluator internalized. Smith's tower terminates at 256 bytes. | Independent of S and D: N=10 counterexamples satisfy Kripke but lack Compose or Inert `[SAT]` |
 
 **Full independence.** No capability implies any other:
@@ -184,7 +184,14 @@ Proved for ALL finite magmas satisfying the relevant axioms — not just one tab
 - Encoding injectivity: self-simulation forces Q-depth encoding to be injective `[Lean, universal]`
 - Row determination: equal partial applications imply identical rows `[Lean, universal]`
 
-23 universal theorems across 3 proof files, zero `decide`, zero `sorry`.
+**From counterexample** ([`PalmieriCountermodel.lean`](Kamea/PalmieriCountermodel.lean)) — concrete 8-element FRM violating dichotomy:
+
+- Palmieri's Countermodel is a FaithfulRetractMagma: extensionality, retraction pair, E-transparency `[Lean, by decide]`
+- Element 5 is mixed: both boolean and non-boolean outputs on core `[Lean, by decide]`
+- Dichotomy violated: the DichotomicRetractMagma axiom fails for this table `[Lean, by decide]`
+- Combined independence: ∃ FRM with classifier that is not a DRM `[Lean, by decide]`
+
+23 universal theorems + 4 independence theorems across 4 proof files, zero `sorry`.
 
 ### Model-Specific Theorems (Ψ₁₆ᶠ Witness)
 
@@ -224,7 +231,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`.
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
-- Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma self-simulates (64/64 cells) `[SAT + Empirical]`
+- Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma (Palmieri's Countermodel) `[Lean: PalmieriCountermodel.lean]`
 - Machine boundary: composition and substrate are independent of Kripke dichotomy — N=10 SAT counterexamples (Test D: no Compose, Test E: no Inert) `[SAT]`
 - Diagonal independence: Kripke dichotomy independent of internal composition — N=10 counterexample has Branch + Compose + Y but 4 mixed elements violating dichotomy (`composition_forces_kripke_test.py`) `[SAT]`
 - Capability coexistence: all three capabilities (S+D+H) coexist at N=10 — the minimum possible size (10 distinguished elements). Full axiom stack requires N=12 due to ladder + coherence axioms (`minimal_sdh_test.py`) `[SAT]`
@@ -303,8 +310,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 **The proofs**
 - [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here for the math**: FaithfulRetractMagma + DichotomicRetractMagma, 4- and 5-element witnesses, 19 universal theorems from axioms (including asymmetry in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean))
 - [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility proofs
-- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — **Self-simulation Layer 0**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
+- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — **Self-simulation**: partial application injectivity — the self-simulator can't compress the encoding (4 universal theorems, zero `decide`)
+- [`Kamea/PalmieriCountermodel.lean`](Kamea/PalmieriCountermodel.lean) — **S ⊬ D independence**: 8-element FRM with classifier that violates Kripke dichotomy (4 theorems, zero `sorry`)
 - [`psi_star.py`](psi_star.py) — Turing-completeness proof: 2CM simulation via 7 axiom-forced elements (run it)
+- [`independence_results.py`](independence_results.py) — All four independence counterexamples: generate, verify, freeze
 - [`docs/psi_framework_summary.md`](docs/psi_framework_summary.md) — full axiom search results and Cayley tables
 
 **The language**
