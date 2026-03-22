@@ -375,13 +375,120 @@ theorem no_right_identity : ¬∃ e : Fin n, ∀ x : Fin n, M.dot x e = x := by
 
 
 -- ─────────────────────────────────────────────────────────────────────
--- Conjecture: No associativity (DRMs cannot be semigroups)
--- SAT-verified at N ≤ 12 but the algebraic proof is incomplete.
--- The key difficulty: nc² is always a non-classifier (provable), so the
--- classifier case (which yields an easy contradiction) never arises.
--- The non-classifier case requires a finiteness argument that we have
--- not been able to formalize. See docs/h_characterization.md.
+-- Theorem 4b: No associativity (DRMs cannot be semigroups)
 -- ─────────────────────────────────────────────────────────────────────
+
+/-- **No DRM is a semigroup.** Associativity is incompatible with the
+    DichotomicRetractMagma axioms.
+
+    Proof in four steps:
+    1. `cls · (a · b) = cls · a` for all a, b (associativity + cls_boolean +
+       absorber property).
+    2. cls is not constant: it hits both z₁ and z₂ (extensionality +
+       cls ≠ z₁, cls ≠ z₂).
+    3. From (1), `cls · z₁ = cls · z₂ = cls · cls` (apply a = cls with the
+       witnesses from step 2). From ret_sec, `cls · x = cls · cls` for all
+       core x. So cls is constant everywhere.
+    4. Extensionality forces cls = absorber, contradicting cls ≠ z₁, cls ≠ z₂.
+
+    Uses: associativity, cls_boolean, zero₁_left, zero₂_left, extensional,
+    ret_sec, ret_zero₁, cls_ne_zero₁, cls_ne_zero₂, zeros_distinct.
+    Does NOT use: dichotomy, has_non_classifier, no_other_zeros, sec_ret. -/
+theorem no_associativity :
+    ¬ (∀ a b c : Fin n, M.dot (M.dot a b) c = M.dot a (M.dot b c)) := by
+  intro hassoc
+  -- Step 1: cls · (a · b) = cls · a for all a, b.
+  -- Proof: cls · a ∈ {z₁, z₂} (cls_boolean), so (cls · a) · b = cls · a (absorber).
+  -- By associativity, cls · (a · b) = (cls · a) · b = cls · a.
+  have cls_left_absorbing : ∀ a b : Fin n,
+      M.dot M.cls (M.dot a b) = M.dot M.cls a := by
+    intro a b
+    have hassoc_inst := hassoc M.cls a b
+    -- hassoc_inst : (cls · a) · b = cls · (a · b)
+    -- Goal: cls · (a · b) = cls · a
+    rcases M.cls_boolean a with h | h
+    · rw [← hassoc_inst, h, M.zero₁_left]
+    · rw [← hassoc_inst, h, M.zero₂_left]
+  -- Step 2: cls is not constant at z₁ and not constant at z₂.
+  -- If constant at z_i, then cls has the same row as z_i, so cls = z_i by
+  -- extensionality, contradicting cls_ne_zero_i.
+  -- Since cls · x ∈ {z₁, z₂} for all x, both values must be hit.
+  have cls_hits_z1 : ∃ b : Fin n, M.dot M.cls b = M.zero₁ := by
+    by_contra h
+    push_neg at h
+    -- Every output is z₂
+    have : M.cls = M.zero₂ := M.extensional M.cls M.zero₂ (fun x => by
+      rcases M.cls_boolean x with hx | hx
+      · exact absurd hx (h x)
+      · rw [hx, M.zero₂_left])
+    exact M.cls_ne_zero₂ this
+  have cls_hits_z2 : ∃ b : Fin n, M.dot M.cls b = M.zero₂ := by
+    by_contra h
+    push_neg at h
+    have : M.cls = M.zero₁ := M.extensional M.cls M.zero₁ (fun x => by
+      rcases M.cls_boolean x with hx | hx
+      · rw [hx, M.zero₁_left]
+      · exact absurd hx (h x))
+    exact M.cls_ne_zero₁ this
+  -- Step 3a: cls · z₁ = cls · cls and cls · z₂ = cls · cls.
+  obtain ⟨b₁, hb₁⟩ := cls_hits_z1
+  obtain ⟨b₂, hb₂⟩ := cls_hits_z2
+  have cls_z1 : M.dot M.cls M.zero₁ = M.dot M.cls M.cls := by
+    have h1 := cls_left_absorbing M.cls b₁
+    -- h1 : cls · (cls · b₁) = cls · cls
+    -- hb₁ : cls · b₁ = z₁
+    rw [hb₁] at h1
+    -- h1 : cls · z₁ = cls · cls
+    exact h1
+  have cls_z2 : M.dot M.cls M.zero₂ = M.dot M.cls M.cls := by
+    have h2 := cls_left_absorbing M.cls b₂
+    rw [hb₂] at h2
+    exact h2
+  -- Step 3b: cls · x = cls · ret for all core x (via ret_sec).
+  -- cls · (ret · (sec · x)) = cls · ret (by cls_left_absorbing).
+  -- But ret · (sec · x) = x for core x (ret_sec). So cls · x = cls · ret.
+  have cls_core : ∀ x : Fin n, x ≠ M.zero₁ → x ≠ M.zero₂ →
+      M.dot M.cls x = M.dot M.cls M.ret := by
+    intro x hx1 hx2
+    have := cls_left_absorbing M.ret (M.dot M.sec x)
+    -- this : cls · (ret · (sec · x)) = cls · ret
+    rw [M.ret_sec x hx1 hx2] at this
+    -- this : cls · x = cls · ret
+    exact this
+  -- Step 3c: cls · cls = cls · ret (since cls is core).
+  have cls_cls_eq : M.dot M.cls M.cls = M.dot M.cls M.ret :=
+    cls_core M.cls M.cls_ne_zero₁ M.cls_ne_zero₂
+  -- Step 3d: cls · z₁ = cls · ret (combine 3a and 3c).
+  have cls_z1_eq : M.dot M.cls M.zero₁ = M.dot M.cls M.ret := by
+    rw [cls_z1, cls_cls_eq]
+  -- Step 3e: cls · z₂ = cls · ret (combine 3a and 3c).
+  have cls_z2_eq : M.dot M.cls M.zero₂ = M.dot M.cls M.ret := by
+    rw [cls_z2, cls_cls_eq]
+  -- Step 3f: Also, cls · z₁ = cls · ret directly from ret_zero₁.
+  -- (Alternative derivation, not needed but confirms consistency.)
+  -- Step 4: cls is constant at c = cls · ret ∈ {z₁, z₂} on everything.
+  -- Therefore cls has the same row as the absorber c.
+  set c := M.dot M.cls M.ret with hc_def
+  -- cls · x = c for all x
+  have cls_const : ∀ x : Fin n, M.dot M.cls x = c := by
+    intro x
+    by_cases hx1 : x = M.zero₁
+    · rw [hx1, cls_z1_eq]
+    · by_cases hx2 : x = M.zero₂
+      · rw [hx2, cls_z2_eq]
+      · exact cls_core x hx1 hx2
+  -- c ∈ {z₁, z₂}
+  rcases M.cls_boolean M.ret with hc | hc
+  · -- c = z₁. cls has row constantly z₁ = z₁'s row.
+    rw [← hc_def] at hc
+    have : M.cls = M.zero₁ := M.extensional M.cls M.zero₁ (fun x => by
+      rw [cls_const x, hc, M.zero₁_left])
+    exact M.cls_ne_zero₁ this
+  · -- c = z₂. cls has row constantly z₂ = z₂'s row.
+    rw [← hc_def] at hc
+    have : M.cls = M.zero₂ := M.extensional M.cls M.zero₂ (fun x => by
+      rw [cls_const x, hc, M.zero₂_left])
+    exact M.cls_ne_zero₂ this
 
 -- ─────────────────────────────────────────────────────────────────────
 -- Theorem 5: Minimum cardinality ≥ 4
