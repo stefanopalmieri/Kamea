@@ -110,9 +110,22 @@ Each capability admits multiple inequivalent axiom forms (`axiom_mutation_test.p
 | H | Y: Y·ρ = ρ·(Y·ρ) | 3 variants (general, g-fixpt, idempotent) | All 4 SAT |
 | H | Branch: τ→f, else→g | 2 variants (swapped, three-way) | All 3 SAT |
 
-The capabilities are the invariants; the axiom forms are presentations of those capabilities. Different presentations produce different role assignments within the same three-category architecture. The McCarthy role inventory (quote, eval, cons, car, cdr, cond, nil) is one realization within an equivalence class — distinguished by producing the familiar Lisp primitives, but not selected by any universal property.
+The capabilities are the invariants; the axiom forms are presentations. But the presentations are not all equal: they differ in how many elements they push across the Kripke wall.
 
-This is analogous to the relationship between groups and group presentations, or between λ-calculus and combinatory logic: the algebraic structure is fixed, but the specific generators and relations are a choice.
+**Classifier minimality.** The 6 Compose variants produce different role structures:
+
+| Compose form | Classifiers | η category | f category |
+|---|---|---|---|
+| **η = ρ∘g [McCarthy]** | **1** | **N (encoder)** | **N (encoder)** |
+| η = g∘ρ | 2 | N (encoder) | C (classifier) |
+| η = f∘g | 3 | C (classifier) | C (classifier) |
+| η = ρ∘f | 3 | C (classifier) | C (classifier) |
+| η = f∘ρ | 3 | C (classifier) | C (classifier) |
+| η = g∘f | 3 | C (classifier) | C (classifier) |
+
+The McCarthy realization is the **unique** form that minimizes the classifier count: 1 tester, everything else computational. In all alternatives, either f or η (or both) cross the Kripke wall — projection becomes judgment, or composition becomes classification. The McCarthy form is the one where the wall is maximally respected.
+
+This is a parsimony principle intrinsic to the framework: the Kripke wall separates judgment from computation; the McCarthy realization is the presentation that keeps the most elements on the computation side. It is "natural" not by universal property but by minimality over the wall the axioms already require.
 
 ## Conjectures
 
@@ -120,7 +133,7 @@ This is analogous to the relationship between groups and group presentations, or
 
 **Conjecture 2 (Kripke–Subobject Correspondence).** The Kripke dichotomy is the finite analog of decidability of the subobject classifier in a topos. A formal functor from the category of DRMs to Set, sending each DRM to its three-category decomposition (Z, C, N), is natural.
 
-**Conjecture 3 (Realization Equivalence).** The set of axiom systems realizing each capability forms an equivalence class under a natural notion of "same capability, different presentation." The McCarthy realization and its 12+ tested alternatives are all equivalent in this sense.
+**Conjecture 3 (Classifier Minimality as Categorical Property).** Minimizing the classifier count over the space of Compose realizations may be equivalent to a known categorical property — e.g., having the smallest subobject classifier lattice, or the most free structure on the encoder subcategory. If so, the McCarthy realization would be selected by a universal property, not just a combinatorial criterion.
 
 ## What Is Proved vs. What Is Open
 
@@ -142,4 +155,5 @@ This is analogous to the relationship between groups and group presentations, or
 | Each capability's axioms irredundant (partial minimality) | SAT-verified | `axiom_irredundancy_test.py` |
 | Cross-formalism universality | Conjectured | — |
 | Kripke ↔ subobject classifier decidability | Conjectured | — |
-| Role uniqueness (McCarthy correspondence) | Open | — |
+| McCarthy realization minimizes classifier count | SAT-verified |
+| Classifier minimality as categorical property | Conjectured | — |
