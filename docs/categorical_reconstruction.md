@@ -133,7 +133,17 @@ This is a parsimony principle intrinsic to the framework: the Kripke wall separa
 
 **Conjecture 2 (Kripke–Subobject Correspondence).** The Kripke dichotomy is the finite analog of decidability of the subobject classifier in a topos. A formal functor from the category of DRMs to Set, sending each DRM to its three-category decomposition (Z, C, N), is natural.
 
-**Conjecture 3 (Classifier Minimality as Categorical Property).** Minimizing the classifier count over the space of Compose realizations may be equivalent to a known categorical property — e.g., having the smallest subobject classifier lattice, or the most free structure on the encoder subcategory. If so, the McCarthy realization would be selected by a universal property, not just a combinatorial criterion.
+**Conjecture 3 (Classifier Minimality ↔ Core-Faithfulness, partially resolved).** Structural analysis of all 6 Compose variants shows: the McCarthy realization is the unique form where the non-classifier stratum is **core-faithful** (all non-classifiers have distinct actions on core). In all alternatives, some non-classifiers collapse on core — they agree on computational behavior and differ only on zeros. Empirically at N=10:
+
+| |C| | Distinct N-rows / |N| | Core-faithful? |
+|---|---|---|
+| 1 (McCarthy) | 7/7 (100%) | Yes |
+| 2 | 4/6 (67%) | No |
+| 3 | 3–4/5 (60–80%) | No |
+
+The categorical reading: classifier minimality corresponds to **faithfulness of the computational sub-representation** — the restriction of the left-regular representation to N × core is injective. In topos-theoretic terms: the McCarthy realization has a two-valued observation structure (one classifier), which forces all non-classifiers to be computationally distinct. Richer observation structures (more classifiers) allow computational redundancy.
+
+Whether this correspondence holds as a theorem for all DRMs (not just N=10 Compose variants) is open.
 
 ## What Is Proved vs. What Is Open
 
@@ -156,4 +166,5 @@ This is a parsimony principle intrinsic to the framework: the Kripke wall separa
 | Cross-formalism universality | Conjectured | — |
 | Kripke ↔ subobject classifier decidability | Conjectured | — |
 | McCarthy realization minimizes classifier count | SAT-verified |
-| Classifier minimality as categorical property | Conjectured | — |
+| Classifier minimality ↔ core-faithfulness of N | Empirical (N=10, all 6 variants) |
+| Equivalence holds for all DRMs | Conjectured | — |
