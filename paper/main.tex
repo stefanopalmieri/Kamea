@@ -293,8 +293,8 @@ The three capabilities S, D, and H are simultaneously satisfiable at $N\!=\!10$.
 A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\DRM$ (Lean-verified: \texttt{witness10\_drm}) and satisfies $\ICP$ (Lean-verified: \texttt{w10\_has\_icp}). The witness uses 10 pairwise distinct elements in all roles: 2 absorbers, 2 retraction pair, 1 classifier, 3~$\ICP$ witnesses, and 2 enrichment elements ($f$ for Branch dispatch, $Y$ for recursion). Lean file: \texttt{Witness10.lean}.\qed
 \end{proof}
 
-\paragraph{Minimum cardinality.}
-The $\ICP$ definition requires 3 pairwise distinct non-absorbers $(a, b, c)$, but does not require them to be distinct from the retraction pair or classifier. SAT search confirms that the capabilities coexist at $N\!=\!6$ when role overlap is permitted (the retraction pair doubles as $\ICP$ witnesses). The true minimum for S+D+H lies in $[5, 10]$; the exact value depends on which overlaps the axioms permit. The $N\!=\!10$ witness with all roles distinct serves as the reference model.
+\paragraph{Tightness.}
+The $N\!=\!10$ bound is tight when all distinguished elements are required to be pairwise distinct (10 elements need $N \geq 10$ by counting; the Lean witness achieves it). Whether S+D+H can coexist at smaller $N$ with role overlap (e.g., an $\ICP$ witness coinciding with a retraction pair element) is open.
 
 % ══════════════════════════════════════════════════════════════
 \section{ICP Characterization}
@@ -310,14 +310,17 @@ with $\eta, g, \rho$ pairwise distinct non-absorbers and $\eta$ non-trivial ($\g
 
 \begin{theorem}[$\ICP$ Equivalence]
 \label{thm:icp-equiv}
-For any magma on a 2-pointed set, $\ICP \iff \text{Compose} + \text{Inert}$ (with non-trivial composite).
+For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
+\[
+\ICP \iff \text{Compose} + \text{Inert} \text{ (with non-trivial composite)}.
+\]
 \end{theorem}
 
 \begin{proof}
-The witness triple $(a, b, c)$ of $\ICP$ maps to $(g, \rho, \eta) = (b, c, a)$ for Compose+Inert, and vice versa. The conditions match exactly under this relabeling. The proof is pure logic — no \texttt{decide}. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.\qed
+This is a \emph{universal} theorem, quantified over all $n$ and all binary operations. The witness triple $(a, b, c)$ of $\ICP$ maps to $(g, \rho, \eta) = (b, c, a)$ for Compose+Inert, and vice versa. The nine conditions (pairwise distinct, non-absorber, core-preservation, factorization, non-triviality) match exactly under this relabeling. The proof is pure equational logic — no \texttt{decide}, no \texttt{native\_decide}, no case analysis on $n$. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.\qed
 \end{proof}
 
-This equivalence means H has a single-concept, presentation-independent definition: \emph{partial internal composition}. The left-regular representation of the magma contains a non-trivially composed element. The operational axioms (Compose, Inert) are one presentation of this property; the ICP is another. They are the same theorem under variable renaming.
+This equivalence gives H a single-concept definition: the left-regular representation contains a non-trivially composed element. The operational axioms (Compose, Inert) and the $\ICP$ are the same property under variable renaming. Additionally, $\ICP$ is invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}; \texttt{ICP.lean}, theorem \texttt{FRMIso.preserves\_icp}).
 
 \paragraph{Enrichments.}
 Two additional axioms are used in the full reflective architecture but are not part of the $\ICP$ core:
@@ -332,51 +335,13 @@ Both are irredundant (SAT-verified) but not part of the core independence result
 \label{sec:categorical}
 % ══════════════════════════════════════════════════════════════
 
-Each capability corresponds to a categorical concept applied to finite extensional magmas:
+Each capability has connections to standard categorical vocabulary, of varying strength:
 
-\begin{center}
-\begin{tabular}{llll}
-\textbf{Capability} & \textbf{Categorical concept} & \textbf{Status} & \textbf{Reference} \\
-\hline
-S & Section-retraction pair & Standard & \cite{maclane71} \\
-D & Decidable subobject classifier & Analogy & \cite{johnstone02} \\
-H ($\ICP$) & Partial internal composition & New (this paper) & --- \\
-\end{tabular}
-\end{center}
+\paragraph{S = section-retraction pair (exact).} The retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core is a standard categorical construction~\cite{maclane71}. Definition~\ref{def:frm} is a section-retraction pair in the endomorphism category of the magma. The connection is formal: the Lean formalization uses exactly this structure.
 
-\paragraph{S = section-retraction pair.} The retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core is a standard categorical construction~\cite{maclane71}. The connection is exact: our Definition~\ref{def:frm} is a section-retraction pair in the endomorphism category of the magma. \emph{Proved}: the Lean formalization uses exactly this structure.
+\paragraph{D $\approx$ decidable subobject classifier (analogy).} In a topos, the subobject classifier $\Omega$ partitions morphisms into $\Omega$-valued and non-$\Omega$-valued~\cite{johnstone02}. The classifier dichotomy (Definition~\ref{def:drm}) is a finite analog: every non-absorber is either entirely $\{z_1, z_2\}$-valued or entirely non-$\{z_1, z_2\}$-valued on core. The connection is an analogy, not a formal functor: our dichotomy requires totality (no partial classifiers), a finiteness-dependent condition with no direct topos-theoretic counterpart. What is proved: the three-category decomposition and its invariance under isomorphisms (Theorem~\ref{thm:functoriality}). What is analogical: the identification of $C$ with the subobject classifier image.
 
-\paragraph{D $\approx$ decidable subobject classifier.} In a topos, the subobject classifier $\Omega$ partitions morphisms into $\Omega$-valued and non-$\Omega$-valued~\cite{johnstone02}. The classifier dichotomy (Definition~\ref{def:drm}) is the finite analog: every non-absorber is either entirely $\{z_1, z_2\}$-valued or entirely non-$\{z_1, z_2\}$-valued on core. The connection is an \emph{analogy}, not a formal functor: our dichotomy requires totality (no partial classifiers), which is a finiteness-dependent condition with no direct topos-theoretic counterpart.
-
-\emph{Proved}: the three-category decomposition ($Z$, $C$, $N$) and its invariance under isomorphisms (Theorem~\ref{thm:functoriality}). \emph{Analogical}: the identification of $C$ with the subobject classifier image.
-
-\paragraph{H = partial internal composition (new).} In a monoidal closed category, the internal hom $[B, C]$ represents $\mathrm{Hom}(B, C)$ as an object. $\ICP$ is a fragment: the left-regular representation $\{L_a : a \in S\}$ contains at least one non-trivially composed element $L_a = L_c \circ L_b$. Full closure ($\{L_a\}$ closed under composition) is far too strong — it fails for all tested models including those with H. The connection to internal hom is an \emph{analogy}: $\ICP$ is a necessary condition for partial closure but does not constitute a universal property.
-
-\emph{Proved}: the $\ICP$ definition, its equivalence with Compose+Inert (Theorem~\ref{thm:icp-equiv}), and its invariance under $\FRM$ isomorphisms (\texttt{ICP.lean}, theorem \texttt{FRMIso.preserves\_icp} --- algebraic proof, no \texttt{decide}). \emph{Analogical}: the identification with internal hom fragments.
-
-% ══════════════════════════════════════════════════════════════
-\section{Realization Freedom and Classifier Minimality}
-\label{sec:realization}
-% ══════════════════════════════════════════════════════════════
-
-The $\ICP$ admits multiple equivalent axiom forms. We tested 6 Compose variants (replacing $\eta \dotop x = \rho \dotop (g \dotop x)$ with five alternatives: $g \circ \rho$, $f \circ g$, $\rho \circ f$, $f \circ \rho$, $g \circ f$), all satisfiable over S+D by SAT. However, structural analysis reveals they are not equal:
-
-\begin{center}
-\begin{tabular}{lccl}
-\textbf{Compose form} & $|C|$ & $|N|$ & \textbf{$\eta$ category} \\
-\hline
-$\eta = \rho \circ g$ (McCarthy) & 1 & 7 & non-classifier \\
-$\eta = g \circ \rho$ & 2 & 6 & non-classifier \\
-$\eta = f \circ g$ & 3 & 5 & classifier \\
-$\eta = \rho \circ f$ & 3 & 5 & classifier \\
-$\eta = f \circ \rho$ & 3 & 5 & classifier \\
-$\eta = g \circ f$ & 3 & 5 & classifier \\
-\end{tabular}
-\end{center}
-
-The McCarthy realization ($\eta = \rho \circ g$) is the unique form that minimizes the classifier count. In all alternatives, computational elements ($f$, $\eta$, or both) cross the classifier wall and become classifiers. The McCarthy form keeps the maximum number of elements in the computational stratum.
-
-This is a selection criterion intrinsic to the framework: the classifier dichotomy separates judgment from computation; the McCarthy realization is the presentation that minimizes judgment. We do not claim this is a categorical universal property — it is a combinatorial fact with a coherent interpretation.
+\paragraph{H: categorical motivation (open).} The $\ICP$ was motivated by the notion of internal composition in monoidal closed categories, where the internal hom $[B, C]$ represents $\mathrm{Hom}(B, C)$ as an object. The $\ICP$ asks for a weaker condition: the left-regular representation contains at least one non-trivially composed element $L_a = L_c \circ L_b$. Full closure ($\{L_a\}$ closed under composition) fails for all tested models. Unlike S, the connection to internal hom is not formal — the $\ICP$ is a concrete algebraic property that we prove equivalent to Compose+Inert (Theorem~\ref{thm:icp-equiv}) and invariant under isomorphisms, but whether it corresponds to a standard categorical universal property is open.
 
 % ══════════════════════════════════════════════════════════════
 \section{Related Work}
@@ -404,27 +369,27 @@ Independence results via finite counterexamples are standard in finite model the
 The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that evaluation machinery does not force clean classification. A system can evaluate without organizing its elements into coherent roles. The classifier dichotomy is an independent \emph{organizational} property — it makes the algebra legible, not more powerful. This distinction between computational power and structural legibility is, to our knowledge, new.
 
 \paragraph{Why magmas?}
-Magmas are extremely general — no associativity, no identity. A natural concern is that the independence result is an artifact of weak structure: in semigroups or monoids, the capabilities might collapse. Two results address this. Theorem~\ref{thm:no-rid} proves that no $\DRM$ has a right identity, ruling out monoids and groups. Theorem~\ref{thm:no-assoc} proves the stronger result: no $\DRM$ is associative, ruling out semigroups entirely. Both are Lean-proved by pure algebraic reasoning (zero \texttt{sorry}, no \texttt{decide}). Together, these results show that the magma setting is not conveniently weak — stronger algebraic structures cannot support capability D at all.
+Magmas are extremely general — no associativity, no identity. A natural concern is that the independence result is an artifact of weak structure: in semigroups or monoids, the capabilities might collapse. Two Lean-proved results address this. Theorem~\ref{thm:no-rid} proves that no $\DRM$ has a right identity, ruling out monoids. Theorem~\ref{thm:no-assoc} proves the strictly stronger result: no $\DRM$ is associative, ruling out semigroups, monoids, and groups entirely. The proof (algebraic, no \texttt{decide}) shows that associativity forces the classifier to have a constant row, collapsing it to an absorber. Together, these results show that the magma setting is not conveniently weak — stronger algebraic structures cannot support capability D at all.
 
 \paragraph{Scope and limitations.}
-Whether analogs of the three-capability separation exist in other settings — $\lambda$-calculus, typed systems, infinite algebras — remains the primary open question. The categorical context (Section~\ref{sec:categorical}) suggests the concepts translate, but Theorems~\ref{thm:no-rid} and~\ref{thm:no-assoc} show that any such translation must work in settings without identity elements or associativity. No formal cross-setting result exists.
+Whether analogs of the three-capability separation exist in other settings — $\lambda$-calculus, typed systems, infinite algebras — remains the primary open question. The categorical context (Section~\ref{sec:categorical}) suggests the concepts translate, but the no-associativity result (Theorem~\ref{thm:no-assoc}) means any such translation must work in settings without associativity or identity. No formal cross-setting result exists.
 
 The ICP characterization of H (Section~\ref{sec:icp}) is a universal theorem: $\ICP \iff \text{Compose} + \text{Inert}$ for any magma on a 2-pointed set, proved by pure logic in Lean. ICP is also invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}). However, while S and D have direct categorical analogs (section-retraction~\cite{maclane71}, decidable subobject classifier~\cite{johnstone02}), ICP is a fragment of internal composition — weaker than a full internal hom. A categorical characterization of H as a universal property remains open.
 
-\paragraph{The equivalence class of realizations.}
-The realization freedom result (Section~\ref{sec:realization}) shows that each capability admits multiple axiom forms. The specific role inventory (the correspondence to McCarthy's Lisp primitives) depends on the chosen realization. The McCarthy form is distinguished by minimizing the classifier count — a criterion intrinsic to the framework — but is not selected by a categorical universal property. Whether a deeper characterization exists is open.
+\paragraph{Realization freedom.}
+Each capability admits multiple axiom forms (e.g., 6 satisfiable Compose variants for H). The specific role inventory depends on the chosen presentation. Whether a canonical selection criterion exists among equivalent presentations is an open question explored in the companion artifact.
 
 % ══════════════════════════════════════════════════════════════
 \section{Conclusion}
 % ══════════════════════════════════════════════════════════════
 
-We have shown that three capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked; the decomposition is invariant; and the magma setting is forced (no $\DRM$ is associative). The classifier dichotomy is epistemic, not computational: an algebra can evaluate without understanding itself as evaluating.
+We have shown that three capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked; the decomposition is invariant; the coexistence bound is tight; and the magma setting is necessary (no semigroup, monoid, or group can satisfy D). The classifier dichotomy is epistemic, not computational: an algebra can evaluate without understanding itself as evaluating.
 
 \paragraph{Open problems.}
 \begin{enumerate}
   \item \emph{Cross-formalism universality}: Does the three-capability separation appear in the $\lambda$-calculus, typed settings, or infinite algebras?
   \item \emph{Categorical characterization of H}: Is the ICP equivalent to a standard universal property (e.g., existence of a partial internal hom)?
-  \item \emph{Classifier minimality}: Is the selection of the McCarthy realization by classifier count equivalent to a known categorical condition?
+  \item \emph{Tight bound with overlap}: $N\!=\!10$ is tight with all roles distinct. Can S+D+H coexist at smaller $N$ with role overlap (e.g., an ICP witness coinciding with a retraction pair element)?
 \end{enumerate}
 
 \paragraph{Artifact.}
