@@ -51,7 +51,7 @@ Branch and Y are not independent capabilities — they are enrichments that conn
 
 The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has internal composition (the evaluation core) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
 
-(The classifier dichotomy is analogous in spirit to a grounded/ungrounded separation [Kripke 1975], but here it is a total finite algebraic condition rather than a partial transfinite construction. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) for the categorical analysis.)
+(The classifier dichotomy is a total finite algebraic condition: every non-zero element's row on core is either entirely boolean-valued or entirely non-boolean-valued. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) for the categorical analysis.)
 
 The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the classifier wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
 
