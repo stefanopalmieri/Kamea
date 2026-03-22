@@ -9,7 +9,7 @@ A structural decomposition of reflective computation into independent capabiliti
 ### For Reviewers
 
 1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = Branch + Compose + Inert + Y
-2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`)
+2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
 3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
 5. **Proof inventory**: 7 files, 55 theorems, zero `sorry` — verify with `lake build`
@@ -19,7 +19,7 @@ A structural decomposition of reflective computation into independent capabiliti
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and shows that no capability implies any other (proved by concrete counterexamples). A 16×16 Cayley table is the witness: a finite algebra that exercises all three.
+Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and shows that no capability implies any other (proved by concrete counterexamples). The core theorem is witnessed minimally at N=10. A richer 16×16 table supports the artifact: a reflective tower, compilation, and operational demos.
 
 ## The Three Capabilities
 
@@ -33,7 +33,7 @@ Self-simulation, self-description, and evaluator internalization are three indep
 
 *Convention: H names the full evaluator package (Branch + Compose + Inert + Y). Compose and Inert are the internalization core — they eliminate the external machine. Branch provides dispatch and Y provides recursion; both are needed for full evaluator expressiveness and for the reflective tower artifact. All four are irredundant within H (SAT-proved).*
 
-**Full independence.** No capability implies any other:
+**Full independence.** No capability implies any other. Four non-trivial directions (D and H both include S by construction, so D→S and H→S are definitional):
 
 | | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
 |---|---|---|---|---|
@@ -41,9 +41,9 @@ Self-simulation, self-description, and evaluator internalization are three indep
 | **What it shows** | Self-simulates, no clean roles | Has dichotomy, no Compose | Has Branch+Compose+Y, no dichotomy | Has retraction pair, too small for H |
 | **Proof** | `[Lean]` | `[Lean]` | `[Lean]` | `[Lean]` (trivial: H needs N≥10) |
 
-A retraction magma can compute its own table without the classifier wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the classifier wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The classifier wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
+The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has full evaluation machinery (Branch + Compose + Y) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
 
-(The classifier dichotomy is a finite algebraic property: every non-zero element's row on core is either entirely boolean-valued or entirely non-boolean-valued. The stratification principle — cleanly separating elements that produce truth values from those that produce computational values — is analogous to Kripke's grounded/ungrounded partition in his theory of truth [1975], but the construction is total, finite, and algebraic rather than partial and transfinite.)
+(The classifier dichotomy is analogous in spirit to a grounded/ungrounded separation [Kripke 1975], but here it is a total finite algebraic condition rather than a partial transfinite construction. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) for the categorical analysis.)
 
 The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the classifier wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
 
@@ -85,19 +85,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-A program that can inspect its own continuation — where the continuation is data built from algebraically verified atoms. The table it runs on has Lean-proved rigidity, discoverability, and actuality irreducibility. The Lisp it implements has five axiom-forced role categories, seven specialized roles justified by compositional expressiveness, and a Turing-complete term algebra.
-
-Smith's 3-Lisp (1984) introduced the reflective tower but left it ungrounded — each level depended on the level below, with no termination. Boba's Tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. The table is not an implementation of the algebra — it is the algebra. The reflective stack is grounded in a 16×16 verified Cayley table.
-
-The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpreting itself with inspectable continuations — computes fibonacci, verifies the Cayley table it runs on, then reifies its own continuation as walkable data, navigates to a pending `k-if` frame, swaps the then/else branches, reflects, and takes the opposite branch from what the source code says. The axioms, theorems, and proofs below provide the formal context for this demonstration.
-
-```bash
-python3 psi_repl.py                                        # interactive REPL
-python3 examples/psi16_corrupted_host_demo.py               # watch one wizard heal another
-cd kamea-rs && cargo run --release -- repl                   # Rust REPL (~25x faster)
-cd kamea-rs && cargo run --release -- run \                  # Rust reflective tower
-  examples/psi_metacircular.lisp examples/psi_reflective_tower.lisp
-```
+The demo exercises all three capabilities: computation on the algebra (S), verification of the Cayley table's invariants (D), and continuation reification + branch swap within a meta-circular evaluator (H). The reflective stack is grounded in a 16×16 verified Cayley table — the table is not an implementation of the algebra, it is the algebra. See [`docs/artifact.md`](docs/artifact.md) for the full artifact description and additional demos.
 
 ### Compiled Boba's Tower
 
@@ -139,18 +127,11 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 ## Why It Matters
 
-The framework isolates three independent capabilities of reflective computation: self-simulation, self-description, and evaluator internalization. No capability implies any other. But the specific axioms realizing each capability are not unique: composition admits ≥6 forms, fixed-point ≥4, branching ≥3. Different realizations induce different role assignments within the same three-category architecture. The capabilities are invariants; the axiom forms are presentations; the roles are artifacts of the chosen presentation.
+Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus.
 
-Four layers of results, each proved:
+Many reflective systems combine mechanisms that this framework separates into three capabilities. The framework shows what each costs: a retraction pair (standard category theory), the classifier dichotomy (one epistemic axiom, independent of computation), and evaluator internalization (composition + substrate + recursion). The three-category architecture (zeros, classifiers, non-classifiers) and the walls between categories are proved universal. The specific seven roles are one realization within an equivalence class — each capability admits multiple axiom forms (≥6, ≥4, ≥3), and the McCarthy realization is the unique form that minimizes the classifier count. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 
-1. **Independence** — the three capabilities don't imply each other (Lean, 4 directions)
-2. **Irredundancy** — each capability's axiom set has no internal redundancy (SAT, 5/5)
-3. **Realization freedom** — each capability admits multiple inequivalent axiom forms (SAT, 13 mutations)
-4. **Classifier minimality** — the McCarthy realization is the unique form that minimizes the number of classifiers, keeping the most elements computational (SAT, structural analysis of 6 Compose variants)
-
-Many reflective systems — runtimes with reflection APIs, JIT compilers, meta-circular evaluators — combine mechanisms that this framework separates into three capabilities. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the classifier wall (one epistemic axiom, independent of computation), and evaluator internalization (composition + substrate + recursion). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles are one realization within an equivalence class of axiom systems — Lisp is one point in the space, not the only point. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
-
-**Scope.** Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus. The core contribution is the four-layer result above. The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact demonstrates feasibility; the independence theorem is the primary contribution.
+The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist. The artifact demonstrates feasibility; the independence theorem is the primary contribution.
 
 ### Frequently Asked Questions
 
