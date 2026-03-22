@@ -152,7 +152,7 @@ A $\DRM$ has capability $D$ (self-description) by definition.
 An $\FRM$ has capability $H$ (evaluator internalization) if it satisfies the $\ICP$.
 \end{definition}
 
-Note that D and H are both defined on top of $\FRM$, so both imply S. The four non-trivial independence directions are S $\not\Rightarrow$ D, D $\not\Rightarrow$ H, H $\not\Rightarrow$ D, and S $\not\Rightarrow$ H.
+Note that S is the base: both D and H are defined as extensions of $\FRM$, so both imply S by construction. The directions D $\Rightarrow$ S and H $\Rightarrow$ S are therefore definitional, not theorems. The four \emph{non-trivial} independence directions are S $\not\Rightarrow$ D, D $\not\Rightarrow$ H, H $\not\Rightarrow$ D, and S $\not\Rightarrow$ H.
 
 % ══════════════════════════════════════════════════════════════
 \section{Universal Theorems}
@@ -268,7 +268,7 @@ Each direction is proved by exhibiting a concrete Cayley table and verifying the
 An $8 \times 8$ Cayley table defining an $\FRM$ with $Q = 2$, $E = 3$ (retraction pair), classifier at index~4, and two mixed elements (indices~5 and~7) whose rows on core contain both boolean and non-boolean values. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
-A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies $\ICP$, by exhaustive search via \texttt{native\_decide} over the full existential (\texttt{HasICP}). Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
+A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$ (Definition~\ref{def:icp}; equivalence with Compose+Inert established in Section~\ref{sec:icp}), by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
 
 \paragraph{$H \not\Rightarrow D$ ($N\!=\!10$, diagonal).}
 A $10 \times 10$ Cayley table defining an $\FRM$ with a retraction pair, Branch, Compose ($\eta \dotop x = \rho \dotop (g \dotop x)$), Inert ($g$ preserves core), and Y fixed-point — all evaluation machinery — yet element~5 has both boolean and non-boolean outputs on core, violating the dichotomy. Lean proves both that $\ICP$ holds (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$) and that the dichotomy fails. Lean file: \texttt{Countermodels10.lean}.
@@ -294,7 +294,7 @@ A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\D
 \end{proof}
 
 \paragraph{Tightness.}
-The $N\!=\!10$ bound is tight when all distinguished elements are required to be pairwise distinct (10 elements need $N \geq 10$ by counting; the Lean witness achieves it). Whether S+D+H can coexist at smaller $N$ with role overlap (e.g., an $\ICP$ witness coinciding with a retraction pair element) is open.
+The bound $N\!=\!10$ is tight under the standard distinctness requirement (all role-bearing elements pairwise distinct): 10 elements need $N \geq 10$ by counting, and the Lean witness achieves it. Whether relaxing distinctness permits smaller witnesses is open.
 
 % ══════════════════════════════════════════════════════════════
 \section{ICP Characterization}
@@ -341,7 +341,7 @@ Each capability has connections to standard categorical vocabulary, of varying s
 
 \paragraph{D $\approx$ decidable subobject classifier (analogy).} In a topos, the subobject classifier $\Omega$ partitions morphisms into $\Omega$-valued and non-$\Omega$-valued~\cite{johnstone02}. The classifier dichotomy (Definition~\ref{def:drm}) is a finite analog: every non-absorber is either entirely $\{z_1, z_2\}$-valued or entirely non-$\{z_1, z_2\}$-valued on core. The connection is an analogy, not a formal functor: our dichotomy requires totality (no partial classifiers), a finiteness-dependent condition with no direct topos-theoretic counterpart. What is proved: the three-category decomposition and its invariance under isomorphisms (Theorem~\ref{thm:functoriality}). What is analogical: the identification of $C$ with the subobject classifier image.
 
-\paragraph{H: categorical motivation (open).} The $\ICP$ was motivated by the notion of internal composition in monoidal closed categories, where the internal hom $[B, C]$ represents $\mathrm{Hom}(B, C)$ as an object. The $\ICP$ asks for a weaker condition: the left-regular representation contains at least one non-trivially composed element $L_a = L_c \circ L_b$. Full closure ($\{L_a\}$ closed under composition) fails for all tested models. Unlike S, the connection to internal hom is not formal — the $\ICP$ is a concrete algebraic property that we prove equivalent to Compose+Inert (Theorem~\ref{thm:icp-equiv}) and invariant under isomorphisms, but whether it corresponds to a standard categorical universal property is open.
+\paragraph{H: categorical motivation.} The $\ICP$ was motivated by internal composition in monoidal closed categories, where the internal hom $[B, C]$ represents $\mathrm{Hom}(B, C)$ as an object. The $\ICP$ asks for a weaker condition: the left-regular representation contains at least one non-trivially composed element $L_a = L_c \circ L_b$. Full closure ($\{L_a\}$ closed under composition) fails for all tested models. Unlike S, the connection to internal hom is not formal — the $\ICP$ is a concrete algebraic property that we prove equivalent to Compose+Inert (Theorem~\ref{thm:icp-equiv}) and invariant under isomorphisms, but whether it corresponds to a standard categorical universal property remains to be established.
 
 % ══════════════════════════════════════════════════════════════
 \section{Related Work}
@@ -356,6 +356,9 @@ Mogensen~\cite{mogensen92} constructs self-interpreters for the $\lambda$-calcul
 
 \paragraph{Subobject classifiers.}
 The classifier dichotomy (Definition~\ref{def:drm}) is the finite analog of a decidable subobject classifier in topos theory~\cite{johnstone02,maclane92}. The three-category decomposition parallels the partition of morphisms into $\Omega$-valued and non-$\Omega$-valued in a topos, but our dichotomy requires \emph{totality} (no partial classifiers), which is a finiteness-dependent condition.
+
+\paragraph{Algebraic semantics.}
+Plotkin and Power~\cite{plotkin03} use algebraic operations and equations to give modular semantics to computational effects, showing that algebraic theories naturally decompose computational features. Hyland et al.~\cite{hyland06} develop the categorical framework connecting algebraic theories to monads. Our work shares the spirit of algebraic decomposition but operates in a different setting: we decompose reflective capabilities in finite non-associative algebras rather than computational effects in categories of algebras.
 
 \paragraph{Finite model theory.}
 Independence results via finite counterexamples are standard in finite model theory~\cite{libkin04}. Our contribution is not the technique but the specific separation: three independently-motivated capabilities of reflective computation, shown independent in an algebraic setting, with machine-checked proofs.
@@ -461,6 +464,16 @@ Stanley Burris and H.~P. Sankappanavar.
 Saul Kripke.
 \newblock Outline of a theory of truth.
 \newblock \emph{Journal of Philosophy}, 72(19), 1975.
+
+\bibitem{plotkin03}
+Gordon Plotkin and John Power.
+\newblock Algebraic operations and generic effects.
+\newblock \emph{Applied Categorical Structures}, 11(1), 2003.
+
+\bibitem{hyland06}
+Martin Hyland, Gordon Plotkin, and John Power.
+\newblock Combining effects: Sum and tensor.
+\newblock \emph{Theoretical Computer Science}, 357(1--3), 2006.
 
 \bibitem{moura21}
 Leonardo de~Moura and Sebastian Ullrich.
