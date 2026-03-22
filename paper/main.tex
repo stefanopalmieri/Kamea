@@ -272,7 +272,7 @@ The three capabilities S, D, and H are simultaneously satisfiable if and only if
 \end{theorem}
 
 \begin{proof}
-\emph{Lower bound}: The capabilities require 10 distinguished elements — 2 absorbers ($z_1, z_2$), a retraction pair ($s, r$), a classifier ($c$), and the evaluation machinery (3 $\ICP$ witnesses $a, b, c'$ plus 2 enrichment elements $f, Y$) — and the Lean-verified axioms force all 10 to be pairwise distinct. Thus $N \geq 10$.
+\emph{Lower bound}: The capabilities require 10 distinguished elements: 2 absorbers ($z_1, z_2$), 2 retraction pair elements ($s, r$), 1 classifier ($c$), 3 $\ICP$ witnesses ($a, b, c'$, each distinct from the preceding and from each other), and 2 enrichment elements ($f$ for Branch dispatch, $Y$ for recursion). The Lean-verified witness uses exactly $N\!=\!10$ with all 10 pairwise distinct, confirming no slack. Thus $N \geq 10$.
 
 \emph{Upper bound}: A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\DRM$ (Lean-verified: \texttt{witness10\_drm}) and satisfies $\ICP$ (Lean-verified: \texttt{w10\_has\_icp}). Lean file: \texttt{Witness10.lean}.\qed
 \end{proof}
@@ -387,7 +387,7 @@ The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that eva
 \paragraph{Scope and limitations.}
 All results are proved for finite extensional magmas with two absorbers and a retraction pair. Whether the three-capability separation extends to other settings — $\lambda$-calculus, typed systems, infinite algebras — is the primary open question. The categorical context (Section~\ref{sec:categorical}) suggests the concepts are standard enough to translate, but no formal cross-setting result exists.
 
-The ICP characterization of H (Section~\ref{sec:icp}) is the weakest of the three capability definitions. S (retraction pair) and D (classifier dichotomy) have direct categorical analogs (section-retraction, decidable subobject classifier). ICP is a fragment of internal composition — weaker than a full internal hom. A categorical characterization of H as a universal property (e.g., ``evaluation factors through an internal hom'') remains open.
+The ICP characterization of H (Section~\ref{sec:icp}) is a universal theorem: $\ICP \iff \text{Compose} + \text{Inert}$ for any magma on a 2-pointed set, proved by pure logic in Lean. ICP is also invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}). However, while S and D have direct categorical analogs (section-retraction~\cite{maclane71}, decidable subobject classifier~\cite{johnstone02}), ICP is a fragment of internal composition — weaker than a full internal hom. A categorical characterization of H as a universal property remains open.
 
 \paragraph{The equivalence class of realizations.}
 The realization freedom result (Section~\ref{sec:realization}) shows that each capability admits multiple axiom forms. The specific role inventory (the correspondence to McCarthy's Lisp primitives) depends on the chosen realization. The McCarthy form is distinguished by minimizing the classifier count — a criterion intrinsic to the framework — but is not selected by a categorical universal property. Whether a deeper characterization exists is open.
