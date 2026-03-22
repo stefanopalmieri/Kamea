@@ -2,11 +2,11 @@
 
 ## Summary
 
-The three capabilities — self-simulation (S), self-description (D), self-hosting (H) — correspond to three standard categorical enrichment steps applied to finite extensional magmas. No capability implies any other (proved by counterexample at N=8 and N=10). All three coexist at N=10.
+The three capabilities — self-representation (S), self-description (D), self-execution (H) — correspond to three standard categorical enrichment steps applied to finite extensional magmas. No capability implies any other (proved by counterexample at N=8 and N=10). All three coexist at N=10.
 
 | Capability | Categorical Structure | What's Internalized | Standard Analog |
 |---|---|---|---|
-| **S** (self-simulating) | Faithful magma + section-retraction pair | Naming | Gödel numbering; representability |
+| **S** (self-representing) | Faithful magma + section-retraction pair | Naming | Gödel numbering; representability |
 | **D** (self-describing) | + Subobject classifier + dichotomy | Judging | Subobject classifier (topos) |
 | **H** (self-hosting) | + Internal composition + substrate + fixpoint | Evaluating | Internal hom (closed category) |
 

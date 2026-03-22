@@ -226,13 +226,13 @@ The Kripke dichotomy is the axiom that bridges the gap: it says every non-absorb
 Three levels of finite magma:
 
 ```
-Self-simulating magma:     computes its own table (retraction pair suffices)
+Self-representing magma:   computes its own table (retraction pair suffices)
                            no clean roles, no walls
 
 Self-describing magma:     + Kripke dichotomy (three clean categories)
                            roles are coherent, walls are hard
 
-Self-hosting magma (Ψ):    + compose + inert (evaluator internalized)
+Self-executing magma (Ψ):  + compose + inert (self-execution)
                            no external machine needed
 ```
 

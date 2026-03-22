@@ -1,6 +1,6 @@
 # Presentation-Independent Characterization of H
 
-*The evaluator internalization capability corresponds to a standard categorical structure: partial internal composition.*
+*The self-execution capability corresponds to a standard categorical structure: partial internal composition.*
 
 ---
 
@@ -86,7 +86,7 @@ This is a fragment of monoidal closure: not every composite is representable, bu
 
 | Capability | Categorical property | Finite-algebra definition |
 |---|---|---|
-| **S** (self-simulating) | Section-retraction pair | Retraction pair on core |
+| **S** (self-representing) | Section-retraction pair | Retraction pair on core |
 | **D** (self-describing) | Decidable subobject classifier | Every non-absorber is all-boolean or all-non-boolean on core |
 | **H** (self-hosting) | Partial internal composition | Some element's action on core factors non-trivially through two others, one core-preserving |
 

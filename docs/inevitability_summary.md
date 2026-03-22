@@ -49,7 +49,7 @@ Two axioms internalize the evaluation machine into the algebra. These are NOT de
 - **Compose** (η·x = ρ·(g·x)): algebraic sequencing. The machine's step loop provides sequential execution externally. The Compose axiom internalizes this: composing means packaging via g then dispatching via ρ, all within a single algebraic operation.
 - **Inert/Substrate** (g as CONS): algebraic storage. The machine's registers provide non-destructive variable binding externally. The inert element g provides in-algebra storage: it holds without transforming.
 
-This is what distinguishes Ψ from a bare self-simulating magma and what terminates Smith's infinite regress. The instruction set (Layer 0) says what computations are possible. The machine (this layer) says those computations can happen inside the algebra, with no external evaluator needed.
+This is what distinguishes Ψ from a bare self-representing magma and what terminates Smith's infinite regress. The instruction set (Layer 0) says what computations are possible. The machine (this layer) says those computations can happen inside the algebra, with no external evaluator needed.
 
 **Evidence**: SAT counterexamples (Tests D and E in `self_simulation_investigation.py`) confirm both axioms are algebraically independent of self-simulation. Models satisfying retraction + classifier + Kripke + Branch exist without Compose and without Inert.
 
@@ -141,7 +141,7 @@ Self-simulation forces injectivity (Lean-proved) and suffices for any model (ver
 Three levels of finite magma:
 
 ```
-Self-simulating magma:     retraction pair + extensionality
+Self-representing magma:   retraction pair + extensionality
                            computes own table (Lean: injectivity forced)
                            no clean roles, no walls, machine external
 
@@ -150,11 +150,11 @@ Self-describing magma:     + Kripke dichotomy
                            interpretable as a computational system
 
 Self-hosting magma (Ψ):    + Compose + Inert
-                           evaluator internalized, no external machine
+                           self-executing, no external machine
                            Smith's tower terminates
 ```
 
-The gap between self-simulating and self-describing is the Kripke wall. The gap between self-describing and self-hosting is machine internalization.
+The gap between self-representing and self-describing is the Kripke wall. The gap between self-describing and self-hosting is machine internalization.
 
 ---
 

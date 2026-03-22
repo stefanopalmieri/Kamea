@@ -49,9 +49,9 @@
 \keywords{finite algebra, reflective computation, independence, Lean~4, machine-checked proofs}
 
 \begin{abstract}
-We identify three capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and prove they are fully independent in finite extensional magmas: no capability implies any other. Each capability has a single-concept, presentation-independent definition. Self-simulation is the existence of a section-retraction pair. Self-description is the classifier dichotomy: every non-absorber element is either entirely boolean-valued or entirely non-boolean-valued on the core. Evaluator internalization is the Internal Composition Property: some element's action on core factors non-trivially through two others, one core-preserving.
+We identify three capabilities of reflective computation — self-representation, self-description, and self-execution — and prove they are fully independent in finite extensional magmas: no capability implies any other. Each capability has a single-concept, presentation-independent definition. Self-representation is the existence of a section-retraction pair. Self-description is the classifier dichotomy: every non-absorber element is either entirely boolean-valued or entirely non-boolean-valued on the core. Self-execution is the Internal Composition Property: some element's action on core factors non-trivially through two others, one core-preserving.
 
-We prove independence by exhibiting Lean-verified finite counterexamples in all four non-trivial directions ($N\!=\!8$ and $N\!=\!10$), exhibit a tight coexistence witness at $N\!=\!10$, prove the three-category decomposition is an algebraic invariant, and show the magma setting is necessary: no associative magma admits the classifier dichotomy (ruling out semigroups, monoids, and groups). All results are machine-checked in Lean~4, zero \texttt{sorry}.
+We prove independence by exhibiting Lean-verified finite counterexamples in all four non-trivial directions ($N\!=\!8$ and $N\!=\!10$), exhibit a coexistence witness at $N\!=\!10$, prove the three-category decomposition is an algebraic invariant, and show the magma setting is necessary: no associative magma admits the classifier dichotomy (ruling out semigroups, monoids, and groups). All results are machine-checked in Lean~4, zero \texttt{sorry}.
 \end{abstract}
 
 \maketitle
@@ -60,33 +60,28 @@ We prove independence by exhibiting Lean-verified finite counterexamples in all 
 \section{Introduction}
 % ══════════════════════════════════════════════════════════════
 
-When a programmer writes a meta-circular evaluator, how many things are they doing? The standard answer is one: building a self-interpreter. The evaluator encodes programs as data, classifies expressions by type, and reduces them — all in a single recursive function. These mechanisms feel inseparable because they always appear together.
+Meta-circular evaluators combine three mechanisms: encoding programs as data, classifying expressions by type, and reducing them. These co-occur in practice, but we prove they are independent: no mechanism implies any other in finite extensional magmas.
 
-But they need not. A system can encode its own elements without classifying them (a G\"odel numbering has no type system). It can classify without evaluating (a type checker need not run programs). It can evaluate without classifying (an untyped reducer applies rules without sorting expressions into categories). Each of these is familiar in isolation. What is not obvious is whether the combinations are forced — whether, say, the ability to self-evaluate \emph{requires} the ability to classify, or merely co-occurs with it in practice.
-
-This paper answers the question for finite algebras: the three mechanisms are fully independent. We exhibit concrete finite structures where any one is present and the others absent. The separation is not a matter of expressiveness or convenience — it is a theorem, machine-checked in Lean.
-
-Specifically, we define three capabilities of a finite extensional magma~\cite{burris81} (a set with a binary operation whose left-regular representation is faithful):
+We define three capabilities of a finite extensional magma~\cite{burris81} (a set with a binary operation whose left-regular representation is faithful):
 
 \begin{itemize}
-  \item \textbf{Self-simulation (S):} the existence of a section-retraction pair on the core — elements can encode and decode each other.
+  \item \textbf{Self-representation (S):} the existence of a section-retraction pair on the core — elements can encode and decode each other.
   \item \textbf{Self-description (D):} the classifier dichotomy — every non-absorber element is either entirely boolean-valued or entirely non-boolean-valued on the core, creating a clean partition into zeros, classifiers, and non-classifiers.
-  \item \textbf{Evaluator internalization (H):} the Internal Composition Property (ICP) — some element's action on core factors non-trivially as $a \dotop x = c \dotop (b \dotop x)$ with $b$ core-preserving, $a \neq b \neq c$ pairwise distinct, and $a$ taking $\geq 2$ distinct values.
+  \item \textbf{Self-execution (H):} the Internal Composition Property (ICP) — some element's action on core factors non-trivially as $a \dotop x = c \dotop (b \dotop x)$ with $b$ core-preserving, $a \neq b \neq c$ pairwise distinct, and $a$ taking $\geq 2$ distinct values.
 \end{itemize}
 
 We prove these three capabilities are fully independent: no capability implies any other. Four Lean-verified finite counterexamples establish all four non-trivial directions (the remaining two are definitional: both D and H are formalized on top of S). A Lean-verified witness shows all three capabilities coexist at $N\!=\!10$.
 
-The three-category decomposition induced by D (zeros, classifiers, non-classifiers) is proved to be an algebraic invariant: it is preserved by all magma isomorphisms that respect the absorbers. The ICP is proved logically equivalent to the standard operational axioms (Compose + Inert), giving evaluator internalization a single-concept characterization on par with S and D.
+The three-category decomposition induced by D (zeros, classifiers, non-classifiers) is proved to be an algebraic invariant: it is preserved by all magma isomorphisms that respect the absorbers. The ICP is proved logically equivalent to the standard operational axioms (Compose + Inert), giving self-execution a single-concept characterization on par with S and D.
 
 All results are formalized in Lean~4~\cite{moura21} and verified by \texttt{lake build}, zero \texttt{sorry}. The proofs divide into universal algebraic theorems (proved by pure equational reasoning, no \texttt{decide}) and model-specific verifications (proved by \texttt{native\_decide} on concrete Cayley tables).
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples at $N\!=\!8$ and $N\!=\!10$ (Section~\ref{sec:independence}).
-  \item A coexistence witness at $N\!=\!10$ (Section~\ref{sec:bound}).
+  \item A characterization of H: the ICP is logically equivalent to Compose+Inert (Section~\ref{sec:icp}).
+  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples at $N\!=\!8$ and $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!10$ (Section~\ref{sec:bound}).
   \item Universal algebraic obstructions: no $\DRM$ has a right identity or is associative, ruling out semigroups, monoids, and groups (Section~\ref{sec:universal}).
   \item A decomposition invariance theorem: the three-category partition is preserved by isomorphisms (Section~\ref{sec:invariance}).
-  \item A characterization of H: the ICP is logically equivalent to Compose+Inert (Section~\ref{sec:icp}).
 \end{enumerate}
 
 % ══════════════════════════════════════════════════════════════
@@ -96,15 +91,20 @@ All results are formalized in Lean~4~\cite{moura21} and verified by \texttt{lake
 
 Throughout, $(S, \dotop)$ is a finite magma on $\Fin(n) = \{0, 1, \ldots, n-1\}$ with binary operation $\dotop : \Fin(n) \times \Fin(n) \to \Fin(n)$.
 
-\begin{definition}[Faithful Retract Magma]
-\label{def:frm}
-A \emph{Faithful Retract Magma} $(\FRM)$ is a tuple $(S, \dotop, z_1, z_2, s, r)$ where:
+\begin{definition}[Extensional 2-Pointed Magma]
+\label{def:epm}
+An \emph{extensional 2-pointed magma} is a tuple $(S, \dotop, z_1, z_2)$ where:
 \begin{enumerate}
   \item $z_1, z_2 \in S$ are distinct \emph{left-absorbers}: $z_i \dotop x = z_i$ for all $x$.
   \item No other element is a left-absorber.
   \item \emph{Extensionality}: if $a \dotop x = b \dotop x$ for all $x$, then $a = b$.
-  \item $s, r \in \core(S) := S \setminus \{z_1, z_2\}$ form a \emph{retraction pair}: $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure).
 \end{enumerate}
+We write $\core(S) := S \setminus \{z_1, z_2\}$ for the non-absorber elements.
+\end{definition}
+
+\begin{definition}[Faithful Retract Magma]
+\label{def:frm}
+A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure).
 \end{definition}
 
 The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. This is the finite algebraic analog of a G\"odel numbering.
@@ -113,13 +113,13 @@ The retraction pair provides encoding infrastructure: element $a$ can be represe
 \label{def:drm}
 A \emph{Dichotomic Retract Magma} $(\DRM)$ extends $\FRM$ with:
 \begin{enumerate}
-  \item A \emph{classifier} $c \in \core(S)$ with $c \dotop x \in \{z_1, z_2\}$ for all $x$.
+  \item A \emph{classifier} $\tau \in \core(S)$ with $\tau \dotop x \in \{z_1, z_2\}$ for all $x$.
   \item The \emph{classifier dichotomy}: for every $y \in \core(S)$, either
     \begin{itemize}
       \item $y \dotop x \in \{z_1, z_2\}$ for all $x \in \core(S)$ \quad ($y$ is a \emph{classifier}), or
       \item $y \dotop x \notin \{z_1, z_2\}$ for all $x \in \core(S)$ \quad ($y$ is a \emph{non-classifier}).
     \end{itemize}
-  \item At least one non-classifier exists. (Without this, every $\FRM$ where all non-absorbers happen to be classifiers would vacuously satisfy D. The non-degeneracy condition ensures the dichotomy is a genuine partition into two inhabited classes, not a trivial collapse.)
+  \item At least one non-classifier exists. Without this, every $\FRM$ whose core elements all happen to map core into $\{z_1, z_2\}$ would vacuously satisfy D — the ``dichotomy'' would be a single inhabited class. This condition is used only to exclude that degeneracy; no theorem in Sections~\ref{sec:universal}--\ref{sec:icp} depends on it.
 \end{enumerate}
 \end{definition}
 
@@ -138,10 +138,10 @@ A magma $(S, \dotop, z_1, z_2)$ satisfies the \emph{Internal Composition Propert
 \end{enumerate}
 \end{definition}
 
-ICP says: the left-regular representation admits a non-trivial factorization on core. One element's action decomposes as ``store, then process'' — a single fragment of internal composition. This is the evaluator internalization core: the algebra contains an element representing a composite of two of its own operations.
+ICP says: the left-regular representation admits a non-trivial factorization on core. One element's action decomposes as ``store, then process'' — a single fragment of internal composition. In Section~\ref{sec:icp} we prove that $\ICP$ is equivalent to the standard operational axioms Compose+Inert (Theorem~\ref{thm:icp-equiv}).
 
 \begin{definition}[Capability S]
-An $\FRM$ has capability $S$ (self-simulation) by definition.
+An $\FRM$ has capability $S$ (self-representation) by definition.
 \end{definition}
 
 \begin{definition}[Capability D]
@@ -149,7 +149,7 @@ A $\DRM$ has capability $D$ (self-description) by definition.
 \end{definition}
 
 \begin{definition}[Capability H]
-An $\FRM$ has capability $H$ (evaluator internalization) if it satisfies the $\ICP$.
+An $\FRM$ has capability $H$ (self-execution) if it satisfies the $\ICP$.
 \end{definition}
 
 Note that S is the base: both D and H are defined as extensions of $\FRM$, so both imply S by construction. The directions D $\Rightarrow$ S and H $\Rightarrow$ S are therefore definitional, not theorems. The four \emph{non-trivial} independence directions are S $\not\Rightarrow$ D, D $\not\Rightarrow$ H, H $\not\Rightarrow$ D, and S $\not\Rightarrow$ H.
@@ -159,16 +159,11 @@ Note that S is the base: both D and H are defined as extensions of $\FRM$, so bo
 \label{sec:universal}
 % ══════════════════════════════════════════════════════════════
 
-All theorems in this section hold for \emph{every} $\DRM$, proved by pure algebraic reasoning (no \texttt{decide}). They are formalized in \texttt{CatKripkeWallMinimal.lean}, \texttt{NoCommutativity.lean}, and \texttt{Functoriality.lean}.
+Theorems~\ref{thm:three-cat}--\ref{thm:no-assoc} hold for \emph{every} $\DRM$, proved by pure algebraic reasoning (no \texttt{decide}). They are formalized in \texttt{CatKripkeWallMinimal.lean} and \texttt{NoCommutativity.lean}.
 
 \begin{theorem}[Three-Category Decomposition]
 \label{thm:three-cat}
-In any $\DRM$, every element is a zero, a classifier, or a non-classifier. The classes are pairwise disjoint.
-\end{theorem}
-
-\begin{theorem}[Classifier Wall]
-\label{thm:wall}
-$C \cap N = \emptyset$: no element is partially classifying.
+In any $\DRM$, every element is a zero, a classifier, or a non-classifier. The classes are pairwise disjoint: in particular, $C \cap N = \emptyset$ (no element is partially classifying).
 \end{theorem}
 
 \begin{theorem}[Retraction Pair Placement]
@@ -197,20 +192,20 @@ No $\DRM$ is associative. In particular, no $\DRM$ is a semigroup, monoid, or gr
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Assume associativity. Then $\text{cls} \dotop (a \dotop b) = (\text{cls} \dotop a) \dotop b = \text{cls} \dotop a$ for all $a, b$, since $\text{cls} \dotop a \in \{z_1, z_2\}$ (classifier), and absorbers absorb on the left. So the classifier absorbs on the right.
+Assume associativity. Then $\tau \dotop (a \dotop b) = (\tau \dotop a) \dotop b = \tau \dotop a$ for all $a, b$, since $\tau \dotop a \in \{z_1, z_2\}$ (classifier), and absorbers absorb on the left. So $\tau$ absorbs on the right.
 
-This right-absorption property has two consequences. First, for any core $x$: since $x = r \dotop (s \dotop x)$ (retraction pair), right-absorption gives $\text{cls} \dotop x = \text{cls} \dotop (r \dotop (s \dotop x)) = \text{cls} \dotop r$. So $\text{cls}$ is constant on core at the value $c = \text{cls} \dotop r \in \{z_1, z_2\}$. Second, $\text{cls}$ must hit both $z_1$ and $z_2$ (else extensionality forces $\text{cls} = z_i$); let $b_1, b_2$ witness this. Then $\text{cls} \dotop z_1 = \text{cls} \dotop (\text{cls} \dotop b_1) = \text{cls} \dotop \text{cls} = c$ (since $\text{cls}$ is core), and symmetrically $\text{cls} \dotop z_2 = c$. So $\text{cls}$ is constant everywhere. By extensionality, $\text{cls} = z_i$, contradicting $\text{cls} \neq z_1, z_2$.
+This right-absorption property has two consequences. First, for any core $x$: since $x = r \dotop (s \dotop x)$ (retraction pair), right-absorption gives $\tau \dotop x = \tau \dotop (r \dotop (s \dotop x)) = \tau \dotop r$. So $\tau$ is constant on core at the value $v = \tau \dotop r \in \{z_1, z_2\}$. Second, $\tau$ must hit both $z_1$ and $z_2$ (else extensionality forces $\tau = z_i$); let $b_1, b_2$ witness this. Then $\tau \dotop z_1 = \tau \dotop (\tau \dotop b_1) = \tau \dotop \tau = v$ (since $\tau$ is core), and symmetrically $\tau \dotop z_2 = v$. So $\tau$ is constant everywhere. By extensionality, $\tau = z_i$, contradicting $\tau \neq z_1, z_2$.
 
-The full proof is algebraic (no \texttt{decide}) and uses neither the dichotomy nor the non-classifier existence axiom — only the classifier, the retraction pair, and extensionality. Lean file: \texttt{CatKripkeWallMinimal.lean}.\qed
+The full proof is algebraic (no \texttt{decide}) and uses neither the dichotomy nor the non-classifier existence axiom — only the classifier, the retraction pair, and extensionality. Lean file: \texttt{CatKripkeWallMinimal.lean}.
 \end{proof}
 
 \subsection{Self-Simulation Injectivity}
 
-The following results show that capability S alone constrains the algebra — even without D or H. They hold for any $\FRM$ that self-simulates (proved in \texttt{SelfSimulation.lean}). Self-simulation means: there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$.
+The theorems above concern $\DRM$s (capability D). The following results show that capability S (self-representation) alone already constrains the algebra. They hold for any $\FRM$ that \emph{self-simulates} — i.e., there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$. Self-representation provides the encoding infrastructure; self-simulation is the process of using it to compute the Cayley table. Proved in \texttt{SelfSimulation.lean}.
 
 \begin{theorem}[Partial Application Injectivity]
 \label{thm:injectivity}
-If an $\FRM$ self-simulates, the partial application map $a \mapsto \text{eval}(\text{App}(t, \text{rep}(a)))$ is injective.
+If a self-representing $\FRM$ self-simulates, the partial application map $a \mapsto \text{eval}(\text{App}(t, \text{rep}(a)))$ is injective.
 \end{theorem}
 
 \begin{corollary}
@@ -242,13 +237,99 @@ Any $\DRM$ isomorphism preserves the three-category decomposition: $\varphi$ map
 
 \emph{Non-classifiers}: symmetric argument using injectivity to transport $\notin \{z_1, z_2\}$.
 
-The full proof is algebraic (no \texttt{decide}) and formalized in \texttt{Functoriality.lean}.\qed
+The full proof is algebraic (no \texttt{decide}) and formalized in \texttt{Functoriality.lean}.
 \end{proof}
+
+% ══════════════════════════════════════════════════════════════
+\section{ICP Characterization}
+\label{sec:icp}
+% ══════════════════════════════════════════════════════════════
+
+Self-representation (S) already provides 4 role elements — the retraction pair $(s, r)$, a zero $z_1$, and the operation $\dotop$ itself — sufficient to encode, decode, and look up any entry in the Cayley table. But this requires an \emph{external} machine to supply control flow: dispatch, composition, recursion. Self-execution (H) replaces the external machine with algebra: dedicated elements whose left-multiplication implements dispatch ($\rho$), composition ($\eta = \rho \circ g$), and storage ($g$). The $\ICP$ captures exactly this: some element's action factors through two others, meaning the algebra contains a fragment of its own control flow as an element.
+
+The standard formulation uses two operational axioms:
+\begin{itemize}
+  \item \emph{Compose}: $\eta \dotop x = \rho \dotop (g \dotop x)$ for all $x \in \core(S)$
+  \item \emph{Inert}: $g \dotop x \notin \{z_1, z_2\}$ for all $x \in \core(S)$
+\end{itemize}
+with $\eta, g, \rho$ pairwise distinct non-absorbers and $\eta$ non-trivial ($\geq 2$ distinct values on core).
+
+\begin{theorem}[$\ICP$ Equivalence]
+\label{thm:icp-equiv}
+For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
+\[
+\ICP \iff \text{Compose} + \text{Inert} \text{ (with non-trivial composite)}.
+\]
+\end{theorem}
+
+\begin{proof}
+The bijection between witness triples is $(\eta, g, \rho) = (a, b, c)$: the composed element $a$ is $\eta$, the core-preserving element $b$ is $g$, and the outer element $c$ is $\rho$. Under this identification the factorization $a \dotop x = c \dotop (b \dotop x)$ becomes $\eta \dotop x = \rho \dotop (g \dotop x)$ (Compose), core-preservation of $b$ becomes Inert, and the remaining conditions (pairwise distinct, non-absorber) transfer directly.
+
+The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies. Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$. Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$.
+
+The proof is pure equational logic — no \texttt{decide}, no case analysis on $n$. It holds for every finite magma on a 2-pointed set, of any size. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.
+\end{proof}
+
+This equivalence gives H a single-concept definition: the left-regular representation contains a non-trivially composed element. The operational axioms (Compose, Inert) and the $\ICP$ are the same property under variable renaming. Additionally, $\ICP$ is invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}; \texttt{ICP.lean}, theorem \texttt{FRMIso.preserves\_icp}).
+
+\paragraph{Enrichments.}
+Two additional axioms act as \emph{bridges} between capabilities, not capabilities themselves:
+\begin{itemize}
+  \item \emph{Branch}: $\rho \dotop x = f \dotop x$ if $\tau \dotop x = z_1$, else $\rho \dotop x = g \dotop x$. Branch connects D to H: the classifier's judgment controls the evaluator's dispatch. It requires both D and H as prerequisites.
+  \item \emph{Y} (fixed-point): $Y \dotop \rho = \rho \dotop (Y \dotop \rho)$ with $Y \dotop \rho \in \core(S)$. Y extends H across the decidability boundary: bounded evaluation becomes unbounded recursion. It requires H as a prerequisite.
+\end{itemize}
+Both are irredundant (SAT-verified) and used in the accompanying artifact (a compiled reflective tower), but are not required for the independence or invariance results of this paper.
+
+\begin{figure}[t]
+\centering
+\begin{tabular}{@{}r@{~}l@{\quad}l@{}}
+\textsc{Input:} & $\text{rep}(a),\ \text{rep}(b)$ & \emph{S provides: $s, z_1$} \\
+$\to$ \textsc{Decode:} & peel $s$-layers via $r$ & \emph{S provides: $r$} \\
+$\to$ \textsc{Lookup:} & $\text{table}[a][b]$ & \emph{the algebra itself} \\
+$\to$ \textsc{Dispatch:} & branch on classifier & \emph{D provides: $\tau$} \\
+$\to$ \textsc{Compose:} & $\eta \dotop x = \rho \dotop (g \dotop x)$ & \emph{H provides: $\eta, g, \rho$} \\
+$\to$ \textsc{Encode:} & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1$} \\
+\textsc{Output:} & $\text{rep}(a \dotop b)$ & \\
+\end{tabular}
+\caption{Information flow in self-simulation. S provides encoding/decoding (I/O). The algebra provides the lookup (computation). D organizes elements into roles (classification). H replaces external control flow with internal composition (evaluation). Without H, an external machine must supply the Compose and Dispatch steps.}
+\label{fig:flow}
+\end{figure}
 
 % ══════════════════════════════════════════════════════════════
 \section{Independence}
 \label{sec:independence}
 % ══════════════════════════════════════════════════════════════
+
+\begin{figure}[t]
+\centering
+\setlength{\unitlength}{1em}
+\begin{picture}(14,8)
+% Nodes
+\put(7,0.5){\makebox(0,0){\framebox{S}}}
+\put(2,6.5){\makebox(0,0){\framebox{D}}}
+\put(12,6.5){\makebox(0,0){\framebox{H}}}
+% Upward arrows (definitional implications)
+\put(6.2,1.3){\vector(-1,1){3.4}}
+\put(7.8,1.3){\vector(1,1){3.4}}
+% Crossed-out downward arrows (non-implications)
+\put(3.6,5.5){\vector(1,-1){2.6}}
+\put(4.2,4.0){\makebox(0,0){\small$\times$}}
+\put(10.4,5.5){\vector(-1,-1){2.6}}
+\put(9.8,4.0){\makebox(0,0){\small$\times$}}
+% Crossed-out horizontal arrows (non-implications)
+\put(3.5,6.5){\vector(1,0){7}}
+\put(7,7.1){\makebox(0,0){\small$\times$}}
+\put(10.5,6.5){\vector(-1,0){7}}
+\put(7,5.9){\makebox(0,0){\small$\times$}}
+% Labels
+\put(3.0,3.0){\makebox(0,0){\scriptsize$N\!=\!8$}}
+\put(11.0,3.0){\makebox(0,0){\scriptsize$N\!=\!4$}}
+\put(5.2,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
+\put(8.8,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
+\end{picture}
+\caption{Independence structure. Upward arrows are definitional (D and H both extend S). Crossed arrows are non-implications, each proved by a Lean-verified finite counterexample at the indicated size.}
+\label{fig:independence}
+\end{figure}
 
 \begin{theorem}[Full Independence]
 \label{thm:independence}
@@ -268,12 +349,12 @@ Each direction is proved by exhibiting a concrete Cayley table and verifying the
 An $8 \times 8$ Cayley table defining an $\FRM$ with $Q = 2$, $E = 3$ (retraction pair), classifier at index~4, and two mixed elements (indices~5 and~7) whose rows on core contain both boolean and non-boolean values. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
-A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$ (Definition~\ref{def:icp}; equivalence with Compose+Inert established in Section~\ref{sec:icp}), by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
+A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$ (Theorem~\ref{thm:icp-equiv}), by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
 
 \paragraph{$H \not\Rightarrow D$ ($N\!=\!10$, diagonal).}
-A $10 \times 10$ Cayley table defining an $\FRM$ with a retraction pair, Branch, Compose ($\eta \dotop x = \rho \dotop (g \dotop x)$), Inert ($g$ preserves core), and Y fixed-point — all evaluation machinery — yet element~5 has both boolean and non-boolean outputs on core, violating the dichotomy. Lean proves both that $\ICP$ holds (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$) and that the dichotomy fails. Lean file: \texttt{Countermodels10.lean}.
+A $10 \times 10$ Cayley table defining an $\FRM$ satisfying $\ICP$ (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$) yet violating the dichotomy: element~5 has both boolean and non-boolean outputs on core. Lean file: \texttt{Countermodels10.lean}.
 
-All tables are generated by Z3 SAT solver and independently verified. The Cayley tables are frozen in the repository (\texttt{counterexamples.json}) for reproducibility.\qed
+All tables are generated by Z3 SAT solver and independently verified. The Cayley tables are frozen in the repository (\texttt{counterexamples.json}) for reproducibility.
 \end{proof}
 
 \paragraph{Methodology.}
@@ -293,58 +374,24 @@ The three capabilities S, D, and H are simultaneously satisfiable at $N\!=\!10$.
 \end{theorem}
 
 \begin{proof}
-A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\DRM$ (Lean-verified: \texttt{witness10\_drm}) and satisfies $\ICP$ (Lean-verified: \texttt{w10\_has\_icp}). The witness uses 10 pairwise distinct elements in all roles: 2 absorbers, 2 retraction pair, 1 classifier, 3~$\ICP$ witnesses, and 2 enrichment elements ($f$ for Branch dispatch, $Y$ for recursion). Lean file: \texttt{Witness10.lean}.\qed
+A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\DRM$ (Lean-verified: \texttt{witness10\_drm}) and satisfies $\ICP$ (Lean-verified: \texttt{w10\_has\_icp}). The witness uses 10 pairwise distinct elements in all roles: 2 absorbers, 2 retraction pair, 1 classifier, 3~$\ICP$ witnesses, and 2 enrichment elements ($f$ for Branch dispatch, $Y$ for recursion). Lean file: \texttt{Witness10.lean}.
 \end{proof}
 
-\paragraph{Tightness.}
-The bound $N\!=\!10$ is tight under the standard distinctness requirement (all role-bearing elements pairwise distinct): 10 elements need $N \geq 10$ by counting, and the Lean witness achieves it. Whether relaxing distinctness permits smaller witnesses is open.
-
-% ══════════════════════════════════════════════════════════════
-\section{ICP Characterization}
-\label{sec:icp}
-% ══════════════════════════════════════════════════════════════
-
-The standard formulation of evaluator internalization uses two operational axioms:
-\begin{itemize}
-  \item \emph{Compose}: $\eta \dotop x = \rho \dotop (g \dotop x)$ for all $x \in \core(S)$
-  \item \emph{Inert}: $g \dotop x \notin \{z_1, z_2\}$ for all $x \in \core(S)$
-\end{itemize}
-with $\eta, g, \rho$ pairwise distinct non-absorbers and $\eta$ non-trivial ($\geq 2$ distinct values on core).
-
-\begin{theorem}[$\ICP$ Equivalence]
-\label{thm:icp-equiv}
-For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
-\[
-\ICP \iff \text{Compose} + \text{Inert} \text{ (with non-trivial composite)}.
-\]
-\end{theorem}
-
-\begin{proof}
-This is a \emph{universal} theorem, quantified over all $n$ and all binary operations. The witness triple $(a, b, c)$ of $\ICP$ maps to $(g, \rho, \eta) = (b, c, a)$ for Compose+Inert, and vice versa. The nine conditions (pairwise distinct, non-absorber, core-preservation, factorization, non-triviality) match exactly under this relabeling. The proof is pure equational logic — no \texttt{decide}, no \texttt{native\_decide}, no case analysis on $n$. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.\qed
-\end{proof}
-
-This equivalence gives H a single-concept definition: the left-regular representation contains a non-trivially composed element. The operational axioms (Compose, Inert) and the $\ICP$ are the same property under variable renaming. Additionally, $\ICP$ is invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}; \texttt{ICP.lean}, theorem \texttt{FRMIso.preserves\_icp}).
-
-\paragraph{Enrichments.}
-Two additional axioms are used in the full reflective architecture but are not part of the $\ICP$ core:
-\begin{itemize}
-  \item \emph{Branch}: $\rho \dotop x = f \dotop x$ if $c \dotop x = z_1$, else $\rho \dotop x = g \dotop x$. This connects D (the classifier's judgment) to H (the evaluator's dispatch).
-  \item \emph{Y} (fixed-point): $Y \dotop \rho = \rho \dotop (Y \dotop \rho)$ with $Y \dotop \rho \in \core(S)$. This crosses the decidability boundary from bounded to unbounded evaluation.
-\end{itemize}
-Both are irredundant (SAT-verified) but not part of the core independence result. They connect the capabilities and add computational power.
+\paragraph{Minimum cardinality.}
+The $N\!=\!10$ witness uses pairwise distinct elements in all roles, but the definitions do not require this: the $\ICP$ witnesses $(a, b, c)$ need only be pairwise distinct non-absorbers and may coincide with the retraction pair or classifier. SAT search finds S+D+$\ICP$ models at $N\!=\!6$ where retraction pair members serve simultaneously as $\ICP$ witnesses. Whether $N\!=\!5$ admits S+D+H is open (SAT returns UNSAT at $N\!=\!5$ for the specific axiom encoding tested, but we have not proved a universal lower bound). The current state: $N\!=\!6$ is the smallest known witness; $N\!=\!10$ is the smallest Lean-verified witness.
 
 % ══════════════════════════════════════════════════════════════
 \section{Categorical Context}
 \label{sec:categorical}
 % ══════════════════════════════════════════════════════════════
 
-Each capability has connections to standard categorical vocabulary, of varying strength:
+Each capability connects to standard categorical vocabulary.
 
-\paragraph{S = section-retraction pair (exact).} The retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core is a standard categorical construction~\cite{maclane71}. Definition~\ref{def:frm} is a section-retraction pair in the endomorphism category of the magma. The connection is formal: the Lean formalization uses exactly this structure.
+\paragraph{S = section-retraction pair.} Definition~\ref{def:frm} is a section-retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core~\cite{maclane71} in the endomorphism category of the magma. The connection is exact: the Lean formalization uses this structure directly.
 
-\paragraph{D $\approx$ decidable subobject classifier (analogy).} In a topos, the subobject classifier $\Omega$ partitions morphisms into $\Omega$-valued and non-$\Omega$-valued~\cite{johnstone02}. The classifier dichotomy (Definition~\ref{def:drm}) is a finite analog: every non-absorber is either entirely $\{z_1, z_2\}$-valued or entirely non-$\{z_1, z_2\}$-valued on core. The connection is an analogy, not a formal functor: our dichotomy requires totality (no partial classifiers), a finiteness-dependent condition with no direct topos-theoretic counterpart. What is proved: the three-category decomposition and its invariance under isomorphisms (Theorem~\ref{thm:functoriality}). What is analogical: the identification of $C$ with the subobject classifier image.
+\paragraph{D $\approx$ decidable subobject classifier.} The classifier dichotomy parallels the $\Omega$-valued / non-$\Omega$-valued partition in a topos~\cite{johnstone02}. The three-category decomposition and its functoriality (Theorem~\ref{thm:functoriality}) are proved; the identification of $C$ with a subobject classifier image is an analogy (our totality condition — no partial classifiers — has no direct topos-theoretic counterpart).
 
-\paragraph{H: categorical motivation.} The $\ICP$ was motivated by internal composition in monoidal closed categories, where the internal hom $[B, C]$ represents $\mathrm{Hom}(B, C)$ as an object. The $\ICP$ asks for a weaker condition: the left-regular representation contains at least one non-trivially composed element $L_a = L_c \circ L_b$. Full closure ($\{L_a\}$ closed under composition) fails for all tested models. Unlike S, the connection to internal hom is not formal — the $\ICP$ is a concrete algebraic property that we prove equivalent to Compose+Inert (Theorem~\ref{thm:icp-equiv}) and invariant under isomorphisms, but whether it corresponds to a standard categorical universal property remains to be established.
+\paragraph{H $\approx$ partial internal composition.} The $\ICP$ asks that the left-regular representation $\{L_a\}$ contains one non-trivially composed element $L_a = L_c \circ L_b$. This is motivated by internal hom in monoidal closed categories but is weaker: full closure under composition fails in all tested models. The $\ICP$ is proved equivalent to Compose+Inert (Theorem~\ref{thm:icp-equiv}) and invariant under isomorphisms, but whether it corresponds to a standard categorical universal property is open.
 
 % ══════════════════════════════════════════════════════════════
 \section{Related Work}
@@ -352,16 +399,13 @@ Each capability has connections to standard categorical vocabulary, of varying s
 % ══════════════════════════════════════════════════════════════
 
 \paragraph{Reflective towers.}
-Smith's 3-Lisp~\cite{smith84} introduced the reflective tower — an infinite chain of meta-interpreters. Subsequent work~\cite{friedman84,danvy88} explored reification, intensions, and live meta-modification in reflective towers. Amin and Rompf~\cite{amin18} showed how to compile through the tower via stage polymorphism. All of these systems combine self-simulation, self-description, and evaluator internalization without separating them. Our contribution is the separation and the proof that it is genuine (no capability implies any other).
+Smith's 3-Lisp~\cite{smith84} introduced the reflective tower — an infinite chain of meta-interpreters. Subsequent work~\cite{friedman84,danvy88} explored reification, intensions, and live meta-modification in reflective towers. Amin and Rompf~\cite{amin18} showed how to compile through the tower via stage polymorphism. All of these systems combine self-representation, self-description, and self-execution without separating them. Our contribution is the separation and the proof that it is genuine (no capability implies any other).
 
 \paragraph{Self-interpretation.}
 Mogensen~\cite{mogensen92} constructs self-interpreters for the $\lambda$-calculus. Brown and Palsberg~\cite{brown16} show that self-interpretation is possible in strongly-normalizing typed languages, contradicting earlier impossibility results. These works study self-interpretation (our S) but do not address the independence of S from D or H.
 
-\paragraph{Subobject classifiers.}
-The classifier dichotomy (Definition~\ref{def:drm}) is the finite analog of a decidable subobject classifier in topos theory~\cite{johnstone02,maclane92}. The three-category decomposition parallels the partition of morphisms into $\Omega$-valued and non-$\Omega$-valued in a topos, but our dichotomy requires \emph{totality} (no partial classifiers), which is a finiteness-dependent condition.
-
 \paragraph{Algebraic effects and handlers.}
-Plotkin and Power~\cite{plotkin03} decompose computational effects into algebraic operations with generic effects that classify each operation's arity — a structural parallel to our classifier dichotomy. Plotkin and Pretnar~\cite{plotkin09} show that effect handlers are algebra homomorphisms from a free model, with the return clause as section and the handler as retraction — our S is the finite-carrier instance of exactly this structure. Hyland and Power~\cite{hyland07} develop the Lawvere-theoretic framework in which our magma is a model of the free theory on one binary operation. Hyland, Levy, Plotkin, and Power~\cite{hyland06} show that the continuation monad is not algebraic; our no-associativity result (Theorem~\ref{thm:no-assoc}) is a structural parallel — the classifier dichotomy, like continuations, is incompatible with equational collapse. The algebraic effects literature studies finitary theories over infinite carriers; our contribution operates in the complementary setting of finite carriers with no equations.
+Plotkin and Power~\cite{plotkin03} decompose computational effects into algebraic operations with generic effects that classify each operation's arity — a structural parallel to our classifier dichotomy. Plotkin and Pretnar~\cite{plotkin09} show that effect handlers are algebra homomorphisms from a free model, with the return clause as section and the handler as retraction; our S is a structural parallel at finite carrier size (the categorical setup is the same, though our retraction pair is between elements of a single algebra rather than between a free model and an arbitrary algebra). Hyland and Power~\cite{hyland07} develop the Lawvere-theoretic framework in which our magma is a model of the free theory on one binary operation. Hyland, Levy, Plotkin, and Power~\cite{hyland06} show that the continuation monad is not algebraic; the flavor of obstruction is similar to our no-associativity result (Theorem~\ref{thm:no-assoc}), though the mechanisms differ — failure of a monad to admit a presentation by operations and equations vs.\ an algebraic impossibility in a finite magma. The algebraic effects literature studies finitary theories over infinite carriers; our contribution operates in the complementary setting of finite carriers with no equations.
 
 \paragraph{Finite model theory.}
 Independence results via finite counterexamples are standard in finite model theory~\cite{libkin04}. Our contribution is not the technique but the specific separation: three independently-motivated capabilities of reflective computation, shown independent in an algebraic setting, with machine-checked proofs.
@@ -372,30 +416,31 @@ Independence results via finite counterexamples are standard in finite model the
 % ══════════════════════════════════════════════════════════════
 
 \paragraph{The classifier dichotomy is epistemic.}
-The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that evaluation machinery does not force clean classification. A system can evaluate without organizing its elements into coherent roles. The classifier dichotomy is an independent \emph{organizational} property — it makes the algebra legible, not more powerful. This distinction between computational power and structural legibility is, to our knowledge, new.
+Self-representation (S) provides the encoding to compute the Cayley table. Self-description (D) organizes that computation into coherent categories — classifiers that test and non-classifiers that transform. The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that an algebra can \emph{compute} its own operation, and even internalize its own control flow, without \emph{parsing} that operation into meaningful roles. The boundary between S and D — witnessed by the $N\!=\!8$ counterexample — is the boundary between computing and understanding. The classifier dichotomy is an independent organizational property: it makes the algebra legible, not more powerful.
 
 \paragraph{Why magmas?}
-Magmas are extremely general — no associativity, no identity. A natural concern is that the independence result is an artifact of weak structure: in semigroups or monoids, the capabilities might collapse. Two Lean-proved results address this. Theorem~\ref{thm:no-rid} proves that no $\DRM$ has a right identity, ruling out monoids. Theorem~\ref{thm:no-assoc} proves the strictly stronger result: no $\DRM$ is associative, ruling out semigroups, monoids, and groups entirely. The proof (algebraic, no \texttt{decide}) shows that associativity forces the classifier to have a constant row, collapsing it to an absorber. Together, these results show that the magma setting is not conveniently weak — stronger algebraic structures cannot support capability D at all.
+The magma setting is not conveniently weak. Theorem~\ref{thm:no-assoc} shows that associativity forces the classifier to have a constant row, collapsing it to an absorber: no $\DRM$ is a semigroup, monoid, or group. The independence result is not an artifact of missing structure — stronger algebraic structures cannot support capability D at all.
 
 \paragraph{Scope and limitations.}
-Whether analogs of the three-capability separation exist in other settings — $\lambda$-calculus, typed systems, infinite algebras — remains the primary open question. The categorical context (Section~\ref{sec:categorical}) suggests the concepts translate, but the no-associativity result (Theorem~\ref{thm:no-assoc}) means any such translation must work in settings without associativity or identity. No formal cross-setting result exists.
+Whether the three-capability separation appears in other settings ($\lambda$-calculus, typed systems, infinite algebras) is the primary open question. Theorem~\ref{thm:no-assoc} constrains the target: any such translation must work without associativity or identity. A categorical characterization of H as a universal property (stronger than the analogy in Section~\ref{sec:categorical}) is also open.
 
-The ICP characterization of H (Section~\ref{sec:icp}) is a universal theorem: $\ICP \iff \text{Compose} + \text{Inert}$ for any magma on a 2-pointed set, proved by pure logic in Lean. ICP is also invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}). However, while S and D have direct categorical analogs (section-retraction~\cite{maclane71}, decidable subobject classifier~\cite{johnstone02}), ICP is a fragment of internal composition — weaker than a full internal hom. A categorical characterization of H as a universal property remains open.
+\paragraph{The cost of legibility.}
+The three capabilities coexist at $N\!=\!10$ (Section~\ref{sec:bound}). Additional organizational axioms — a structural ladder constraining element interactions, power-associativity, and selection — produce a clean seven-role architecture with separated roles and push the minimum to $N\!=\!12$ (SAT-verified). The gap between 10 and 12 is the cost of legibility: going from a structure that works to one whose roles are interpretable. These organizational axioms are the subject of a companion paper.
 
 \paragraph{Realization freedom.}
-Each capability admits multiple axiom forms — SAT search finds 6 satisfiable Compose variants for H, each producing a different classifier/non-classifier distribution. The independence result holds for all variants. Whether a canonical selection principle exists is open.
+Each capability admits multiple axiom forms. For H, replacing $\eta = \rho \circ g$ with alternatives (e.g., $g \circ \rho$) produces different classifier distributions; the independence result holds for all variants.
 
 % ══════════════════════════════════════════════════════════════
 \section{Conclusion}
 % ══════════════════════════════════════════════════════════════
 
-We have shown that three capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked; the decomposition is invariant; and the magma setting is necessary — no $\DRM$ is associative (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, and groups. The classifier dichotomy is epistemic, not computational: an algebra can evaluate without understanding itself as evaluating.
+We have shown that three capabilities of reflective computation — self-representation, self-description, and self-execution — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked; the decomposition is invariant; and the magma setting is necessary — no $\DRM$ is associative (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, and groups. The classifier dichotomy is epistemic, not computational: an algebra can execute without understanding itself as executing.
 
 \paragraph{Open problems.}
 \begin{enumerate}
   \item \emph{Cross-formalism universality}: Does the three-capability separation appear in the $\lambda$-calculus, typed settings, or infinite algebras? The connection to algebraic effects (Section~\ref{sec:related}) suggests the concepts translate, but the no-associativity obstruction (Theorem~\ref{thm:no-assoc}) constrains the target setting.
   \item \emph{Categorical characterization of H}: Is the ICP equivalent to a standard universal property (e.g., existence of a partial internal hom)?
-  \item \emph{Minimum coexistence bound}: The true minimum for S+D+H lies in $[5, 10]$. SAT search shows $N\!=\!6$ is achievable with role overlap; the exact minimum is open.
+  \item \emph{Minimum coexistence bound}: The smallest known S+D+H witness has $N\!=\!6$ (SAT); the smallest Lean-verified witness has $N\!=\!10$ (Section~\ref{sec:bound}). A universal lower bound is open.
 \end{enumerate}
 
 \paragraph{Artifact.}

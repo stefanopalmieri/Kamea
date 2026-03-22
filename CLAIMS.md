@@ -112,7 +112,7 @@ This file is the canonical status registry for claims made in this repository.
 
 ### Capability Independence (S, D, H)
 
-The three capabilities — self-simulation (S), self-description (D), self-hosting (H) — are fully independent. No capability implies any other. All counterexamples are generated, independently verified, and frozen in `counterexamples.json`.
+The three capabilities — self-representation (S), self-description (D), self-execution (H) — are fully independent. No capability implies any other. All counterexamples are generated, independently verified, and frozen in `counterexamples.json`.
 
 | Claim | Tier | Primary Evidence | Reproduce |
 |---|---|---|---|
