@@ -167,4 +167,93 @@ theorem sdh_icp_witness :
     ∃ (_ : DichotomicRetractMagma 10), HasICP 10 dotW10 0 1 :=
   ⟨witness10_drm, w10_has_icp⟩
 
+-- ═══════════════════════════════════════════════════════════════════
+-- ICP invariance under FRM isomorphisms
+-- ═══════════════════════════════════════════════════════════════════
+
+/-- An FRM isomorphism: a bijective zero-preserving homomorphism. -/
+structure FRMIso {n : Nat} (M₁ M₂ : FaithfulRetractMagma n) where
+  toFun : Fin n → Fin n
+  bij : Function.Bijective toFun
+  hom : ∀ a b : Fin n, toFun (M₁.dot a b) = M₂.dot (toFun a) (toFun b)
+  map_zero₁ : toFun M₁.zero₁ = M₂.zero₁
+  map_zero₂ : toFun M₁.zero₂ = M₂.zero₂
+
+/-- **ICP is invariant under FRM isomorphisms.**
+    If φ : M₁ → M₂ is a bijective zero-preserving homomorphism and M₁ has ICP,
+    then M₂ has ICP. The factorization L_a = L_c ∘ L_b transfers because
+    φ preserves the operation, injectivity preserves distinctness and non-triviality,
+    and surjectivity ensures core-preservation transfers. Algebraic proof,
+    no `decide`. -/
+theorem FRMIso.preserves_icp {n : Nat} {M₁ M₂ : FaithfulRetractMagma n}
+    (φ : FRMIso M₁ M₂) :
+    HasICP n M₁.dot M₁.zero₁ M₁.zero₂ → HasICP n M₂.dot M₂.zero₁ M₂.zero₂ := by
+  intro ⟨a, b, c, hab, hac, hbc, ha1, ha2, hb1, hb2, hc1, hc2,
+         hpres, hfact, ⟨x, y, hx1, hx2, hy1, hy2, hneq⟩⟩
+  refine ⟨φ.toFun a, φ.toFun b, φ.toFun c,
+    -- Pairwise distinct (injectivity)
+    fun h => hab (φ.bij.1 h), fun h => hac (φ.bij.1 h), fun h => hbc (φ.bij.1 h),
+    -- Non-absorber (injectivity + zero-preservation)
+    fun h => ha1 (φ.bij.1 (by rw [h, φ.map_zero₁])),
+    fun h => ha2 (φ.bij.1 (by rw [h, φ.map_zero₂])),
+    fun h => hb1 (φ.bij.1 (by rw [h, φ.map_zero₁])),
+    fun h => hb2 (φ.bij.1 (by rw [h, φ.map_zero₂])),
+    fun h => hc1 (φ.bij.1 (by rw [h, φ.map_zero₁])),
+    fun h => hc2 (φ.bij.1 (by rw [h, φ.map_zero₂])),
+    -- Core-preservation of b
+    ?_, -- Factorization
+    ?_, -- Non-triviality
+    ⟨φ.toFun x, φ.toFun y, ?_, ?_, ?_, ?_, ?_⟩⟩
+  · -- b preserves core: ∀ u, u = z₁' ∨ u = z₂' ∨ (dot₂ (φ b) u ≠ z₁' ∧ ≠ z₂')
+    intro u
+    obtain ⟨v, rfl⟩ := φ.bij.2 u
+    by_cases hv1 : v = M₁.zero₁
+    · left; rw [hv1, φ.map_zero₁]
+    · by_cases hv2 : v = M₁.zero₂
+      · right; left; rw [hv2, φ.map_zero₂]
+      · right; right
+        rw [← φ.hom]
+        have := hpres v
+        rcases this with h | h | ⟨h1, h2⟩
+        · exact absurd h hv1
+        · exact absurd h hv2
+        · exact ⟨fun h => h1 (φ.bij.1 (by rw [h, φ.map_zero₁])),
+                 fun h => h2 (φ.bij.1 (by rw [h, φ.map_zero₂]))⟩
+  · -- Factorization: ∀ u, u = z₁' ∨ u = z₂' ∨ dot₂ (φ a) u = dot₂ (φ c) (dot₂ (φ b) u)
+    intro u
+    obtain ⟨v, rfl⟩ := φ.bij.2 u
+    by_cases hv1 : v = M₁.zero₁
+    · left; rw [hv1, φ.map_zero₁]
+    · by_cases hv2 : v = M₁.zero₂
+      · right; left; rw [hv2, φ.map_zero₂]
+      · right; right
+        rw [← φ.hom, ← φ.hom, ← φ.hom]
+        have := hfact v
+        rcases this with h | h | h
+        · exact absurd h hv1
+        · exact absurd h hv2
+        · rw [h]
+  · -- φ x ≠ z₁'
+    exact fun h => hx1 (φ.bij.1 (by rw [h, φ.map_zero₁]))
+  · exact fun h => hx2 (φ.bij.1 (by rw [h, φ.map_zero₂]))
+  · exact fun h => hy1 (φ.bij.1 (by rw [h, φ.map_zero₁]))
+  · exact fun h => hy2 (φ.bij.1 (by rw [h, φ.map_zero₂]))
+  · -- dot₂ (φ a) (φ x) ≠ dot₂ (φ a) (φ y)
+    rw [← φ.hom, ← φ.hom]
+    exact fun h => hneq (φ.bij.1 h)
+
+-- ═══════════════════════════════════════════════════════════════════
+-- S ⊬ ICP: self-simulation does not imply internal composition
+-- ═══════════════════════════════════════════════════════════════════
+
+/-- **S ⊬ ICP**: The minimal DRM (`kripke4`, N=4) is an FRM that trivially
+    fails ICP — it has only 2 non-absorber elements, but ICP requires 3
+    pairwise distinct non-absorbers.
+
+    This completes ICP's position in the independence structure:
+    S ⊬ ICP, D ⊬ ICP, ICP ⊬ D (all Lean-proved). -/
+theorem s_not_implies_icp :
+    ∃ (_ : FaithfulRetractMagma 4), ¬ HasICP 4 dotK4 0 1 :=
+  ⟨kripke4.toFaithfulRetractMagma, by decide⟩
+
 end KripkeWall
