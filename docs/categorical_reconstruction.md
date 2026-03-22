@@ -110,7 +110,7 @@ Each capability admits multiple inequivalent axiom forms (`axiom_mutation_test.p
 | H | Y: Y·ρ = ρ·(Y·ρ) | 3 variants (general, g-fixpt, idempotent) | All 4 SAT |
 | H | Branch: τ→f, else→g | 2 variants (swapped, three-way) | All 3 SAT |
 
-The capabilities are the invariants; the axiom forms are presentations of those capabilities. Different presentations produce different role assignments within the same three-category architecture. The McCarthy role inventory (quote, eval, cons, car, cdr, cond, nil) is one realization — a canonical point within an equivalence class.
+The capabilities are the invariants; the axiom forms are presentations of those capabilities. Different presentations produce different role assignments within the same three-category architecture. The McCarthy role inventory (quote, eval, cons, car, cdr, cond, nil) is one realization within an equivalence class — distinguished by producing the familiar Lisp primitives, but not selected by any universal property.
 
 This is analogous to the relationship between groups and group presentations, or between λ-calculus and combinatory logic: the algebraic structure is fixed, but the specific generators and relations are a choice.
 
