@@ -139,7 +139,7 @@ Classifier minimality remains a well-defined selection criterion that uniquely p
 
 ## What Is Proved vs. What Is Open
 
-55 Lean theorems, 7 files, zero `sorry`.
+60 Lean theorems, 8 files, zero `sorry`.
 
 | Claim | Status | File |
 |---|---|---|
