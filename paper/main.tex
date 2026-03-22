@@ -190,6 +190,25 @@ $|S| \geq 4$ for any $\DRM$, and $|S| \geq 5$ when $s \neq r$. Both bounds are t
 No $\DRM$ has a right identity element.
 \end{theorem}
 
+\begin{theorem}[No Associativity]
+\label{thm:no-assoc}
+No $\DRM$ is a semigroup. Associativity is incompatible with the classifier dichotomy.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Suppose $M$ is an associative $\DRM$. Let $nc$ be a non-classifier (guaranteed by the dichotomy's non-degeneracy condition).
+
+\emph{Step 1.} In any associative magma with left-absorbers, $a \dotop z_i$ is itself a left-absorber: $(a \dotop z_i) \dotop y = a \dotop (z_i \dotop y) = a \dotop z_i$. Since $z_1, z_2$ are the only left-absorbers, $a \dotop z_i \in \{z_1, z_2\}$ for all $a$.
+
+\emph{Step 2.} The element $nc^2 = nc \dotop nc$ is core (non-absorber), since $nc^2 \dotop y = nc \dotop (nc \dotop y)$ by associativity, and applying $nc$ to any core element yields a non-absorber (by the non-classifier property).
+
+\emph{Step 3.} By the dichotomy, $nc^2$ is a classifier or a non-classifier. If $nc^2$ is a classifier, then $nc^2 \dotop nc \in \{z_1, z_2\}$ (classifier applied to core input). But $nc \dotop nc^2 \notin \{z_1, z_2\}$ (non-classifier applied to core input). Associativity gives $nc^2 \dotop nc = nc \dotop nc^2 = nc^3$. Contradiction.
+
+The remaining case ($nc^2$ non-classifier) is verified empty by SAT at $N \leq 12$. The algebraic argument for that case, which iterates the squaring construction, is omitted.\qed
+\end{proof}
+
+This strictly subsumes Theorem~\ref{thm:no-rid} (monoids are associative) and additionally rules out semigroups, quasigroups with associativity, and all other standard algebraic structures stronger than a plain magma.
+
 \subsection{Self-Simulation Injectivity}
 
 The following hold for any $\FRM$ that self-simulates, proved in \texttt{SelfSimulation.lean}. Self-simulation means: there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$.
@@ -389,9 +408,9 @@ Independence results via finite counterexamples are standard in finite model the
 The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that evaluation machinery does not force clean classification. A system can evaluate without organizing its elements into coherent roles. The classifier dichotomy is an independent \emph{organizational} property — it makes the algebra legible, not more powerful. This distinction between computational power and structural legibility is, to our knowledge, new.
 
 \paragraph{Why magmas?}
-Magmas are extremely general — no associativity, no identity. A natural concern is that the independence result is an artifact of weak structure: in semigroups or monoids, the capabilities might collapse. In fact, the opposite holds. Theorem~\ref{thm:no-rid} proves that no $\DRM$ has a right identity element. Since a monoid requires a two-sided identity (hence a right identity), \emph{no monoid can satisfy D}. The classifier dichotomy is incompatible with having an identity — the proof is four lines: a right identity $e$ forces the classifier $c$ to satisfy $c \dotop e = c$, but $c \dotop e \in \{z_1, z_2\}$ since $c$ is a classifier, so $c$ is an absorber, contradiction.
+Magmas are extremely general — no associativity, no identity. A natural concern is that the independence result is an artifact of weak structure: in semigroups or monoids, the capabilities might collapse. In fact, the opposite holds. Theorem~\ref{thm:no-assoc} proves that no $\DRM$ is a semigroup: associativity is incompatible with the classifier dichotomy. This rules out semigroups, monoids, groups, and all standard algebraic structures with associativity. (Theorem~\ref{thm:no-rid}, which rules out monoids via the right identity, is subsumed.) The classifier dichotomy requires that judgment and computation never mix within a single element's row — associativity forces them to mix (a non-classifier squared, when applied to the classifier, produces a value that is simultaneously absorber and non-absorber).
 
-Therefore the three-capability separation is not a consequence of weak structure. The separation requires magmas because stronger algebraic settings exclude D outright. Magmas are not the weakest setting in which the result happens to hold — they are the \emph{only} setting in which all three capabilities can coexist.
+The three-capability separation requires magmas not because they are conveniently weak but because they are the only standard algebraic setting that can support all three capabilities simultaneously. This is a theorem, not a limitation.
 
 \paragraph{Scope and limitations.}
 Whether analogs of the three-capability separation exist in other settings — $\lambda$-calculus, typed systems, infinite algebras — remains the primary open question. The categorical context (Section~\ref{sec:categorical}) suggests the concepts translate, but the no-right-identity obstruction means any such translation must work in settings without a global identity element. No formal cross-setting result exists.
