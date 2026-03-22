@@ -51,7 +51,7 @@
 \begin{abstract}
 We identify three capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and prove they are fully independent in finite extensional magmas: no capability implies any other. Each capability has a single-concept, presentation-independent definition. Self-simulation is the existence of a section-retraction pair. Self-description is the classifier dichotomy: every non-absorber element is either entirely boolean-valued or entirely non-boolean-valued on the core. Evaluator internalization is the Internal Composition Property: some element's action on core factors non-trivially through two others, one core-preserving.
 
-We prove independence by exhibiting Lean-verified finite counterexamples in all four non-trivial directions ($N\!=\!8$ and $N\!=\!10$), exhibit a coexistence witness at $N\!=\!10$, prove that no $\DRM$ is associative (ruling out semigroups, monoids, and groups), prove the three-category decomposition is an algebraic invariant preserved by isomorphisms, and show the ICP is logically equivalent to the standard Compose+Inert axioms. All results are machine-checked in Lean~4, zero \texttt{sorry}.
+We prove independence by exhibiting Lean-verified finite counterexamples in all four non-trivial directions ($N\!=\!8$ and $N\!=\!10$), exhibit a tight coexistence witness at $N\!=\!10$, prove the three-category decomposition is an algebraic invariant, and show the magma setting is necessary: no associative magma admits the classifier dichotomy (ruling out semigroups, monoids, and groups). All results are machine-checked in Lean~4, zero \texttt{sorry}.
 \end{abstract}
 
 \maketitle
@@ -66,7 +66,7 @@ But they need not. A system can encode its own elements without classifying them
 
 This paper answers the question for finite algebras: the three mechanisms are fully independent. We exhibit concrete finite structures where any one is present and the others absent. The separation is not a matter of expressiveness or convenience — it is a theorem, machine-checked in Lean.
 
-Specifically, we define three capabilities of a finite extensional magma (a set with a binary operation whose left-regular representation is faithful):
+Specifically, we define three capabilities of a finite extensional magma~\cite{burris81} (a set with a binary operation whose left-regular representation is faithful):
 
 \begin{itemize}
   \item \textbf{Self-simulation (S):} the existence of a section-retraction pair on the core — elements can encode and decode each other.
@@ -78,7 +78,7 @@ We prove these three capabilities are fully independent: no capability implies a
 
 The three-category decomposition induced by D (zeros, classifiers, non-classifiers) is proved to be an algebraic invariant: it is preserved by all magma isomorphisms that respect the absorbers. The ICP is proved logically equivalent to the standard operational axioms (Compose + Inert), giving evaluator internalization a single-concept characterization on par with S and D.
 
-All results are formalized in Lean~4 and verified by \texttt{lake build}, zero \texttt{sorry}. The proofs divide into universal algebraic theorems (proved by pure equational reasoning, no \texttt{decide}) and model-specific verifications (proved by \texttt{native\_decide} on concrete Cayley tables).
+All results are formalized in Lean~4~\cite{moura21} and verified by \texttt{lake build}, zero \texttt{sorry}. The proofs divide into universal algebraic theorems (proved by pure equational reasoning, no \texttt{decide}) and model-specific verifications (proved by \texttt{native\_decide} on concrete Cayley tables).
 
 \paragraph{Contributions.}
 \begin{enumerate}
@@ -119,7 +119,7 @@ A \emph{Dichotomic Retract Magma} $(\DRM)$ extends $\FRM$ with:
       \item $y \dotop x \in \{z_1, z_2\}$ for all $x \in \core(S)$ \quad ($y$ is a \emph{classifier}), or
       \item $y \dotop x \notin \{z_1, z_2\}$ for all $x \in \core(S)$ \quad ($y$ is a \emph{non-classifier}).
     \end{itemize}
-  \item At least one non-classifier exists.
+  \item At least one non-classifier exists. (Without this, every $\FRM$ where all non-absorbers happen to be classifiers would vacuously satisfy D. The non-degeneracy condition ensures the dichotomy is a genuine partition into two inhabited classes, not a trivial collapse.)
 \end{enumerate}
 \end{definition}
 
@@ -206,7 +206,7 @@ The full proof is algebraic (no \texttt{decide}) and uses neither the dichotomy 
 
 \subsection{Self-Simulation Injectivity}
 
-The following hold for any $\FRM$ that self-simulates, proved in \texttt{SelfSimulation.lean}. Self-simulation means: there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$.
+The following results show that capability S alone constrains the algebra — even without D or H. They hold for any $\FRM$ that self-simulates (proved in \texttt{SelfSimulation.lean}). Self-simulation means: there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$.
 
 \begin{theorem}[Partial Application Injectivity]
 \label{thm:injectivity}
@@ -451,6 +451,21 @@ Saunders Mac~Lane and Ieke Moerdijk.
 Leonid Libkin.
 \newblock \emph{Elements of Finite Model Theory}.
 \newblock Springer, 2004.
+
+\bibitem{burris81}
+Stanley Burris and H.~P. Sankappanavar.
+\newblock \emph{A Course in Universal Algebra}.
+\newblock Springer, 1981.
+
+\bibitem{kripke75}
+Saul Kripke.
+\newblock Outline of a theory of truth.
+\newblock \emph{Journal of Philosophy}, 72(19), 1975.
+
+\bibitem{moura21}
+Leonardo de~Moura and Sebastian Ullrich.
+\newblock The {Lean}~4 theorem prover and programming language.
+\newblock In \emph{CADE}, 2021.
 
 \end{thebibliography}
 
