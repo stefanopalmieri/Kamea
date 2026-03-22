@@ -20,7 +20,7 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 | Capability | Presentation-independent definition | Axioms (one presentation) | Independence |
 |------------|-------------------------------------|---------------------------|--------------|
 | **Self-simulating (S)** | Existence of a section-retraction pair | Q/E with E(Q(x))=x, Q(E(x))=x on core | `[Lean]` `SelfSimulation.lean` |
-| **Self-describing (D)** | Existence of a classifier with dichotomy | Kripke: every non-zero is all-boolean or all-non-boolean on core | `[Lean]` `Countermodel.lean`, `Countermodels10.lean` |
+| **Self-describing (D)** | Existence of a classifier with dichotomy | Classifier dichotomy: every non-zero is all-boolean or all-non-boolean on core | `[Lean]` `Countermodel.lean`, `Countermodels10.lean` |
 | **Self-hosting (H)** | Internal composition + fixed point | Branch + Compose + Inert + Y (≥6 equivalent Compose forms) | `[Lean]` `Countermodels10.lean` |
 
 **Full independence.** No capability implies any other:
@@ -28,14 +28,14 @@ Self-simulation, self-description, and self-hosting are three independent capabi
 | | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
 |---|---|---|---|---|
 | **Counterexample** | N=8 (the Countermodel) | N=10 (no Compose) | N=10 (diagonal) | N=4 (`kripke4`) |
-| **What it shows** | Self-simulates, no clean roles | Has Kripke, no Compose | Has Branch+Compose+Y, no Kripke | Has retraction pair, too small for H |
+| **What it shows** | Self-simulates, no clean roles | Has dichotomy, no Compose | Has Branch+Compose+Y, no dichotomy | Has retraction pair, too small for H |
 | **Proof** | `[Lean]` | `[Lean]` | `[Lean]` | `[Lean]` (trivial: H needs N≥10) |
 
-A retraction magma can compute its own table without the Kripke wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the Kripke wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The Kripke wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
+A retraction magma can compute its own table without the classifier wall: a concrete 8-element counterexample with mixed elements self-simulates perfectly. A retraction magma can have all evaluation machinery (Branch + Compose + Y) without the classifier wall: a concrete 10-element counterexample has 4 mixed elements yet satisfies all machine axioms. The classifier wall is not forced by computation — it is the axiom that organizes the algebra into coherent roles. An algebra can *evaluate* without *understanding itself as evaluating*.
 
-(The dichotomy is named after Kripke's "Outline of a Theory of Truth" (1975), where a language that can express its own truth predicate partitions sentences into *grounded* and *ungrounded*. The connection is analogical, not literal: Kripke's construction is partial, involves transfinite fixed points, and operates over an infinite semantic domain. Ours is total, finite, and algebraic. The shared structure is the *stratification principle*: elements that produce truth values and elements that produce computational values are cleanly separated, with no mixing. The three-category decomposition {zeros, classifiers, non-classifiers} is the finite algebraic shadow of Kripke-style stratification — not a reimplementation of it.)
+(The classifier dichotomy is a finite algebraic property: every non-zero element's row on core is either entirely boolean-valued or entirely non-boolean-valued. The stratification principle — cleanly separating elements that produce truth values from those that produce computational values — is analogous to Kripke's grounded/ungrounded partition in his theory of truth [1975], but the construction is total, finite, and algebraic rather than partial and transfinite.)
 
-The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the Kripke wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
+The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the classifier wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
 
 ## Quick Start
 
@@ -138,17 +138,17 @@ Four layers of results, each proved:
 3. **Realization freedom** — each capability admits multiple inequivalent axiom forms (SAT, 13 mutations)
 4. **Classifier minimality** — the McCarthy realization is the unique form that minimizes the number of classifiers, keeping the most elements computational (SAT, structural analysis of 6 Compose variants)
 
-This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the Kripke wall (one epistemic axiom, independent of computation), and machine internalization (composition + substrate + recursion). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles are one realization within an equivalence class of axiom systems — Lisp is one point in the space, not the only point. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the classifier wall (one epistemic axiom, independent of computation), and machine internalization (composition + substrate + recursion). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles are one realization within an equivalence class of axiom systems — Lisp is one point in the space, not the only point. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 
 **Scope.** Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus. The core contribution is the four-layer result above. The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact is impressive but the theorem is the point.
 
 ### Frequently Asked Questions
 
-**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are structurally necessary — you need some composition, some branching, some recursion (irredundancy proved). The specific axiom forms are not unique: composition admits ≥6 variants. But the variants are not equal: in 4 of 5 alternatives, computational elements cross the Kripke wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
+**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are structurally necessary — you need some composition, some branching, some recursion (irredundancy proved). The specific axiom forms are not unique: composition admits ≥6 variants. But the variants are not equal: in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
 
-**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction, subobject classifier, internal composition fragment). The *specific axiom forms* are conventional — each capability admits multiple viable formulations. The Kripke dichotomy is the only capability with a single axiom (and it's the finite analog of a topos-theoretic concept). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator, independent of the Kripke dichotomy (proved by N=10 counterexample). But even Compose admits 6 equivalent forms — the choice η·x = ρ·(g·x) is the one that produces the CDR-like behavior.
+**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction, subobject classifier, internal composition fragment). The *specific axiom forms* are conventional — each capability admits multiple viable formulations. The classifier dichotomy is the only capability with a single axiom (and it's the finite analog of a topos-theoretic concept). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator, independent of the classifier dichotomy (proved by N=10 counterexample). But even Compose admits 6 equivalent forms — the choice η·x = ρ·(g·x) is the one that produces the CDR-like behavior.
 
-**What's the contribution?** A four-layer structural picture of reflective computation. (1) **Independence**: three capabilities, no one implies any other — Lean-proved in all four directions. (2) **Irredundancy**: 7 axioms across 3 capabilities, none derivable from the rest — SAT-proved. (3) **Realization freedom**: each capability admits multiple inequivalent axiom forms (≥6, ≥4, ≥3) — SAT-proved. (4) **Classifier minimality**: the McCarthy realization is the unique form that keeps the maximum number of elements computational — it's selected by a parsimony principle intrinsic to the Kripke wall. The capabilities are the skeleton; the axiom forms are the joints; the McCarthy choice is the posture that respects the wall. Plus: 55 machine-checked theorems (zero `sorry`), a tight bound (N=10), and a working artifact (compiled reflective tower, 2.2 ms native).
+**What's the contribution?** A four-layer structural picture of reflective computation. (1) **Independence**: three capabilities, no one implies any other — Lean-proved in all four directions. (2) **Irredundancy**: 7 axioms across 3 capabilities, none derivable from the rest — SAT-proved. (3) **Realization freedom**: each capability admits multiple inequivalent axiom forms (≥6, ≥4, ≥3) — SAT-proved. (4) **Classifier minimality**: the McCarthy realization is the unique form that keeps the maximum number of elements computational — it's selected by a parsimony principle intrinsic to the classifier wall. The capabilities are the skeleton; the axiom forms are the joints; the McCarthy choice is the posture that respects the wall. Plus: 55 machine-checked theorems (zero `sorry`), a tight bound (N=10), and a working artifact (compiled reflective tower, 2.2 ms native).
 
 ## The Seven Roles
 
@@ -157,7 +157,7 @@ This matters because every reflective system — every runtime with a reflection
 | ⊤ | NIL | Empty / base case | S (retraction pair) |
 | Q | QUOTE | Freeze a term (constructor) | S (retraction pair) |
 | E | EVAL | Unwrap / interpret (destructor) | S (retraction pair) |
-| ρ | COND | Conditional branch | D (Kripke wall) |
+| ρ | COND | Conditional branch | D (classifier wall) |
 | g | CONS | Build a pair | H (machine: substrate) |
 | f | CAR | First projection | D (Branch axiom) |
 | η | CDR | Second projection | H (machine: Compose) |
@@ -178,7 +178,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 **The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
-- Kripke wall: classifier ∩ non-classifier = ∅ `[Lean, universal]`
+- classifier wall: classifier ∩ non-classifier = ∅ `[Lean, universal]`
 - Retraction pair members are non-classifiers `[Lean, universal]`
 - No right identity in any model `[Lean, universal]`
 - Card ≥ 4 (tight); card ≥ 5 when sec ≠ ret (tight) `[Lean, universal]`
@@ -194,9 +194,9 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - Row determination: equal partial applications ⇒ identical rows `[Lean, universal]`
 
 **The three capabilities are independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean)):
-- S ⊬ D: N=8 FRM with classifier that violates Kripke dichotomy `[Lean, by decide]`
-- D ⊬ H: N=10 DRM satisfying Kripke where no element satisfies Compose `[Lean, by native_decide]`
-- H ⊬ D: N=10 FRM with Branch+Compose+Y that violates Kripke `[Lean, by native_decide]`
+- S ⊬ D: N=8 FRM with classifier that violates classifier dichotomy `[Lean, by decide]`
+- D ⊬ H: N=10 DRM satisfying classifier dichotomy where no element satisfies Compose `[Lean, by native_decide]`
+- H ⊬ D: N=10 FRM with Branch+Compose+Y that violates classifier dichotomy `[Lean, by native_decide]`
 - S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
 
 **Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
@@ -206,7 +206,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 **Partial minimality** (`axiom_irredundancy_test.py`):
 - Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
 - S = {retraction pair, E-transparency}: both irredundant
-- D = {Kripke dichotomy}: single axiom
+- D = {classifier dichotomy}: single axiom
 - H = {Branch, Compose, Inert, Y}: all four irredundant over S+D
 - Total: 7 irredundant axioms across 3 independent capabilities
 
@@ -233,7 +233,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`. These are 
 
 ### SAT and Empirical Results
 
-- Kripke wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
+- classifier wall: judgment cannot merge with any other role (τ: 9/9 UNSAT) `[SAT]`
 - Substrate wall: inert cannot merge with any other role (g: 9/9 UNSAT) `[SAT]`
 - TC forces 3 distinctions: Q≠E (lazy/eager), Q≠f (lazy/eager), f≠η (projection uniqueness) `[Empirical]`
 - Reflective tower forces 0 additional distinctions: all 10 nontriviality pairs survive full tower `[Empirical]`
@@ -250,7 +250,7 @@ Proved for the specific 16-element table by `decide`/`native_decide`. These are 
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
 - S ⊬ D: N=8 non-dichotomic retraction magma (the Countermodel) `[Lean: Countermodel.lean]`
 - D ⊬ H: N=10 DRM without Compose `[Lean: Countermodels10.lean]`; N=10 DRM without Inert `[SAT]`
-- H ⊬ D: N=10 FRM with Branch+Compose+Y but 4 mixed elements violating Kripke `[Lean: Countermodels10.lean]`
+- H ⊬ D: N=10 FRM with Branch+Compose+Y but 4 mixed elements violating classifier dichotomy `[Lean: Countermodels10.lean]`
 - Tight bound: S+D+H coexist at N=10 (minimum possible) `[Lean: Witness10.lean]`; full axiom stack requires N=12 `[SAT]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
@@ -281,7 +281,7 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 | Axiom | What It Forces |
 |-------|----------------|
-| **C (Kripke)** | Only testers can produce boolean outputs on non-absorbers |
+| **C (Classifier dichotomy)** | Only testers can produce boolean outputs on non-absorbers |
 | **D (Inert Propagation)** | Inert elements preserve non-absorber status |
 | **PA (Power-Associativity)** | `(x·x)·x = x·(x·x)` for all x |
 | **VV (Inert Self-Application)** | Inert self-application yields a tester or encoder |
@@ -303,9 +303,9 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 The computational primitives of Lisp — quote/eval, conditional, cons/car/cdr, recursion — fall out of the three capability axioms alone at N=10. The clean seven-role architecture that makes those primitives look like McCarthy's specific design requires the additional organizational axioms and pushes the minimum to N=12. The gap between N=10 and N=12 is the cost of *legibility*: going from an algebra that works to one whose roles are cleanly separated and interpretable. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
-The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the Kripke dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](Kamea/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
+The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the classifier dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](Kamea/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
-The axioms operate at two layers. The **capability layer** (retraction pair, Kripke dichotomy, Compose + Inert) provides the three independent computational capabilities (S, D, H) — no capability implies any other (counterexamples at N=8 and N=10), and all three coexist at N=10. The **organizational layer** (structural ladder L3–L8, PA, Selection, 1-Inert) forces the clean role architecture (2-1-8-1 distribution, seven separated roles) that produces the McCarthy correspondence — this pushes the minimum to N=12. The capabilities give you the ingredients; the organizational axioms give you the recipe. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+The axioms operate at two layers. The **capability layer** (retraction pair, classifier dichotomy, Compose + Inert) provides the three independent computational capabilities (S, D, H) — no capability implies any other (counterexamples at N=8 and N=10), and all three coexist at N=10. The **organizational layer** (structural ladder L3–L8, PA, Selection, 1-Inert) forces the clean role architecture (2-1-8-1 distribution, seven separated roles) that produces the McCarthy correspondence — this pushes the minimum to N=12. The capabilities give you the ingredients; the organizational axioms give you the recipe. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 
 Results fall into four tiers:
 
@@ -323,7 +323,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`Kamea/Functoriality.lean`](Kamea/Functoriality.lean) — DRM isomorphisms preserve the Z/C/N decomposition (algebraic proof)
 - [`Kamea/NoCommutativity.lean`](Kamea/NoCommutativity.lean) — Asymmetry: two left-absorbers ⇒ non-commutative
 - [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
-- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating Kripke dichotomy
+- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating classifier dichotomy
 - [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
 - [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Tight bound: S+D+H coexist at N=10
 - [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
@@ -353,12 +353,12 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 ## What Is Not Proved
 
 - **Uniqueness of Ψ₁₆ᶠ.** The Cayley table is one model from the solution space. The axioms constrain roles and relationships but leave 192/256 cells free at N=16 (25.0% determination). Cell-by-cell freedom analysis (`ds_search/n16_freedom.py`) confirms: absorber rows fully fixed (32), counter/INC/DEC pinned (24), E-transparency + INC2 fix 6 E-cells, selection fixes η·ρ, Y fixed-point fixes Y·ρ. Scale: N=8 → 28.1%, N=12 → 18.8%, N=16 → 25.0% (increase from N=12 due to additional operational constraints).
-- **Role uniqueness (resolved: not unique, but selected by classifier minimality).** The *capabilities* are irredundant — you need some composition, some branching, some recursion. The *specific axiom forms* are not unique: Compose admits ≥6 variants. But the variants are not structurally equal. In 4 of 5 alternative Compose forms, elements that should be computational (f, η) cross the Kripke wall and become classifiers — the algebra confuses doing with judging. The McCarthy realization (η = ρ∘g) is the **unique** form that minimizes the classifier count: 1 tester (the minimum for conditional dispatch), everything else computational. This is a parsimony principle intrinsic to the framework's own architectural axiom: don't judge when you can compute. The criterion is well-defined, selects a unique answer, and uses the Kripke wall (already an axiom) to grade the alternatives. Whether classifier minimality is equivalent to a known categorical property (smallest subobject classifier lattice, most free encoder subcategory) is open.
+- **Role uniqueness (resolved: not unique, but selected by classifier minimality).** The *capabilities* are irredundant — you need some composition, some branching, some recursion. The *specific axiom forms* are not unique: Compose admits ≥6 variants. But the variants are not structurally equal. In 4 of 5 alternative Compose forms, elements that should be computational (f, η) cross the classifier wall and become classifiers — the algebra confuses doing with judging. The McCarthy realization (η = ρ∘g) is the **unique** form that minimizes the classifier count: 1 tester (the minimum for conditional dispatch), everything else computational. This is a parsimony principle intrinsic to the framework's own architectural axiom: don't judge when you can compute. The criterion is well-defined, selects a unique answer, and uses the classifier wall (already an axiom) to grade the alternatives. Whether classifier minimality is equivalent to a known categorical property (smallest subobject classifier lattice, most free encoder subcategory) is open.
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
-- **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The Kripke wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+- **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 - **Presentation-independence of H.** S has a clean presentation-independent definition: existence of a section-retraction pair (standard category theory). D has one: existence of a classifier with the dichotomy property (finite analog of subobject classifier). H is less clean: "internal composition + fixed point" is defined via specific axiom forms (Branch, Compose, Inert, Y), and 13 alternative forms all work. The capability is irredundant (you need *some* composition, *some* recursion), but the presentation-independent characterization — what *exactly* H is, abstractly — is not as sharp as S or D. A categorical characterization of H (e.g., "the algebra is a closed category fragment" or "evaluation factors through an internal hom") would strengthen the framework. This is the weakest point of the three-capability decomposition.
 - **Categorical formalization (mostly complete for paper 1).** The paper-1 proof inventory covers: universal decomposition theorems (19), functoriality (4), self-simulation injectivity (4), full independence (14 countermodel theorems), and tight bound (7) — 55 theorems across 7 Lean files, zero `sorry`. What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
@@ -443,7 +443,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── PsiCountermodels.lean            # Tight 4-element countermodel
 │   ├── SelfSimulation.lean              # Self-simulation: partial application injectivity (4 universal theorems)
 │   ├── CategoricalFoundation.lean       # CatEndoMagma: categorical vocabulary for full N=16
-│   ├── CatKripkeWall.lean               # Abstract Kripke wall + dichotomy theorems
+│   ├── CatKripkeWall.lean               # Abstract classifier wall + dichotomy theorems
 │   ├── CatKripkeWallMinimal.lean        # FaithfulRetractMagma + DichotomicRetractMagma: N=4/5 witnesses + 16 universal theorems
 │   ├── NoCommutativity.lean             # Asymmetry: two left-absorbers ⇒ non-commutative (3-line proof)
 │   ├── CatWitness.lean                  # N=16 witness as CatEndoMagma (satisfiability)

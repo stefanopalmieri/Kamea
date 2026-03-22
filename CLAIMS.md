@@ -42,7 +42,7 @@ This file is the canonical status registry for claims made in this repository.
 | Ψ∗ Turing-completeness: 7 axiom-forced elements (⊤, Q, E, f, g, η, ρ) simulate 2-counter machines; universal across all models | Empirical | `psi_star.py` — stepped 2CM matches reference interpreter on 4 test programs | `uv run python psi_star.py` |
 | 1-bit logic (AND/OR/XOR): curried dispatch on {s0,s1} embeds all three Boolean gates simultaneously; model stays WL-1 rigid | Empirical | SAT-verified at N=16 with full axiom set + all operational constraints | `ds_search/n16_freedom.py` build_solver + XOR/AND/OR constraints |
 | Five behavioral categories forced (32/45 role pairs UNSAT, min 5 elements) | Empirical | `ds_search/forced_roles_test.py` — role-aliasing at N=12; `docs/forced_roles.md` | `uv run python -m ds_search.forced_roles_test` |
-| Kripke wall: τ cannot merge with any encoder or inert role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
+| Classifier wall: τ cannot merge with any encoder or inert role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
 | Inert wall: g cannot merge with any other role (9/9 pairs UNSAT) | Empirical | `ds_search/forced_roles_test.py` | `uv run python -m ds_search.forced_roles_test --quick` |
 | Rigidity survives all collapse levels: 6/6 levels WL-1 rigid, |Aut|=1, 1-probe discoverable | Empirical | `ds_search/collapse_rigidity_test.py` | `uv run python -m ds_search.collapse_rigidity_test` |
 | Model diversity at maximal collapse: 20+ distinct rigid models, 116/144 cells free | Empirical | `ds_search/collapse_model_count.py` | `uv run python -m ds_search.collapse_model_count` |
@@ -61,7 +61,7 @@ This file is the canonical status registry for claims made in this repository.
 | Ψ-Lisp → C/Rust transpiler: compiled output matches interpreter on fibonacci + recursion | Empirical | `psi_transpile.py --target c\|rust` | `python3 psi_transpile.py --target rust examples/psi_fibonacci.lisp > /tmp/fib.rs && cp psi_runtime.rs /tmp/ && rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib` |
 | MMTk GC stress test: 10M cons cells in 4MB heap (MarkSweep + shadow stack roots) | Empirical | `kamea-rs/crates/wispy-gc/` + `wispy-stress/` | `cd kamea-rs && HEAP_MB=4 cargo run -p wispy-stress --release` |
 | 3 categories universal (absorbers, classifiers, transformers from all 4+ axiom systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.alternative_axioms` |
-| Kripke wall universal (classifiers ≠ transformers in all systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
+| Classifier wall universal (classifiers ≠ transformers in all systems) | Empirical | `ds_search/alternative_axioms.py`, `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Rigidity emerges from categorical axioms (50/50 models, no rigidity axiom) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Discoverability emerges from categorical axioms (49/50 models) | Empirical | `ds_search/categorical_topos.py` | `uv run python -m ds_search.categorical_topos` |
 | Substrate existence selected by expressiveness (inert=0 degenerate: 1/10 discoverable) | Empirical | `ds_search/inert_expressiveness.py` | `uv run python -m ds_search.inert_expressiveness` |
@@ -71,7 +71,7 @@ This file is the canonical status registry for claims made in this repository.
 | Minimal non-associative encoder pair: {ρ, η} | Empirical | `ds_search/axiom_archaeology_deep.py`; 14/15 pairs SAT, {ρ,η} UNSAT | `uv run python -m ds_search.axiom_archaeology` |
 | Distinctness decomposition: 32/45 pairs forced by categorical axioms, 3/45 forced by TC (lazy/eager + projection uniqueness), 10/45 are standard algebraic practice | Empirical | `ds_search/forced_roles_test.py` (32 categorical), `ds_search/tc_distinctness_test.py` (3 TC), `ds_search/tc_distinctness_deep.py` (E=f artifact) | `uv run python -m ds_search.tc_distinctness_test && uv run python -m ds_search.tc_distinctness_deep` |
 | Three-category decomposition (zero / classifier / non-classifier) | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
-| Kripke wall: classifier ∩ non-classifier = ∅ | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
+| Classifier wall: classifier ∩ non-classifier = ∅ | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | No right identity (any DichotomicRetractMagma) | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Card ≥ 4 (any DichotomicRetractMagma) | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
 | Retraction pair ∈ non-classifier class | Lean-proved | `Kamea/CatKripkeWallMinimal.lean` — algebraic proof, no `decide` | `lake build` |
@@ -104,7 +104,7 @@ This file is the canonical status registry for claims made in this repository.
 | Y-combinator derived from universal self-simulation (unbounded Q-depth requires recursion) | Argument | `docs/self_simulation_necessity.md` — Phase 3 Step 4 | N/A |
 | Compose independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test D | `python3 self_simulation_investigation.py` |
 | Inert independent of self-simulation (SAT counterexample at N=10) | Empirical | `self_simulation_investigation.py` — Test E | `python3 self_simulation_investigation.py` |
-| Kripke dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma self-simulates (64/64 cells) | Empirical | `self_simulation_investigation.py` — Test B + universal self-simulator | `python3 self_simulation_investigation.py` |
+| Classifier dichotomy independent of self-simulation: N=8 non-dichotomic retraction magma self-simulates (64/64 cells) | Empirical | `self_simulation_investigation.py` — Test B + universal self-simulator | `python3 self_simulation_investigation.py` |
 | Universal self-simulator: one program computes dot(a,b) for any Ψ model (verified on Ψ₁₆ᶠ and Ψ₁₆ᶜ) | Empirical | `universal_self_simulator.py` | `python3 universal_self_simulator.py` |
 | Self-simulation is a property of the theory, not any model (same code, different tables, both pass) | Empirical | `universal_self_simulator.py` — both Ψ₁₆ᶠ and Ψ₁₆ᶜ | `python3 universal_self_simulator.py` |
 | Machine boundary: instruction set (classifier, branch, Y) derived; machine (compose, inert) chosen | Argument | `docs/self_simulation_necessity.md` | N/A |
@@ -116,13 +116,13 @@ The three capabilities — self-simulation (S), self-description (D), self-hosti
 
 | Claim | Tier | Primary Evidence | Reproduce |
 |---|---|---|---|
-| S ⊬ D: N=8 FRM self-simulates (retraction pair), violates Kripke dichotomy (2 mixed elements) | Lean-proved | `Kamea/Countermodel.lean` — `countermodel8_violates_dichotomy`, `frm_independent_of_dichotomy` | `lake build Kamea.Countermodel` |
-| D ⊬ H (Compose): N=10 DRM satisfies Kripke, no element satisfies Compose axiom | Lean-proved | `Kamea/Countermodels10.lean` — `dNotH` (DRM instance) + `dNotH_no_compose` | `lake build Kamea.Countermodels10` |
-| D ⊬ H (Inert): N=10 DRM satisfies Kripke, no inert element exists (all non-absorbers are testers or encoders) | Empirical | `independence_results.py` — D_not_H_inert | `python3 independence_results.py` |
-| H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates Kripke (4 mixed elements) | Lean-proved | `Kamea/Countermodels10.lean` — `hNotD` (FRM) + `hNotD_branch/compose/y_fixpoint` + `hNotD_violates_dichotomy` | `lake build Kamea.Countermodels10` |
+| S ⊬ D: N=8 FRM self-simulates (retraction pair), violates Classifier dichotomy (2 mixed elements) | Lean-proved | `Kamea/Countermodel.lean` — `countermodel8_violates_dichotomy`, `frm_independent_of_dichotomy` | `lake build Kamea.Countermodel` |
+| D ⊬ H (Compose): N=10 DRM satisfies classifier dichotomy, no element satisfies Compose axiom | Lean-proved | `Kamea/Countermodels10.lean` — `dNotH` (DRM instance) + `dNotH_no_compose` | `lake build Kamea.Countermodels10` |
+| D ⊬ H (Inert): N=10 DRM satisfies classifier dichotomy, no inert element exists (all non-absorbers are testers or encoders) | Empirical | `independence_results.py` — D_not_H_inert | `python3 independence_results.py` |
+| H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates classifier dichotomy (4 mixed elements) | Lean-proved | `Kamea/Countermodels10.lean` — `hNotD` (FRM) + `hNotD_branch/compose/y_fixpoint` + `hNotD_violates_dichotomy` | `lake build Kamea.Countermodels10` |
 | S+D+H coexist at N=10 (minimum possible — 10 distinguished elements). Tight bound: N ≥ 10 (counting) and N = 10 suffices (witness). | Lean-proved | `Kamea/Witness10.lean` — `witness10_drm` (DRM instance) + `witness10_branch/compose/inert/y_fixpoint` + `sdh_witness_10` | `lake build Kamea.Witness10` |
 | Full axiom stack (capabilities + organizational ladder) requires N=12 | Empirical | `minimal_sdh_test.py`, `ds_search/stacking_analysis.py` | `python3 minimal_sdh_test.py` |
-| Kripke wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |
+| Classifier wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |
 | Counterexample tables frozen and independently verified (all properties checked without Z3) | Empirical | `counterexamples.json`, `independence_results.py` verification functions | `python3 independence_results.py` |
 | Partial minimality: each capability's axiom set is irredundant (no axiom derivable from the others) | Empirical | `axiom_irredundancy_test.py` — 5/5 SAT (E-trans, Branch, Compose, Inert, Y all irredundant) | `python3 axiom_irredundancy_test.py` |
 
@@ -131,6 +131,6 @@ The three capabilities — self-simulation (S), self-description (D), self-hosti
 - Statements labeled `Empirical` are evidence-backed but may change with stronger tests or alternative implementations.
 - Any top-level claim added to `README.md` should map to one row in this file.
 - Independence counterexamples are SAT-generated and independently verified (property checks run on the extracted table without Z3). Frozen tables in `counterexamples.json` allow re-verification without re-solving.
-- The three capabilities (S, D, H) are fully independent — no capability implies any other. The Kripke dichotomy (D) is an epistemic axiom about role coherence, not a computational consequence of evaluation machinery (H).
+- The three capabilities (S, D, H) are fully independent — no capability implies any other. The Classifier dichotomy (D) is an epistemic axiom about role coherence, not a computational consequence of evaluation machinery (H).
 
 Last updated: 2026-03-21
