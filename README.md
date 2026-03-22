@@ -4,24 +4,32 @@ A structural decomposition of reflective computation into independent capabiliti
 
 **Three capabilities. Three walls. Seven roles. Zero `sorry`.**
 
-*A finite algebra can simulate itself without describing itself. It can describe itself without hosting itself. It can host itself without describing itself. No capability implies any other.*
+*A finite algebra can simulate itself without describing itself. It can describe itself without internalizing its evaluator. It can internalize its evaluator without describing itself. No capability implies any other.*
+
+### For Reviewers
+
+1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = Compose + Inert
+2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`)
+3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
+4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
+5. **Proof inventory**: 7 files, 55 theorems, zero `sorry` — verify with `lake build`
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Lambda calculus gave functions a foundation. Turing machines gave computation a foundation. Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and self-hosting — and shows that no capability implies any other (proved by concrete counterexamples). A 16×16 Cayley table is the witness: a finite algebra that exercises all three.
+Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and shows that no capability implies any other (proved by concrete counterexamples). A 16×16 Cayley table is the witness: a finite algebra that exercises all three.
 
 ## The Three Capabilities
 
-Self-simulation, self-description, and self-hosting are three independent capabilities. No capability implies any other — proved by concrete finite counterexamples at every boundary and every diagonal. Each can be present or absent independently. Whether the axioms for each capability are *minimal* (whether fewer or different axioms could achieve the same structural effect) remains open.
+Self-simulation, self-description, and evaluator internalization are three independent capabilities. No capability implies any other — proved by concrete finite counterexamples at every boundary and every diagonal. Each can be present or absent independently. Whether the axioms for each capability are *minimal* (whether fewer or different axioms could achieve the same structural effect) remains open.
 
 | Capability | Presentation-independent definition | Axioms (one presentation) | Independence |
 |------------|-------------------------------------|---------------------------|--------------|
 | **Self-simulating (S)** | Existence of a section-retraction pair | Q/E with E(Q(x))=x, Q(E(x))=x on core | `[Lean]` `SelfSimulation.lean` |
 | **Self-describing (D)** | Existence of a classifier with dichotomy | Classifier dichotomy: every non-zero is all-boolean or all-non-boolean on core | `[Lean]` `Countermodel.lean`, `Countermodels10.lean` |
-| **Self-hosting (H)** | Internal composition + fixed point | Branch + Compose + Inert + Y (≥6 equivalent Compose forms) | `[Lean]` `Countermodels10.lean` |
+| **Evaluator internalization (H)** | Internal composition + fixed point | Compose + Inert (with Branch and Y for full evaluation; ≥6 equivalent Compose forms) | `[Lean]` `Countermodels10.lean` |
 
 **Full independence.** No capability implies any other:
 
@@ -77,9 +85,9 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
 
 A program that can inspect its own continuation — where the continuation is data built from algebraically verified atoms. The table it runs on has Lean-proved rigidity, discoverability, and actuality irreducibility. The Lisp it implements has five axiom-forced role categories, seven specialized roles justified by compositional expressiveness, and a Turing-complete term algebra.
 
-Smith's 3-Lisp (1984) had the reflective tower but no ground. The levels went down forever — interpreter interpreting interpreter interpreting interpreter. There was no bottom. Each level's meaning depended on the level below, and there was no foundation. Boba's Tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. There is nothing beneath the table to worry about. It IS the algebra, not an implementation of it.
+Smith's 3-Lisp (1984) introduced the reflective tower but left it ungrounded — each level depended on the level below, with no termination. Boba's Tower terminates at a 16×16 Cayley table — 256 bytes whose algebraic properties are machine-checked. The program verifies the table before trusting the evaluator. The table is not an implementation of the algebra — it is the algebra. The tower bottoms out at 256 machine-checked bytes.
 
-The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpreting itself with inspectable continuations — computes fibonacci, verifies the Cayley table it runs on, then reifies its own continuation as walkable data, navigates to a pending `k-if` frame, swaps the then/else branches, reflects, and takes the opposite branch from what the source code says. The program rewrites its own future. Everything below — axioms, theorems, phenomenology — is context for understanding what you just saw.
+The demo: a defunctionalized CPS meta-circular evaluator — Ψ-Lisp interpreting itself with inspectable continuations — computes fibonacci, verifies the Cayley table it runs on, then reifies its own continuation as walkable data, navigates to a pending `k-if` frame, swaps the then/else branches, reflects, and takes the opposite branch from what the source code says. The program rewrites its own control flow. The axioms, theorems, and proofs below provide the formal context.
 
 ```bash
 python3 psi_repl.py                                        # interactive REPL
@@ -99,7 +107,7 @@ rustc -O -o /tmp/tower /tmp/tower.rs
 /tmp/tower    # 2.2 ms — same output, 20,000x faster
 ```
 
-Boba's Tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. Smith's tower had no ground, so it could never be compiled — each level depended on the level below. This one has a ground, so the compiler can bottom out.
+Boba's Tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. An ungrounded tower cannot be compiled because each level depends on the one below. A grounded tower can — the compiler bottoms out at the verified Cayley table.
 
 ### Compile to Native
 
@@ -129,7 +137,7 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 ## Why It Matters
 
-Reflective computation has a **fixed skeleton** but **flexible joints**. The capabilities (self-simulation, self-description, self-hosting) are structurally necessary and independent — no capability implies any other. But the specific axioms realizing each capability are not unique: composition admits ≥6 forms, fixed-point ≥4, branching ≥3. Different realizations induce different role assignments within the same three-category architecture. The capabilities are invariants; the axiom forms are presentations; the roles are artifacts of the chosen presentation.
+Reflective computation has a **fixed skeleton** but **flexible joints**. The capabilities (self-simulation, self-description, evaluator internalization) are structurally necessary and independent — no capability implies any other. But the specific axioms realizing each capability are not unique: composition admits ≥6 forms, fixed-point ≥4, branching ≥3. Different realizations induce different role assignments within the same three-category architecture. The capabilities are invariants; the axiom forms are presentations; the roles are artifacts of the chosen presentation.
 
 Four layers of results, each proved:
 
@@ -138,17 +146,17 @@ Four layers of results, each proved:
 3. **Realization freedom** — each capability admits multiple inequivalent axiom forms (SAT, 13 mutations)
 4. **Classifier minimality** — the McCarthy realization is the unique form that minimizes the number of classifiers, keeping the most elements computational (SAT, structural analysis of 6 Compose variants)
 
-This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the classifier wall (one epistemic axiom, independent of computation), and machine internalization (composition + substrate + recursion). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles are one realization within an equivalence class of axiom systems — Lisp is one point in the space, not the only point. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+This matters because every reflective system — every runtime with a reflection API, every JIT compiler, every meta-circular evaluator — combines these three capabilities without distinguishing them. The Ψ framework separates them and shows what each one costs: a retraction pair (standard category theory), the classifier wall (one epistemic axiom, independent of computation), and evaluator internalization (composition + substrate + recursion). The three-category architecture and the walls between categories are proved universal (Lean theorems that hold for all models). The specific seven roles are one realization within an equivalence class of axiom systems — Lisp is one point in the space, not the only point. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/self_simulation_necessity.md`](docs/self_simulation_necessity.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 
-**Scope.** Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus. The core contribution is the four-layer result above. The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact is impressive but the theorem is the point.
+**Scope.** Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus. The core contribution is the four-layer result above. The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist in a single finite algebra. The artifact demonstrates feasibility; the independence theorem is the primary contribution.
 
 ### Frequently Asked Questions
 
 **Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are structurally necessary — you need some composition, some branching, some recursion (irredundancy proved). The specific axiom forms are not unique: composition admits ≥6 variants. But the variants are not equal: in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
 
-**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction, subobject classifier, internal composition fragment). The *specific axiom forms* are conventional — each capability admits multiple viable formulations. The classifier dichotomy is the only capability with a single axiom (and it's the finite analog of a topos-theoretic concept). The machine axioms (compose, inert) are the most "engineered" — they are the conscious choice to internalize the evaluator, independent of the classifier dichotomy (proved by N=10 counterexample). But even Compose admits 6 equivalent forms — the choice η·x = ρ·(g·x) is the one that produces the CDR-like behavior.
+**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction, subobject classifier, internal composition fragment). The *specific axiom forms* are conventional — each capability admits multiple viable formulations. The evaluator internalization axioms (Compose, Inert) are the most operational — they are the deliberate choice to eliminate the external machine by internalizing sequencing (Compose: η·x = ρ·(g·x)) and storage (Inert: g holds without transforming) into the algebra. Without them, self-simulation still works but requires an external evaluator. With them, Smith's tower terminates. This is not engineering for its own sake — it is the minimal machinery needed for the algebra to evaluate itself without external infrastructure. Even Compose admits 6 equivalent forms — the choice η·x = ρ·(g·x) is the one that minimizes the classifier count.
 
-**What's the contribution?** A four-layer structural picture of reflective computation. (1) **Independence**: three capabilities, no one implies any other — Lean-proved in all four directions. (2) **Irredundancy**: 7 axioms across 3 capabilities, none derivable from the rest — SAT-proved. (3) **Realization freedom**: each capability admits multiple inequivalent axiom forms (≥6, ≥4, ≥3) — SAT-proved. (4) **Classifier minimality**: the McCarthy realization is the unique form that keeps the maximum number of elements computational — it's selected by a parsimony principle intrinsic to the classifier wall. The capabilities are the skeleton; the axiom forms are the joints; the McCarthy choice is the posture that respects the wall. Plus: 55 machine-checked theorems (zero `sorry`), a tight bound (N=10), and a working artifact (compiled reflective tower, 2.2 ms native).
+**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). (2) A tight coexistence bound: N=10 is both necessary and sufficient for all three capabilities, proved from both directions. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities in a single 16-element algebra.
 
 ## The Seven Roles
 
@@ -158,9 +166,9 @@ This matters because every reflective system — every runtime with a reflection
 | Q | QUOTE | Freeze a term (constructor) | S (retraction pair) |
 | E | EVAL | Unwrap / interpret (destructor) | S (retraction pair) |
 | ρ | COND | Conditional branch | D (classifier wall) |
-| g | CONS | Build a pair | H (machine: substrate) |
+| g | CONS | Build a pair | H (internalization: substrate) |
 | f | CAR | First projection | D (Branch axiom) |
-| η | CDR | Second projection | H (machine: Compose) |
+| η | CDR | Second projection | H (internalization: Compose) |
 
 The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). S gives quote/eval. D gives the wall that separates judgment from transformation, enabling conditional dispatch. H gives composition and substrate, enabling pair construction and sequential evaluation. The roles fall out of the capabilities.
 
@@ -360,7 +368,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
 - **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-- **Presentation-independence of H.** S has a clean presentation-independent definition: existence of a section-retraction pair (standard category theory). D has one: existence of a classifier with the dichotomy property (finite analog of subobject classifier). H is less clean: "internal composition + fixed point" is defined via specific axiom forms (Branch, Compose, Inert, Y), and 13 alternative forms all work. The capability is irredundant (you need *some* composition, *some* recursion), but the presentation-independent characterization — what *exactly* H is, abstractly — is not as sharp as S or D. A categorical characterization of H (e.g., "the algebra is a closed category fragment" or "evaluation factors through an internal hom") would strengthen the framework. This is the weakest point of the three-capability decomposition.
+- **Evaluator internalization characterization.** H is currently defined as a conjunction of operational axioms (Compose + Inert, with Branch and Y for full evaluation). Whether a single presentation-independent axiom captures "the algebra provides its own evaluator" — analogous to how a retraction pair captures S and the classifier dichotomy captures D — remains open. The current formulation is sufficient (the independence proofs work) but may not be minimal or canonical. S and D have clean categorical definitions (section-retraction pair, subobject classifier with dichotomy); H does not yet. A categorical characterization (e.g., "evaluation factors through an internal hom") would strengthen the framework. This is the weakest point of the three-capability decomposition.
 - **Categorical formalization (mostly complete for paper 1).** The paper-1 proof inventory covers: universal decomposition theorems (19), functoriality (4), self-simulation injectivity (4), full independence (14 countermodel theorems), and tight bound (7) — 55 theorems across 7 Lean files, zero `sorry`. What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
