@@ -13,7 +13,7 @@ A structural decomposition of reflective computation into independent capabiliti
 3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
 5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
-6. **Proof inventory**: 8 files, 60 theorems, zero `sorry` — verify with `lake build`
+6. **Proof inventory**: 8 files, 62 theorems, zero `sorry` — verify with `lake build`
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -173,7 +173,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ### Paper 1: The Independence Structure (self-contained)
 
-60 theorems across 8 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+62 theorems across 8 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
 
 **The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
@@ -369,7 +369,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 - **Evaluator internalization characterization (resolved, Lean-proved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. Formally, the Internal Composition Property (ICP): ∃ pairwise distinct non-absorber a, b, c with b core-preserving, a = c∘b on core, and a taking ≥2 distinct values. ICP ↔ Compose+Inert is Lean-proved as a universal equivalence (pure logic, `ICP.lean`), and verified on all three N=10 counterexamples by `native_decide`. Also validated empirically across 250 SAT-generated retraction magmas (250/250 agreement). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
-- **Categorical formalization (mostly complete for paper 1).** 60 public theorems across 8 Lean files, zero `sorry`: universal decomposition and bounds (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`), functoriality (`Functoriality.lean`), self-simulation injectivity (`SelfSimulation.lean`), independence counterexamples (`Countermodel.lean`, `Countermodels10.lean`), tight bound (`Witness10.lean`), and H characterization (`ICP.lean`). What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Categorical formalization (mostly complete for paper 1).** 62 public theorems across 8 Lean files, zero `sorry`: universal decomposition and bounds (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`), functoriality (`Functoriality.lean`), self-simulation injectivity (`SelfSimulation.lean`), independence counterexamples (`Countermodel.lean`, `Countermodels10.lean`), tight bound (`Witness10.lean`), and H characterization (`ICP.lean`). What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
