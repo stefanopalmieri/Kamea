@@ -60,9 +60,13 @@ We prove independence by exhibiting Lean-verified finite counterexamples in all 
 \section{Introduction}
 % ══════════════════════════════════════════════════════════════
 
-Reflective computation — the ability of a system to represent, reason about, and modify its own execution — combines several distinct mechanisms. A self-interpreter encodes elements and decodes results. A type system or classifier organizes elements into behavioral categories. An internal evaluator eliminates the need for external infrastructure. In practice, these mechanisms are bundled together: a meta-circular evaluator simultaneously encodes, classifies, and evaluates.
+When a programmer writes a meta-circular evaluator, how many things are they doing? The standard answer is one: building a self-interpreter. The evaluator encodes programs as data, classifies expressions by type, and reduces them — all in a single recursive function. These mechanisms feel inseparable because they always appear together.
 
-This paper separates them. We define three capabilities of a finite extensional magma (a set with a binary operation whose left-regular representation is faithful):
+But they need not. A system can encode its own elements without classifying them (a G\"odel numbering has no type system). It can classify without evaluating (a type checker need not run programs). It can evaluate without classifying (an untyped reducer applies rules without sorting expressions into categories). Each of these is familiar in isolation. What is not obvious is whether the combinations are forced — whether, say, the ability to self-evaluate \emph{requires} the ability to classify, or merely co-occurs with it in practice.
+
+This paper answers the question for finite algebras: the three mechanisms are fully independent. We exhibit concrete finite structures where any one is present and the others absent. The separation is not a matter of expressiveness or convenience — it is a theorem, machine-checked in Lean.
+
+Specifically, we define three capabilities of a finite extensional magma (a set with a binary operation whose left-regular representation is faithful):
 
 \begin{itemize}
   \item \textbf{Self-simulation (S):} the existence of a section-retraction pair on the core — elements can encode and decode each other.
