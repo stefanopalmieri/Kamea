@@ -133,17 +133,9 @@ This is a parsimony principle intrinsic to the framework: the Kripke wall separa
 
 **Conjecture 2 (Kripke–Subobject Correspondence).** The Kripke dichotomy is the finite analog of decidability of the subobject classifier in a topos. A formal functor from the category of DRMs to Set, sending each DRM to its three-category decomposition (Z, C, N), is natural.
 
-**Conjecture 3 (Classifier Minimality ↔ Core-Faithfulness, partially resolved).** Structural analysis of all 6 Compose variants shows: the McCarthy realization is the unique form where the non-classifier stratum is **core-faithful** (all non-classifiers have distinct actions on core). In all alternatives, some non-classifiers collapse on core — they agree on computational behavior and differ only on zeros. Empirically at N=10:
+**Conjecture 3 (Classifier Minimality as Categorical Property).** The McCarthy realization is the unique Compose variant with |C|=1 (classifier count minimized). The initial hypothesis — that this corresponds to core-faithfulness of the non-classifier stratum — is **refuted**: SAT counterexamples show |C|=1 DRMs with non-faithful N (N=6,8,10) and |C|>1 DRMs with faithful N (N=8,10). The correlation in the Compose variants is specific to those models, not a structural law.
 
-| |C| | Distinct N-rows / |N| | Core-faithful? |
-|---|---|---|
-| 1 (McCarthy) | 7/7 (100%) | Yes |
-| 2 | 4/6 (67%) | No |
-| 3 | 3–4/5 (60–80%) | No |
-
-The categorical reading: classifier minimality corresponds to **faithfulness of the computational sub-representation** — the restriction of the left-regular representation to N × core is injective. In topos-theoretic terms: the McCarthy realization has a two-valued observation structure (one classifier), which forces all non-classifiers to be computationally distinct. Richer observation structures (more classifiers) allow computational redundancy.
-
-Whether this correspondence holds as a theorem for all DRMs (not just N=10 Compose variants) is open.
+Classifier minimality remains a well-defined selection criterion that uniquely picks the McCarthy form from the space of Compose variants. Whether it corresponds to any known categorical property (beyond the combinatorial fact of having the fewest classifiers) is open. Candidate connections: two-valuedness of the subobject classifier action, maximality of the encoder sub-representation, minimal logical complexity of the internal observation structure.
 
 ## What Is Proved vs. What Is Open
 
@@ -166,5 +158,5 @@ Whether this correspondence holds as a theorem for all DRMs (not just N=10 Compo
 | Cross-formalism universality | Conjectured | — |
 | Kripke ↔ subobject classifier decidability | Conjectured | — |
 | McCarthy realization minimizes classifier count | SAT-verified |
-| Classifier minimality ↔ core-faithfulness of N | Empirical (N=10, all 6 variants) |
-| Equivalence holds for all DRMs | Conjectured | — |
+| Classifier minimality ↔ core-faithfulness of N | **Refuted** (SAT counterexamples both directions) |
+| Classifier minimality as categorical property | Open | — |
