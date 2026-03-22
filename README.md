@@ -12,7 +12,8 @@ A structural decomposition of reflective computation into independent capabiliti
 2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
 3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
-5. **Proof inventory**: 7 files, 55 theorems, zero `sorry` — verify with `lake build`
+5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
+6. **Proof inventory**: 8 files, 65 theorems, zero `sorry` — verify with `lake build`
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -172,7 +173,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ### Paper 1: The Independence Structure (self-contained)
 
-55 theorems across 7 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+65 theorems across 8 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
 
 **The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
@@ -196,6 +197,12 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - D ⊬ H: N=10 DRM satisfying classifier dichotomy where no internal composition exists `[Lean, by native_decide]`
 - H ⊬ D: N=10 FRM with internal composition + Branch + Y that violates classifier dichotomy `[Lean, by native_decide]`
 - S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
+
+**H characterization** ([`ICP.lean`](Kamea/ICP.lean)):
+- ICP ↔ Compose+Inert: the two formulations are logically equivalent for any magma `[Lean, pure logic, no decide]`
+- D⊬H model has no ICP (exhaustive search), H⊬D model has ICP, S+D+H witness has ICP `[Lean, by native_decide]`
+- D ⊬ ICP and ICP ⊬ D: the classifier dichotomy and internal composition are independent `[Lean, counterexample]`
+- S+D+ICP coexist at N=10 `[Lean, witness]`
 
 **Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
 - S+D+H coexist at N=10: concrete witness is a DRM with internal composition + Branch + Y `[Lean, by native_decide]`
@@ -324,6 +331,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
 - [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating classifier dichotomy
 - [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
+- [`Kamea/ICP.lean`](Kamea/ICP.lean) — **ICP ↔ Compose+Inert**: H characterization as factorable action, verified on all counterexamples
 - [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Tight bound: S+D+H coexist at N=10
 - [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
 - [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) — Standard categorical vocabulary translation
@@ -360,8 +368,8 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
 - **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-- **Evaluator internalization characterization (resolved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. In the finite-algebra setting, this instantiates as the *Internal Composition Property* (ICP): there exist pairwise distinct non-absorber elements a, b, c such that b preserves the core, a · x = c · (b · x) on core, and a takes ≥2 distinct values on core. ICP is empirically equivalent to Compose + Inert across 250 SAT-generated retraction magmas and the 3 Lean-proved N=10 counterexamples (250/250 agreement). The equivalence is not yet a Lean theorem. Two degeneracies motivate the conditions: Q² = E requires b ≠ c (pairwise distinct), and classifier-then-inert → constant-absorber requires non-triviality (≥2 values). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
-- **Categorical formalization (mostly complete for paper 1).** The paper-1 proof inventory covers: universal decomposition theorems (19), functoriality (4), self-simulation injectivity (4), full independence (14 countermodel theorems), and tight bound (7) — 55 theorems across 7 Lean files, zero `sorry`. What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Evaluator internalization characterization (resolved, Lean-proved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. Formally, the Internal Composition Property (ICP): ∃ pairwise distinct non-absorber a, b, c with b core-preserving, a = c∘b on core, and a taking ≥2 distinct values. ICP ↔ Compose+Inert is Lean-proved as a universal equivalence (pure logic, `ICP.lean`), and verified on all three N=10 counterexamples by `native_decide`. Also validated empirically across 250 SAT-generated retraction magmas (250/250 agreement). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
+- **Categorical formalization (mostly complete for paper 1).** The paper-1 proof inventory covers: universal decomposition (19), functoriality (4), self-simulation injectivity (4), full independence (14 countermodel theorems), tight bound (7), and H characterization (10, including ICP ↔ Compose+Inert equivalence) — 65 theorems across 8 Lean files, zero `sorry`. What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
