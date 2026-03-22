@@ -1,16 +1,18 @@
 # Presentation-Independent Characterization of H
 
-*The evaluator internalization capability has a single-concept definition: the Internal Composition Property.*
+*The evaluator internalization capability corresponds to a standard categorical structure: partial internal composition.*
 
 ---
 
 ## The Problem
 
-S has a clean single-concept definition: retraction pair (the algebra can name its own elements). D has a clean single-concept definition: Kripke dichotomy (classification and transformation don't mix). H was a bundle of operational axioms — Compose (η·x = ρ·(g·x)), Inert (g maps core to core), Branch (ρ dispatches on τ), and Y (fixed-point combinator). The goal: find a single abstract property that captures what H IS, with the axioms as witnesses rather than definition.
+S corresponds to a section-retraction pair (the algebra can name its own elements). D corresponds to a decidable subobject classifier (classification and transformation don't mix). H was a bundle of operational axioms — Compose (η·x = ρ·(g·x)), Inert (g maps core to core), Branch (ρ dispatches on τ), and Y (fixed-point combinator). The goal: find a single categorical property that captures what H IS, with the axioms as witnesses rather than definition.
 
 ## The Result
 
-**Internal Composition Property (ICP):**
+**Categorical property:** Partial internal composition — the left-regular representation contains a non-trivially composed element.
+
+**Finite-algebra instantiation (Internal Composition Property / ICP):**
 
 > *There exist pairwise distinct elements a, b, c ∈ S \ {⊤, ⊥} such that b preserves the core, the composite function c ∘ b on core equals a's row on core, and a takes at least two distinct values on core.*
 
@@ -20,9 +22,9 @@ Formally: ∃ a, b, c ∈ S \ {z₁, z₂}, pairwise distinct, such that:
 2. **Factorization:** a · x = c · (b · x) for all x ∈ core(S)
 3. **Non-triviality:** |{a · x : x ∈ core(S)}| ≥ 2
 
-In one sentence: **"Some element's action on core factors non-trivially through two other distinct elements' actions, one of which preserves the core."**
+In one sentence: **"The left-regular representation admits a non-trivial factorization L_a = L_c ∘ L_b on core, with L_b core-preserving."**
 
-This is one concept — *factorable action* — not a list of four capabilities.
+This is one concept — *partial internal composition* — not a list of four capabilities. "Factorable action" is the concrete finite-algebra term for the same property.
 
 ## Equivalence
 
@@ -82,13 +84,13 @@ This is a fragment of monoidal closure: not every composite is representable, bu
 
 ## The Three Capabilities Restated
 
-| Capability | One-sentence definition | Categorical analog |
+| Capability | Categorical property | Finite-algebra definition |
 |---|---|---|
-| **S** (self-simulating) | The algebra has a retraction pair on core | Section-retraction pair |
-| **D** (self-describing) | Every non-absorber is either all-boolean or all-non-boolean on core | Decidable subobject classifier |
-| **H** (self-hosting) | Some element's action on core factors non-trivially through two others, one core-preserving | Partial internal composition |
+| **S** (self-simulating) | Section-retraction pair | Retraction pair on core |
+| **D** (self-describing) | Decidable subobject classifier | Every non-absorber is all-boolean or all-non-boolean on core |
+| **H** (self-hosting) | Partial internal composition | Some element's action on core factors non-trivially through two others, one core-preserving |
 
-All three are now single-concept definitions. None references specific element names or operational axioms.
+All three correspond to standard categorical structures. The finite-algebra definitions reference no specific element names or operational axioms.
 
 ## What Was Tested and What Was Ruled Out
 
@@ -138,7 +140,7 @@ The investigation reveals why H is harder to abstract than S or D:
 
 This locality is inherent. The evaluator needs exactly one composition step (store-then-dispatch). It doesn't need all compositions to be internal, or most, or even many. It needs exactly one. This makes H intrinsically existential rather than universal, which is why it felt like a bundle of operational axioms — each axiom was witnessing a different aspect of the same existential statement.
 
-ICP shows that the "bundle" is actually a single existential: ∃ a non-trivial factorable action. Compose, Inert, Branch, and Y are four witnesses of this one fact, not four independent requirements. (Branch and Y are enrichments that go beyond what ICP captures, but ICP captures the core.)
+ICP shows that the "bundle" is actually a single existential: ∃ a non-trivial internal composite. Compose, Inert, Branch, and Y are four witnesses of this one fact, not four independent requirements. (Branch and Y are enrichments that go beyond what ICP captures, but ICP captures the core.)
 
 ## What ICP Does NOT Solve
 
@@ -165,12 +167,12 @@ python3 h_characterization_final.py    # full validation (requires z3-solver)
 
 ## Summary
 
-H = **"the algebra has a non-trivial factorable action."**
+H = **partial internal composition** — the left-regular representation admits a non-trivial factorization on core.
 
-One concept, one sentence, no element names. The current axioms (Compose + Inert) are witnesses of this property. Branch and Y are enrichments that provide conditional dispatch and recursion on top of the basic factorability.
+One categorical concept, one sentence, no element names. In finite algebras, this instantiates as the Internal Composition Property (ICP). The current axioms (Compose + Inert) are witnesses. Branch and Y are enrichments that provide conditional dispatch and recursion on top of the basic composition.
 
-| Capability | Definition | Witnesses |
-|---|---|---|
-| S | Retraction pair on core | Q (section), E (retraction) |
-| D | Dichotomic partition of non-absorbers | τ (classifier), Kripke wall |
-| H | Non-trivial factorable action on core | η (composite), g (storage), ρ (dispatch) |
+| Capability | Categorical property | Finite-algebra instantiation | Witnesses |
+|---|---|---|---|
+| S | Section-retraction pair | Retraction pair on core | Q, E |
+| D | Decidable subobject classifier | Dichotomic partition of non-absorbers | τ, Kripke wall |
+| H | Partial internal composition | Non-trivial factorable action on core | η, g, ρ |

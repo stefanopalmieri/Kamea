@@ -8,7 +8,7 @@ A structural decomposition of reflective computation into independent capabiliti
 
 ### For Reviewers
 
-1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = factorable action (Internal Composition Property)
+1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = partial internal composition
 2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
 3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
@@ -25,13 +25,13 @@ Kamea separates three independent capabilities of reflective computation — sel
 
 Self-simulation, self-description, and evaluator internalization are three independent capabilities. No capability implies any other — proved by concrete finite counterexamples at every boundary and every diagonal. Each can be present or absent independently. Whether the axioms for each capability are *minimal* (whether fewer or different axioms could achieve the same structural effect) remains open.
 
-| Capability | Presentation-independent definition | Witnesses (one presentation) | Independence |
-|------------|-------------------------------------|------------------------------|--------------|
-| **Self-simulating (S)** | Retraction pair on core | Q (section), E (retraction) | `[Lean]` `SelfSimulation.lean` |
-| **Self-describing (D)** | Classifier dichotomy — every non-zero is all-boolean or all-non-boolean on core | τ (classifier), Kripke wall | `[Lean]` `Countermodel.lean`, `Countermodels10.lean` |
-| **Evaluator internalization (H)** | Factorable action — some element's row on core factors non-trivially as c ∘ b with b core-preserving | η (composite), g (storage), ρ (dispatch) | `[Lean]` `Countermodels10.lean` |
+| Capability | Categorical property | Finite-algebra instantiation | Independence |
+|------------|---------------------|------------------------------|--------------|
+| **Self-simulating (S)** | Section-retraction pair | Q/E with mutual inverse on core | `[Lean]` `SelfSimulation.lean` |
+| **Self-describing (D)** | Decidable subobject classifier | Classifier dichotomy: every non-zero is all-boolean or all-non-boolean on core | `[Lean]` `Countermodel.lean`, `Countermodels10.lean` |
+| **Evaluator internalization (H)** | Partial internal composition | Some element's row on core factors non-trivially as c ∘ b with b core-preserving | `[Lean]` `Countermodels10.lean` |
 
-All three are single-concept definitions. None references specific element names. The witnesses (Q/E, τ, η/g/ρ) are one presentation; each capability admits multiple axiom forms.
+All three are single-concept definitions corresponding to standard categorical structures. The finite-algebra instantiations are witnessed by specific elements (Q/E, τ, η/g/ρ) but defined without naming them; each capability admits multiple axiom forms.
 
 | Enrichment | What it adds | Bridges |
 |------------|-------------|---------|
@@ -44,11 +44,11 @@ Branch and Y are not independent capabilities — they are enrichments that conn
 
 | | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
 |---|---|---|---|---|
-| **Counterexample** | N=8 (the Countermodel) | N=10 (no factorable action) | N=10 (diagonal) | N=4 (`kripke4`) |
-| **What it shows** | Self-simulates, no clean roles | Has dichotomy, no composition factors | Has factorable action, no dichotomy | Has retraction pair, too small for H |
+| **Counterexample** | N=8 (the Countermodel) | N=10 (no internal composition) | N=10 (diagonal) | N=4 (`kripke4`) |
+| **What it shows** | Self-simulates, no clean roles | Has dichotomy, no composition factors | Has internal composition, no dichotomy | Has retraction pair, too small for H |
 | **Proof** | `[Lean]` | `[Lean]` | `[Lean]` | `[Lean]` (trivial: H needs N≥10) |
 
-The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has a factorable action (the evaluation core) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
+The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has internal composition (the evaluation core) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
 
 (The classifier dichotomy is analogous in spirit to a grounded/ungrounded separation [Kripke 1975], but here it is a total finite algebraic condition rather than a partial transfinite construction. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) for the categorical analysis.)
 
@@ -136,17 +136,17 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus.
 
-Many reflective systems combine mechanisms that this framework separates into three capabilities and two enrichments. The framework shows what each costs: a retraction pair (naming), the classifier dichotomy (judging), and a factorable action (evaluating) — plus two enrichments that connect them: Branch (classifier-controlled dispatch) and Y (unbounded recursion). All three capabilities have single-concept, presentation-independent definitions; all three are proved independent. The three-category architecture (zeros, classifiers, non-classifiers) and the walls between categories are proved universal. The specific seven roles are one realization within an equivalence class — each capability admits multiple axiom forms (≥6, ≥4, ≥3), and the McCarthy realization is the unique form that minimizes the classifier count. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md), [`docs/h_characterization.md`](docs/h_characterization.md).
+Many reflective systems combine mechanisms that this framework separates into three capabilities and two enrichments. The framework shows what each costs: a section-retraction pair (naming), a decidable subobject classifier (judging), and a partial internal composition (evaluating) — plus two enrichments that connect them: Branch (classifier-controlled dispatch) and Y (unbounded recursion). All three capabilities correspond to standard categorical structures; all three are proved independent. The three-category architecture (zeros, classifiers, non-classifiers) and the walls between categories are proved universal. The specific seven roles are one realization within an equivalence class — each capability admits multiple axiom forms (≥6, ≥4, ≥3), and the McCarthy realization is the unique form that minimizes the classifier count. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md), [`docs/h_characterization.md`](docs/h_characterization.md).
 
 The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist. The artifact demonstrates feasibility; the independence theorem is the primary contribution.
 
 ### Frequently Asked Questions
 
-**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are irredundant — each is a single abstract property (retraction pair, classifier dichotomy, factorable action). The two enrichments (Branch, Y) connect them. The specific axiom forms are not unique: composition admits ≥6 variants. But the variants are not equal: in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
+**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are irredundant — each corresponds to a standard categorical structure (section-retraction, decidable subobject classifier, partial internal composition). The two enrichments (Branch, Y) connect them. The specific axiom forms are not unique: composition admits ≥6 variants. But the variants are not equal: in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
 
-**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction, decidable subobject classifier, partial internal composition). Each has a presentation-independent definition: S is a retraction pair, D is the classifier dichotomy, H is a non-trivial factorable action — the existence of an element whose row on core factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
+**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). In the finite-algebra setting, these instantiate as: a retraction pair on core (S), the classifier dichotomy (D), and a non-trivially factorable action on core (H) — the existence of an element whose row factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
-**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three have single-concept, presentation-independent definitions. (2) A tight coexistence bound: N=10 is both necessary and sufficient for all three capabilities, proved from both directions. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
+**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) A tight coexistence bound: N=10 is both necessary and sufficient for all three capabilities, proved from both directions. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
 
 ## The Seven Roles
 
@@ -155,12 +155,12 @@ The 16×16 table, the compiled tower, Turing completeness, and performance bench
 | ⊤ | NIL | Empty / base case | S (retraction pair) |
 | Q | QUOTE | Freeze a term (constructor) | S (retraction pair) |
 | E | EVAL | Unwrap / interpret (destructor) | S (retraction pair) |
-| g | CONS | Build a pair (core-preserving) | H (factorable action: storage) |
+| g | CONS | Build a pair (core-preserving) | H (internal composition: storage) |
 | f | CAR | First projection | Branch enrichment |
-| η | CDR | Second projection | H (factorable action: composite) |
-| ρ | COND | Conditional branch | H (factorable action: dispatch) + Branch enrichment |
+| η | CDR | Second projection | H (internal composition: composite) |
+| ρ | COND | Conditional branch | H (internal composition: dispatch) + Branch enrichment |
 
-The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). S gives quote/eval. H gives the factorable action — g stores, ρ dispatches, η composes — enabling pair construction and sequential evaluation. The Branch enrichment connects D's classifier to H's dispatcher, giving ρ its conditional behavior. The roles fall out of the capabilities and enrichments.
+The correspondence is structural (same role inventory) rather than semantic (the domains differ: Ψ operates on magma elements, Lisp on symbolic lists). S gives quote/eval. H gives the internal composition — g stores, ρ dispatches, η composes — enabling pair construction and sequential evaluation. The Branch enrichment connects D's classifier to H's dispatcher, giving ρ its conditional behavior. The roles fall out of the capabilities and enrichments.
 
 The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative (three-line Lean proof in [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)).
 
@@ -193,19 +193,19 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 **The three capabilities are independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean)):
 - S ⊬ D: N=8 FRM with classifier that violates classifier dichotomy `[Lean, by decide]`
-- D ⊬ H: N=10 DRM satisfying classifier dichotomy where no non-trivial factorable action exists `[Lean, by native_decide]`
-- H ⊬ D: N=10 FRM with factorable action (Compose+Inert+Branch+Y) that violates classifier dichotomy `[Lean, by native_decide]`
+- D ⊬ H: N=10 DRM satisfying classifier dichotomy where no internal composition exists `[Lean, by native_decide]`
+- H ⊬ D: N=10 FRM with internal composition + Branch + Y that violates classifier dichotomy `[Lean, by native_decide]`
 - S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
 
 **Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
-- S+D+H coexist at N=10: concrete witness is a DRM with factorable action + Branch + Y `[Lean, by native_decide]`
+- S+D+H coexist at N=10: concrete witness is a DRM with internal composition + Branch + Y `[Lean, by native_decide]`
 - N=10 is optimal: 10 distinct distinguished elements need N ≥ 10 (counting) `[trivial]`
 
 **Partial minimality** (`axiom_irredundancy_test.py`):
 - Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
 - S = {retraction pair, E-transparency}: both irredundant
 - D = {classifier dichotomy}: single axiom
-- H = {Compose, Inert}: the factorable action core (2 axioms, equivalent to the Internal Composition Property)
+- H = {Compose, Inert}: the internal composition core (2 axioms, equivalent to the Internal Composition Property)
 - Enrichments = {Branch, Y}: both irredundant over S+D+H
 - Total: 5 capability axioms + 2 enrichment axioms = 7 irredundant axioms
 
@@ -248,8 +248,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`. These are 
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
 - S ⊬ D: N=8 non-dichotomic retraction magma (the Countermodel) `[Lean: Countermodel.lean]`
-- D ⊬ H: N=10 DRM without factorable action (no Compose) `[Lean: Countermodels10.lean]`; N=10 DRM without Inert `[SAT]`
-- H ⊬ D: N=10 FRM with factorable action + Branch + Y but 4 mixed elements violating classifier dichotomy `[Lean: Countermodels10.lean]`
+- D ⊬ H: N=10 DRM without internal composition (no Compose) `[Lean: Countermodels10.lean]`; N=10 DRM without Inert `[SAT]`
+- H ⊬ D: N=10 FRM with internal composition + Branch + Y but 4 mixed elements violating classifier dichotomy `[Lean: Countermodels10.lean]`
 - Tight bound: S+D+H coexist at N=10 (minimum possible) `[Lean: Witness10.lean]`; full axiom stack requires N=12 `[SAT]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
@@ -304,7 +304,7 @@ The computational primitives of Lisp — quote/eval, conditional, cons/car/cdr, 
 
 The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the classifier dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](Kamea/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
-The axioms operate at three layers. The **capability layer** (retraction pair, classifier dichotomy, factorable action) provides the three independent computational capabilities (S, D, H) — no capability implies any other (counterexamples at N=8 and N=10), and all three coexist at N=10. The **enrichment layer** (Branch, Y) connects the capabilities: Branch bridges D and H (the classifier controls the dispatcher), and Y crosses the decidability boundary (bounded → unbounded recursion). The **organizational layer** (structural ladder L3–L8, PA, Selection, 1-Inert) forces the clean role architecture (2-1-8-1 distribution, seven separated roles) that produces the McCarthy correspondence — this pushes the minimum to N=12. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md). H characterization: [`docs/h_characterization.md`](docs/h_characterization.md).
+The axioms operate at three layers. The **capability layer** (section-retraction, decidable subobject classifier, partial internal composition) provides the three independent computational capabilities (S, D, H) — no capability implies any other (counterexamples at N=8 and N=10), and all three coexist at N=10. The **enrichment layer** (Branch, Y) connects the capabilities: Branch bridges D and H (the classifier controls the dispatcher), and Y crosses the decidability boundary (bounded → unbounded recursion). The **organizational layer** (structural ladder L3–L8, PA, Selection, 1-Inert) forces the clean role architecture (2-1-8-1 distribution, seven separated roles) that produces the McCarthy correspondence — this pushes the minimum to N=12. Full inevitability analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md). Categorical reconstruction: [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md). H characterization: [`docs/h_characterization.md`](docs/h_characterization.md).
 
 Results fall into four tiers:
 
@@ -360,7 +360,7 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
 - **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Tight bound: S+D+H coexist at N=10 (`Witness10.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-- **Evaluator internalization characterization (resolved).** H now has a presentation-independent definition on par with S and D: the *Internal Composition Property* (ICP). An algebra satisfies ICP when there exist pairwise distinct non-absorber elements a, b, c such that b preserves the core, a · x = c · (b · x) on core, and a takes ≥2 distinct values — "some element's action on core factors non-trivially through two others, one core-preserving." ICP is empirically equivalent to Compose + Inert across 250 SAT-generated retraction magmas and the 3 Lean-proved N=10 counterexamples (250/250 agreement). The equivalence is not yet a Lean theorem. Two degeneracies motivate the conditions: Q² = E requires b ≠ c (pairwise distinct), and classifier-then-inert → constant-absorber requires non-triviality (≥2 values). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
+- **Evaluator internalization characterization (resolved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. In the finite-algebra setting, this instantiates as the *Internal Composition Property* (ICP): there exist pairwise distinct non-absorber elements a, b, c such that b preserves the core, a · x = c · (b · x) on core, and a takes ≥2 distinct values on core. ICP is empirically equivalent to Compose + Inert across 250 SAT-generated retraction magmas and the 3 Lean-proved N=10 counterexamples (250/250 agreement). The equivalence is not yet a Lean theorem. Two degeneracies motivate the conditions: Q² = E requires b ≠ c (pairwise distinct), and classifier-then-inert → constant-absorber requires non-triviality (≥2 values). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
 - **Categorical formalization (mostly complete for paper 1).** The paper-1 proof inventory covers: universal decomposition theorems (19), functoriality (4), self-simulation injectivity (4), full independence (14 countermodel theorems), and tight bound (7) — 55 theorems across 7 Lean files, zero `sorry`. What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
