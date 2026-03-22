@@ -10,7 +10,7 @@ A structural decomposition of reflective computation into independent capabiliti
 
 1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = partial internal composition
 2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
-3. **Tight bound**: N=10 is necessary (10 pairwise-distinct named elements required by construction) and sufficient (Lean witness in `Witness10.lean`)
+3. **Coexistence witness**: S+D+H coexist at N=10 with all roles distinct (Lean witness in `Witness10.lean`). With role overlap permitted, S+D+ICP+Branch+Y coexist at N=6 (SAT). The N=10 witness is the reference model; the N=6 result shows the bound depends on distinctness assumptions.
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
 5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
 6. **Proof inventory**: 8 files, 62 theorems, zero `sorry` — verify with `lake build`
@@ -153,7 +153,7 @@ The 16×16 table, the compiled tower, Turing completeness, and performance bench
 
 **Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). In the finite-algebra setting, these instantiate as: a retraction pair on core (S), the classifier dichotomy (D), and a non-trivially factorable action on core (H) — the existence of an element whose row factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
-**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) A tight coexistence bound: the formalization requires N=10 (10 distinct named elements), and a Lean witness at N=10 shows sufficiency. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
+**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) Coexistence witnesses: all capabilities coexist at N=10 with distinct roles (Lean witness) and at N=6 with role overlap (SAT). (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
 
 ## The Seven Roles
 
@@ -210,9 +210,10 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - D ⊬ ICP and ICP ⊬ D: the classifier dichotomy and internal composition are independent `[Lean, counterexample]`
 - S+D+ICP coexist at N=10 `[Lean, witness]`
 
-**Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
-- S+D+H coexist at N=10: concrete witness is a DRM with internal composition + Branch + Y `[Lean, by native_decide]`
-- N=10 is optimal: the formalization requires 10 pairwise-distinct named elements, so N ≥ 10 by construction. Whether role merging could reduce this bound is open but unlikely — the ICP requires 3 elements distinct from the retraction pair and absorbers.
+**Coexistence** ([`Witness10.lean`](Kamea/Witness10.lean)):
+- S+D+H coexist at N=10 with all 10 roles distinct: concrete Lean witness `[Lean, by native_decide]`
+- With role overlap permitted, S+D+ICP+Branch+Y coexist at N=6 (ICP witnesses overlap retraction pair) `[SAT]`
+- The N=10 witness is the reference model for the artifact; the N=6 result shows the capabilities themselves don't require 10 distinct elements
 
 **Partial minimality** (`axiom_irredundancy_test.py`):
 - Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
