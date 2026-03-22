@@ -10,7 +10,7 @@ A structural decomposition of reflective computation into independent capabiliti
 
 1. **Definitions**: S (self-simulation) = retraction pair; D (self-description) = classifier dichotomy; H (evaluator internalization) = partial internal composition
 2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
-3. **Tight bound**: N=10 is necessary (counting) and sufficient (Lean witness in `Witness10.lean`)
+3. **Tight bound**: N=10 is necessary (10 pairwise-distinct named elements required by construction) and sufficient (Lean witness in `Witness10.lean`)
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
 5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
 6. **Proof inventory**: 8 files, 62 theorems, zero `sorry` — verify with `lake build`
@@ -21,6 +21,12 @@ A structural decomposition of reflective computation into independent capabiliti
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
 Kamea separates three independent capabilities of reflective computation — self-simulation, self-description, and evaluator internalization — and shows that no capability implies any other (proved by concrete counterexamples). The core theorem is witnessed minimally at N=10. A richer 16×16 table supports the artifact: a reflective tower, compilation, and operational demos.
+
+### Why finite extensional magmas?
+
+A meta-circular evaluator applies functions to arguments. Strip away the syntax, the types, and the environment — what remains is a set of elements and a binary operation: `apply(f, x)`. That operation is the Cayley table. An extensional magma is what you get when you require that `apply` distinguishes its arguments: if two functions agree on all inputs, they are equal. The two absorbers (⊤, ⊥) are the truth values — the constant functions that ignore their argument. The retraction pair (Q, E) is Gödel numbering: Q encodes an element as data, E decodes it back. Everything else is structure that the operation forces.
+
+This is not a claim that magmas *are* evaluators, any more than Turing machines *are* programs. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation would be invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction. Finite algebra makes the separation visible by stripping the infrastructure down to the operation alone.
 
 ## The Three Capabilities
 
@@ -147,7 +153,7 @@ The 16×16 table, the compiled tower, Turing completeness, and performance bench
 
 **Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). In the finite-algebra setting, these instantiate as: a retraction pair on core (S), the classifier dichotomy (D), and a non-trivially factorable action on core (H) — the existence of an element whose row factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
-**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) A tight coexistence bound: N=10 is both necessary and sufficient for all three capabilities, proved from both directions. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
+**What's the contribution?** (1) An independence theorem: self-simulation, self-description, and evaluator internalization are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) A tight coexistence bound: the formalization requires N=10 (10 distinct named elements), and a Lean witness at N=10 shows sufficiency. (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
 
 ## The Seven Roles
 
@@ -206,7 +212,7 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 **Tight bound** ([`Witness10.lean`](Kamea/Witness10.lean)):
 - S+D+H coexist at N=10: concrete witness is a DRM with internal composition + Branch + Y `[Lean, by native_decide]`
-- N=10 is optimal: 10 distinct distinguished elements need N ≥ 10 (counting) `[trivial]`
+- N=10 is optimal: the formalization requires 10 pairwise-distinct named elements, so N ≥ 10 by construction. Whether role merging could reduce this bound is open but unlikely — the ICP requires 3 elements distinct from the retraction pair and absorbers.
 
 **Partial minimality** (`axiom_irredundancy_test.py`):
 - Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
@@ -391,6 +397,10 @@ An infinite tower cannot be defunctionalized — there are infinitely many conti
 | **Boba's Tower (Kamea)** | **Grounded (256 bytes)** | **Tagged data** | **Compile the tower itself** |
 
 What they have that we don't: live meta-interpreter modification (`set! base-eval`), infinite tower levels, compilation under modified semantics. What we have that none of them do: walkable continuations (the branch swap), a compiled tower (2.2 ms native), formal verification (106+ Lean theorems, zero `sorry`), and runtime substrate verification. See [`docs/related_work.md`](docs/related_work.md) for the full comparison.
+
+**Algebraic models of computation.** The tradition of studying computation through finite algebraic structures includes Minsky's register machines, Shepherdson and Sturgis's work on computability via algebraic operations, and the algebraic approach to CSP (constraint satisfaction problems) pioneered by Jeavons, Bulatov, and others. Our magmas are not register machines — they are closer to the action of a monoid on itself via left-multiplication. The connection is that the Cayley table of a finite magma *is* the complete specification of the operation, and the structural properties of that table (retraction pairs, classifier dichotomy, internal composition) determine which computational capabilities the algebra supports. The algebraic CSP program studies which algebraic structures make constraint problems tractable; our program studies which algebraic structures make reflective computation possible.
+
+**Evaluator internalization and Futamura projections.** Our capability H (evaluator internalization) is related to the Futamura projections: specializing an interpreter with respect to a program yields a compiled program (projection 1), specializing a specializer with respect to an interpreter yields a compiler (projection 2), and specializing a specializer with respect to itself yields a compiler generator (projection 3). The compiled reflective tower in the artifact is projection 1 applied to the meta-circular evaluator. The connection to H is that evaluator internalization is the algebraic precondition for these projections: without internal composition, the algebra cannot represent the specialization step, and the projections require an external machine. With H, the algebra provides its own evaluator, and compilation becomes possible.
 
 ---
 
