@@ -51,7 +51,7 @@
 \begin{abstract}
 We identify three capabilities of reflective computation — self-representation, self-description, and self-execution — and prove they are fully independent in finite extensional magmas: no capability implies any other. Each capability has a single-concept, presentation-independent definition. Self-representation is the existence of a section-retraction pair. Self-description is the classifier dichotomy: every non-absorber element is either entirely boolean-valued or entirely non-boolean-valued on the core. Self-execution is the Internal Composition Property: some element's action on core factors non-trivially through two others, one core-preserving.
 
-We prove independence by exhibiting Lean-verified finite counterexamples in all four non-trivial directions ($N\!=\!8$ and $N\!=\!10$), exhibit a coexistence witness at $N\!=\!10$, prove the three-category decomposition is an algebraic invariant, and show the magma setting is necessary: no associative magma admits the classifier dichotomy (ruling out semigroups, monoids, and groups). All results are machine-checked in Lean~4, zero \texttt{sorry}.
+We prove independence by exhibiting Lean-verified finite counterexamples in all six pairwise directions ($N\!=\!4$ through $N\!=\!10$), exhibit a coexistence witness at $N\!=\!10$, prove the three-category decomposition is an algebraic invariant, and show that non-associativity is essential: no associative extensional 2-pointed magma admits the classifier dichotomy (ruling out semigroups, monoids, and groups). All results are machine-checked in Lean~4, zero \texttt{sorry}.
 \end{abstract}
 
 \maketitle
@@ -70,7 +70,7 @@ We define three capabilities of a finite extensional magma~\cite{burris81} (a se
   \item \textbf{Self-execution (H):} the Internal Composition Property (ICP) — some element's action on core factors non-trivially as $a \dotop x = c \dotop (b \dotop x)$ with $b$ core-preserving, $a \neq b \neq c$ pairwise distinct, and $a$ taking $\geq 2$ distinct values.
 \end{itemize}
 
-We prove these three capabilities are fully independent: no capability implies any other. Four Lean-verified finite counterexamples establish all four non-trivial directions (the remaining two are definitional: both D and H are formalized on top of S). A Lean-verified witness shows all three capabilities coexist at $N\!=\!10$.
+We prove these three capabilities are fully independent: no capability implies any other. Six Lean-verified finite counterexamples establish all six pairwise directions. A Lean-verified witness shows all three capabilities coexist at $N\!=\!10$.
 
 The three-category decomposition induced by D (zeros, classifiers, non-classifiers) is proved to be an algebraic invariant: it is preserved by all magma isomorphisms that respect the absorbers. The ICP is proved logically equivalent to the standard operational axioms (Compose + Inert), giving self-execution a single-concept characterization on par with S and D.
 
@@ -79,7 +79,7 @@ All results are formalized in Lean~4~\cite{moura21} and verified by \texttt{lake
 \paragraph{Contributions.}
 \begin{enumerate}
   \item A characterization of H: the ICP is logically equivalent to Compose+Inert (Section~\ref{sec:icp}).
-  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples at $N\!=\!8$ and $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!10$ (Section~\ref{sec:bound}).
+  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples in all six directions at $N\!=\!4$ through $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!10$ (Section~\ref{sec:bound}).
   \item Universal algebraic obstructions: no $\DRM$ has a right identity or is associative, ruling out semigroups, monoids, and groups (Section~\ref{sec:universal}).
   \item A decomposition invariance theorem: the three-category partition is preserved by isomorphisms (Section~\ref{sec:invariance}).
 \end{enumerate}
@@ -107,11 +107,11 @@ We write $\core(S) := S \setminus \{z_1, z_2\}$ for the non-absorber elements.
 A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure).
 \end{definition}
 
-The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. This is the finite algebraic analog of a G\"odel numbering.
+The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. Informally, this acts as a finite internal coding scheme, analogous in spirit to a G\"odel numbering.
 
 \begin{definition}[Classifier Dichotomy / Dichotomic Retract Magma]
 \label{def:drm}
-A \emph{Dichotomic Retract Magma} $(\DRM)$ extends $\FRM$ with:
+A \emph{Dichotomic Retract Magma} $(\DRM)$ is an extensional 2-pointed magma with a retraction pair (i.e., an $\FRM$) that additionally has:
 \begin{enumerate}
   \item A \emph{classifier} $\tau \in \core(S)$ with $\tau \dotop x \in \{z_1, z_2\}$ for all $x$.
   \item The \emph{classifier dichotomy}: for every $y \in \core(S)$, either
@@ -123,7 +123,7 @@ A \emph{Dichotomic Retract Magma} $(\DRM)$ extends $\FRM$ with:
 \end{enumerate}
 \end{definition}
 
-The dichotomy creates a three-category decomposition $S = Z \sqcup C \sqcup N$ where $Z = \{z_1, z_2\}$ (absorbers), $C$ (classifiers), and $N$ (non-classifiers). No element can be partially classifying. This is a finite algebraic analog of Kripke's grounded/ungrounded stratification of truth~\cite{kripke75}: truth-producing elements are cleanly separated from computation-producing elements.
+The dichotomy creates a three-category decomposition $S = Z \sqcup C \sqcup N$ where $Z = \{z_1, z_2\}$ (absorbers), $C$ (classifiers), and $N$ (non-classifiers). No element can be partially classifying. This suggests a loose analogy with Kripke's grounded/ungrounded stratification of truth~\cite{kripke75}: classifier-like elements are separated from computation-producing ones. We use the comparison only as intuition, not as a formal correspondence.
 
 \begin{definition}[Internal Composition Property]
 \label{def:icp}
@@ -141,18 +141,18 @@ A magma $(S, \dotop, z_1, z_2)$ satisfies the \emph{Internal Composition Propert
 ICP says: the left-regular representation admits a non-trivial factorization on core. One element's action decomposes as ``store, then process'' — a single fragment of internal composition. In Section~\ref{sec:icp} we prove that $\ICP$ is equivalent to the standard operational axioms Compose+Inert (Theorem~\ref{thm:icp-equiv}).
 
 \begin{definition}[Capability S]
-An $\FRM$ has capability $S$ (self-representation) by definition.
+An extensional 2-pointed magma has capability $S$ (self-representation) if it admits a retraction pair.
 \end{definition}
 
 \begin{definition}[Capability D]
-A $\DRM$ has capability $D$ (self-description) by definition.
+An extensional 2-pointed magma has capability $D$ (self-description) if it satisfies the classifier dichotomy.
 \end{definition}
 
 \begin{definition}[Capability H]
-An $\FRM$ has capability $H$ (self-execution) if it satisfies the $\ICP$.
+An extensional 2-pointed magma has capability $H$ (self-execution) if it satisfies the $\ICP$.
 \end{definition}
 
-Note that S is the base: both D and H are defined as extensions of $\FRM$, so both imply S by construction. The directions D $\Rightarrow$ S and H $\Rightarrow$ S are therefore definitional, not theorems. The four \emph{non-trivial} independence directions are S $\not\Rightarrow$ D, D $\not\Rightarrow$ H, H $\not\Rightarrow$ D, and S $\not\Rightarrow$ H.
+All three capabilities are properties of the same base structure (Definition~\ref{def:epm}). None is defined as an extension of any other, making the independence theorem (Section~\ref{sec:independence}) a statement about six non-implications, all proved by Lean-verified counterexamples.
 
 % ══════════════════════════════════════════════════════════════
 \section{Universal Theorems}
@@ -223,7 +223,7 @@ The middle equalities use Step~1; $\tau \dotop \tau = v$ because $\tau$ is core 
 
 \subsection{Self-Simulation Injectivity}
 
-The theorems above concern $\DRM$s (capability D). The following results show that capability S (self-representation) alone already constrains the algebra. They hold for any $\FRM$ that \emph{self-simulates} — i.e., there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$. Self-representation provides the encoding infrastructure; self-simulation is the process of using it to compute the Cayley table. Proved in \texttt{SelfSimulation.lean}.
+The theorems above concern $\DRM$s (capability D). The following results show that capability S (self-representation) alone already constrains the algebra. They hold for any $\FRM$ that \emph{self-simulates} — i.e., there exists a term $t$ in the free term algebra over $S$ such that evaluating $t$ on the encodings of any $a, b$ returns the atom $a \dotop b$. In an algebra with S, the retraction pair provides encoding infrastructure; self-simulation is the process of using it to compute the Cayley table. Proved in \texttt{SelfSimulation.lean}.
 
 \begin{theorem}[Partial Application Injectivity]
 \label{thm:injectivity}
@@ -330,60 +330,75 @@ $\to$ \textsc{Encode:} & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1
 \put(7,0.5){\makebox(0,0){\framebox{S}}}
 \put(2,6.5){\makebox(0,0){\framebox{D}}}
 \put(12,6.5){\makebox(0,0){\framebox{H}}}
-% Upward arrows (definitional implications)
+% Crossed-out downward arrows S ⇏ D, S ⇏ H
 \put(6.2,1.3){\vector(-1,1){3.4}}
+\put(4.5,3.5){\makebox(0,0){\small$\times$}}
 \put(7.8,1.3){\vector(1,1){3.4}}
-% Crossed-out downward arrows (non-implications)
+\put(9.5,3.5){\makebox(0,0){\small$\times$}}
+% Crossed-out upward arrows D ⇏ S, H ⇏ S
 \put(3.6,5.5){\vector(1,-1){2.6}}
 \put(4.9,4.2){\makebox(0,0){\small$\times$}}
 \put(10.4,5.5){\vector(-1,-1){2.6}}
 \put(9.1,4.2){\makebox(0,0){\small$\times$}}
-% Crossed-out horizontal arrows (non-implications)
+% Crossed-out horizontal arrows D ⇏ H, H ⇏ D
 \put(3.5,6.9){\vector(1,0){7}}
 \put(7,6.9){\makebox(0,0){\small$\times$}}
 \put(10.5,6.1){\vector(-1,0){7}}
 \put(7,6.1){\makebox(0,0){\small$\times$}}
 % Labels
-\put(3.5,2.8){\makebox(0,0){\scriptsize$N\!=\!8$}}
-\put(10.5,2.8){\makebox(0,0){\scriptsize$N\!=\!4$}}
+\put(3.3,3.1){\makebox(0,0){\scriptsize$N\!=\!8$}}
+\put(10.7,3.1){\makebox(0,0){\scriptsize$N\!=\!4$}}
+\put(5.7,4.8){\makebox(0,0){\scriptsize$N\!=\!5$}}
+\put(8.3,4.8){\makebox(0,0){\scriptsize$N\!=\!6$}}
 \put(5.2,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
 \put(8.8,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
 \end{picture}
-\caption{Independence structure. Upward arrows are definitional (D and H both extend S). Crossed arrows are non-implications, each proved by a Lean-verified finite counterexample at the indicated size.}
+\caption{Full independence structure. All six pairwise non-implications are proved by Lean-verified finite counterexamples at the indicated sizes. No capability implies any other.}
 \label{fig:independence}
 \end{figure}
 
 \begin{theorem}[Full Independence]
 \label{thm:independence}
-No capability implies any other. Specifically:
+No capability implies any other. Specifically, all six pairwise non-implications hold:
 \begin{enumerate}
-  \item $S \not\Rightarrow D$: There exists an $\FRM$ of size $8$ with a classifier element that violates the classifier dichotomy.
-  \item $D \not\Rightarrow H$: There exists a $\DRM$ of size $10$ where no triple satisfies the $\ICP$.
-  \item $H \not\Rightarrow D$: There exists an $\FRM$ of size $10$ satisfying $\ICP$ that violates the classifier dichotomy.
-  \item $S \not\Rightarrow H$: The minimal $\DRM$ witness ($N\!=\!4$) trivially lacks $\ICP$ since it has only 2 non-absorber elements but $\ICP$ requires 3. Lean file: \texttt{ICP.lean}, theorem \texttt{s\_not\_implies\_icp}.
+  \item $S \not\Rightarrow D$: An $\FRM$ of size $8$ has a classifier element but violates the classifier dichotomy.
+  \item $S \not\Rightarrow H$: The minimal $\DRM$ ($N\!=\!4$) has only 2 non-absorber elements; $\ICP$ requires 3.
+  \item $D \not\Rightarrow H$: A $\DRM$ of size $10$ has no triple satisfying the $\ICP$.
+  \item $H \not\Rightarrow D$: An extensional 2-pointed magma of size $10$ satisfies $\ICP$ but violates the classifier dichotomy.
+  \item $D \not\Rightarrow S$: An extensional 2-pointed magma of size $5$ satisfies the classifier dichotomy but admits no retraction pair.
+  \item $H \not\Rightarrow S$: An extensional 2-pointed magma of size $6$ satisfies $\ICP$ but admits no retraction pair.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Each direction is proved by exhibiting a concrete Cayley table and verifying the claimed properties by \texttt{native\_decide} (or \texttt{decide} for $N\!=\!4, 8$). The tables are:
+Each direction is proved by exhibiting a concrete Cayley table and verifying the claimed properties by \texttt{native\_decide} (or \texttt{decide} for $N \leq 8$). The tables are:
 
 \paragraph{$S \not\Rightarrow D$ ($N\!=\!8$, the Countermodel).}
-An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Similarly, element~7's row on core is $(2, 1, 2, 2, 6, 3)$, mixing boolean and non-boolean outputs. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
+An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
+
+\paragraph{$S \not\Rightarrow H$ ($N\!=\!4$).}
+The minimal $\DRM$ (Kripke-4) has exactly 2 non-absorbers. Since $\ICP$ requires 3 pairwise distinct non-absorbers, it fails trivially. Lean file: \texttt{ICP.lean}, theorem \texttt{s\_not\_implies\_icp}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
-A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$ (Theorem~\ref{thm:icp-equiv}), by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
+A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$, by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean}, \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
 
-\paragraph{$H \not\Rightarrow D$ ($N\!=\!10$, diagonal).}
-A $10 \times 10$ Cayley table defining an $\FRM$ satisfying $\ICP$ (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$) yet violating the dichotomy: element~5 has both boolean and non-boolean outputs on core. Lean file: \texttt{Countermodels10.lean}.
+\paragraph{$H \not\Rightarrow D$ ($N\!=\!10$).}
+A $10 \times 10$ Cayley table defining an extensional 2-pointed magma with a retraction pair, satisfying $\ICP$ (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$), yet violating the dichotomy: element~5 has both boolean and non-boolean outputs on core. Lean file: \texttt{Countermodels10.lean}.
 
-All tables are generated by Z3 SAT solver and independently verified. The Cayley tables are frozen in the repository (\texttt{counterexamples.json}) for reproducibility.
+\paragraph{$D \not\Rightarrow S$ ($N\!=\!5$).}
+A $5 \times 5$ Cayley table defining an extensional 2-pointed magma with the classifier dichotomy (classifier at index~2, non-classifiers at 3 and 4), but admitting no retraction pair. Lean proves $\neg\,\texttt{HasRetractPair}$ by exhaustive search over all candidate pairs via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{d\_not\_implies\_s}.
+
+\paragraph{$H \not\Rightarrow S$ ($N\!=\!6$).}
+A $6 \times 6$ Cayley table defining an extensional 2-pointed magma satisfying $\ICP$ (witnessed by $a\!=\!2, b\!=\!4, c\!=\!5$), but admitting no retraction pair. Lean file: \texttt{E2PM.lean}, theorem \texttt{h\_not\_implies\_s}.
+
+All tables are generated by Z3 SAT solver and independently verified. The Cayley tables are frozen in the repository for reproducibility.
 \end{proof}
 
 \paragraph{Methodology.}
 Each counterexample was found by encoding the relevant capability axioms (and the negation of the target capability) as a SAT problem over an $n \times n$ Cayley table, then solving with Z3. The search space is $n^{n^2}$ (all possible binary operations on $\Fin(n)$); the axioms reduce this to a manageable constraint system. The sizes $N\!=\!8$ and $N\!=\!10$ were discovered by incrementing $n$ from the minimum until SAT returned a model. Once found, each table was frozen in \texttt{counterexamples.json} and independently verified in Lean.
 
 \paragraph{Interpretation.}
-The $H \not\Rightarrow D$ direction is the most surprising: an algebra can have full evaluation machinery (encoding, conditional dispatch, internal composition, recursion) while having no clean separation between classifiers and non-classifiers. The classifier dichotomy is not a consequence of computational power — it is an independent organizational property. An algebra can \emph{evaluate} without \emph{understanding itself as evaluating}.
+The $H \not\Rightarrow D$ direction shows that an algebra can internalize a non-trivial composition pattern, as captured by the $\ICP$, without also satisfying the classifier dichotomy. Thus self-execution in our sense does not force the organizational separation expressed by D.
 
 % ══════════════════════════════════════════════════════════════
 \section{Coexistence}
@@ -438,10 +453,10 @@ Independence results via finite counterexamples are standard in finite model the
 % ══════════════════════════════════════════════════════════════
 
 \paragraph{The classifier dichotomy is epistemic.}
-Self-representation (S) provides the encoding to compute the Cayley table. Self-description (D) organizes that computation into coherent categories — classifiers that test and non-classifiers that transform. The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that an algebra can \emph{compute} its own operation, and even internalize its own control flow, without \emph{parsing} that operation into meaningful roles. The boundary between S and D — witnessed by the $N\!=\!8$ counterexample — is the boundary between computing and understanding. The classifier dichotomy is an independent organizational property: it makes the algebra legible, not more powerful.
+Self-representation (S) provides the encoding to compute the Cayley table. Self-description (D) organizes that computation into coherent categories — classifiers that test and non-classifiers that transform. The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that an algebra can internalize a non-trivial composition pattern without organizing its elements into stable semantic roles. Informally, the separation between S and D marks a difference between having an internal coding mechanism and having a clean internal role structure. The classifier dichotomy is an independent organizational property: it makes the algebra legible, not more powerful.
 
 \paragraph{Why magmas?}
-The magma setting is not conveniently weak. Theorem~\ref{thm:no-assoc} shows that associativity forces the classifier to have a constant row, collapsing it to an absorber: no $\DRM$ is a semigroup, monoid, or group. The independence result is not an artifact of missing structure — stronger algebraic structures cannot support capability D at all.
+Non-associativity is essential for D in our setting. Theorem~\ref{thm:no-assoc} shows that associativity forces the classifier to have a constant row, collapsing it to an absorber: no associative extensional 2-pointed magma satisfies the classifier structure required for self-description.
 
 \paragraph{Scope and limitations.}
 Whether the three-capability separation appears in other settings ($\lambda$-calculus, typed systems, infinite algebras) is the primary open question. Theorem~\ref{thm:no-assoc} constrains the target: any such translation must work without associativity or identity. A categorical characterization of H as a universal property (stronger than the analogy in Section~\ref{sec:categorical}) is also open.
@@ -456,7 +471,7 @@ Each capability admits multiple axiom forms. For H, replacing $\eta = \rho \circ
 \section{Conclusion}
 % ══════════════════════════════════════════════════════════════
 
-We have shown that three capabilities of reflective computation — self-representation, self-description, and self-execution — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked; the decomposition is invariant; and the magma setting is necessary — no $\DRM$ is associative (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, and groups. The classifier dichotomy is epistemic, not computational: an algebra can execute without understanding itself as executing.
+We have shown that three capabilities of reflective computation — self-representation, self-description, and self-execution — are independent in finite extensional magmas, each admitting a single-concept presentation-independent definition. The independence is machine-checked in all six pairwise directions; the decomposition is invariant; and non-associativity is essential — no associative extensional 2-pointed magma admits the classifier dichotomy (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, and groups. The classifier dichotomy is an organizational property, not a computational one: an algebra can internalize non-trivial composition without organizing its elements into stable semantic roles.
 
 \paragraph{Open problems.}
 \begin{enumerate}
@@ -668,6 +683,35 @@ $\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\\hline
 9 & 2 & 2 & 2 & 2 & 4 & 7 & 6 & 7 & 2 & 0 \\
 \end{tabular}}
 
+\paragraph{$N\!=\!5$: $D \not\Rightarrow S$ Counterexample.}
+No retraction pair exists. Element~2 is a classifier: row on core is $(1,0,0) \subseteq \{z_1, z_2\}$. Elements~3 and 4 are non-classifiers: all core outputs $\geq 2$. Dichotomy holds; no pair of core elements forms a retraction pair. \quad Lean: \texttt{E2PM.lean} (\texttt{dNoS\_e2pm}).
+
+\medskip
+{\small
+\begin{tabular}{c|ccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 0 & 0 & 1 & 0 & 0 \\
+3 & 4 & 2 & 4 & 2 & 4 \\
+4 & 2 & 2 & 3 & 3 & 3 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!6$: $H \not\Rightarrow S$ Counterexample.}
+No retraction pair exists. $\ICP$ holds: $a\!=\!2, b\!=\!4, c\!=\!5$ with $b$ core-preserving and $2 \dotop x = 5 \dotop (4 \dotop x)$ on core. \quad Lean: \texttt{E2PM.lean} (\texttt{hNoS\_e2pm}).
+
+\medskip
+{\small
+\begin{tabular}{c|cccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 3 & 2 & 2 & 2 & 4 \\
+3 & 0 & 2 & 2 & 2 & 4 & 0 \\
+4 & 4 & 3 & 2 & 2 & 4 & 5 \\
+5 & 0 & 0 & 2 & 2 & 2 & 4 \\
+\end{tabular}}
+
 \paragraph{$N\!=\!10$: S+D+H Coexistence Witness (all roles distinct).}
 Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$, $5 = f$, $6 = g$ (Inert), $7 = \rho$ (Branch), $8 = \eta$ (Compose), $9 = Y$. \quad Lean: \texttt{Witness10.lean}.
 
@@ -704,10 +748,11 @@ SelfSimulation       &  5 & Algebraic & Partial app.\ injectivity \\
 ICP                  & 20 & Alg.+decide & ICP $\Leftrightarrow$ Compose+Inert \\
 Countermodel         &  5 & decide & $S \not\Rightarrow D$ ($N\!=\!8$) \\
 Countermodels10      &  9 & native\_dec. & $D \not\Rightarrow H$, $H \not\Rightarrow D$ \\
+E2PM                 &  7 & decide & $D \not\Rightarrow S$, $H \not\Rightarrow S$ \\
 Witness10            &  6 & native\_dec. & S+D+H at $N\!=\!10$ \\
 Witness6             &  3 & decide & S+D+H at $N\!=\!6$ \\
 \hline
-\textbf{Total}       & \textbf{72} & & \\
+\textbf{Total}       & \textbf{79} & & \\
 \end{tabular}}
 
 \end{document}
