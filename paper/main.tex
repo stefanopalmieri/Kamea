@@ -415,7 +415,7 @@ A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\D
 \end{proof}
 
 \paragraph{Minimum cardinality.}
-The $N\!=\!10$ witness uses pairwise distinct elements in all roles, but the definitions do not require this: the $\ICP$ witnesses $(a, b, c)$ need only be pairwise distinct non-absorbers and may coincide with the retraction pair or classifier. A Lean-verified $6 \times 6$ Cayley table exhibits S+D+$\ICP$ at $N\!=\!6$ where retraction pair members serve simultaneously as $\ICP$ witnesses (Lean file: \texttt{Witness6.lean}, theorem \texttt{sdh\_witness\_6}). Whether $N\!=\!5$ admits S+D+H is open (SAT returns UNSAT at $N\!=\!5$ for the specific axiom encoding tested, but we have not proved a universal lower bound).
+The $N\!=\!10$ witness uses pairwise distinct elements in all roles, but the definitions do not require this: the $\ICP$ witnesses $(a, b, c)$ need only be pairwise distinct non-absorbers and may coincide with the retraction pair or classifier. A Lean-verified $6 \times 6$ Cayley table exhibits S+D+$\ICP$ at $N\!=\!6$ where retraction pair members serve simultaneously as $\ICP$ witnesses (Lean file: \texttt{Witness6.lean}, theorem \texttt{sdh\_witness\_6}). Whether $N\!=\!5$ admits S+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the retraction pair fixed at $(s, r) = (2, 3)$ and each classifier assignment tested individually, but this does not rule out other role assignments or overlapping role encodings. We have not proved a universal lower bound.
 
 % ══════════════════════════════════════════════════════════════
 \section{Categorical Context}
