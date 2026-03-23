@@ -191,12 +191,34 @@ No $\DRM$ has a right identity element.
 No $\DRM$ is associative. In particular, no $\DRM$ is a semigroup, monoid, or group.
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-Assume associativity. Then $\tau \dotop (a \dotop b) = (\tau \dotop a) \dotop b = \tau \dotop a$ for all $a, b$, since $\tau \dotop a \in \{z_1, z_2\}$ (classifier), and absorbers absorb on the left. So $\tau$ absorbs on the right.
+\begin{proof}
+Assume $(\tau \dotop a) \dotop b = \tau \dotop (a \dotop b)$ for all $a, b$. We derive a contradiction in four steps. The proof uses neither the dichotomy nor the non-classifier existence axiom — only the classifier ($\tau$), the retraction pair ($s, r$), and extensionality. Lean file: \texttt{CatKripkeWallMinimal.lean}.
 
-This right-absorption property has two consequences. First, for any core $x$: since $x = r \dotop (s \dotop x)$ (retraction pair), right-absorption gives $\tau \dotop x = \tau \dotop (r \dotop (s \dotop x)) = \tau \dotop r$. So $\tau$ is constant on core at the value $v = \tau \dotop r \in \{z_1, z_2\}$. Second, $\tau$ must hit both $z_1$ and $z_2$ (else extensionality forces $\tau = z_i$); let $b_1, b_2$ witness this. Then $\tau \dotop z_1 = \tau \dotop (\tau \dotop b_1) = \tau \dotop \tau = v$ (since $\tau$ is core), and symmetrically $\tau \dotop z_2 = v$. So $\tau$ is constant everywhere. By extensionality, $\tau = z_i$, contradicting $\tau \neq z_1, z_2$.
+\emph{Step 1: $\tau$ absorbs on the right.} For any $a, b$:
+\[
+\tau \dotop (a \dotop b)
+= (\tau \dotop a) \dotop b
+= z_i \dotop b
+= z_i
+= \tau \dotop a
+\]
+where the second equality uses $\tau \dotop a \in \{z_1, z_2\}$ (classifier), and the third uses left-absorption. So $\tau \dotop (a \dotop b) = \tau \dotop a$ for all $a, b$.
 
-The full proof is algebraic (no \texttt{decide}) and uses neither the dichotomy nor the non-classifier existence axiom — only the classifier, the retraction pair, and extensionality. Lean file: \texttt{CatKripkeWallMinimal.lean}.
+\emph{Step 2: $\tau$ is constant on core.} For any core $x$: the retraction pair gives $x = r \dotop (s \dotop x)$. Applying Step~1 with $a = r$, $b = s \dotop x$:
+\[
+\tau \dotop x = \tau \dotop (r \dotop (s \dotop x)) = \tau \dotop r.
+\]
+Set $v = \tau \dotop r \in \{z_1, z_2\}$. Then $\tau \dotop x = v$ for all core $x$.
+
+\emph{Step 3: $\tau$ is constant on absorbers.} Since $\tau$ is a classifier, it hits both $z_1$ and $z_2$ — otherwise, if $\tau \dotop x = z_1$ for all $x$, then $\tau$ and $z_1$ have identical rows, so $\tau = z_1$ by extensionality, contradicting $\tau \neq z_1$ (and symmetrically for $z_2$). Let $b_1, b_2$ witness $\tau \dotop b_1 = z_1$ and $\tau \dotop b_2 = z_2$. Applying Step~1 with $a = \tau$:
+\[
+\tau \dotop z_1 = \tau \dotop (\tau \dotop b_1) = \tau \dotop \tau = v,
+\qquad
+\tau \dotop z_2 = \tau \dotop (\tau \dotop b_2) = \tau \dotop \tau = v.
+\]
+The middle equalities use Step~1; $\tau \dotop \tau = v$ because $\tau$ is core (Step~2).
+
+\emph{Step 4: Contradiction.} Steps 2 and 3 give $\tau \dotop x = v$ for all $x \in S$. Since $v \in \{z_1, z_2\}$, the classifier $\tau$ has the same row as absorber $v$. By extensionality, $\tau = v \in \{z_1, z_2\}$, contradicting $\tau \neq z_1, z_2$.
 \end{proof}
 
 \subsection{Self-Simulation Injectivity}
@@ -265,7 +287,7 @@ For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
 \begin{proof}
 The bijection between witness triples is $(\eta, g, \rho) = (a, b, c)$: the composed element $a$ is $\eta$, the core-preserving element $b$ is $g$, and the outer element $c$ is $\rho$. Under this identification the factorization $a \dotop x = c \dotop (b \dotop x)$ becomes $\eta \dotop x = \rho \dotop (g \dotop x)$ (Compose), core-preservation of $b$ becomes Inert, and the remaining conditions (pairwise distinct, non-absorber) transfer directly.
 
-The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies. Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$. Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$.
+The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}).
 
 The proof is pure equational logic — no \texttt{decide}, no case analysis on $n$. It holds for every finite magma on a 2-pointed set, of any size. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.
 \end{proof}
@@ -313,17 +335,17 @@ $\to$ \textsc{Encode:} & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1
 \put(7.8,1.3){\vector(1,1){3.4}}
 % Crossed-out downward arrows (non-implications)
 \put(3.6,5.5){\vector(1,-1){2.6}}
-\put(4.2,4.0){\makebox(0,0){\small$\times$}}
+\put(4.9,4.2){\makebox(0,0){\small$\times$}}
 \put(10.4,5.5){\vector(-1,-1){2.6}}
-\put(9.8,4.0){\makebox(0,0){\small$\times$}}
+\put(9.1,4.2){\makebox(0,0){\small$\times$}}
 % Crossed-out horizontal arrows (non-implications)
-\put(3.5,6.5){\vector(1,0){7}}
-\put(7,7.1){\makebox(0,0){\small$\times$}}
-\put(10.5,6.5){\vector(-1,0){7}}
-\put(7,5.9){\makebox(0,0){\small$\times$}}
+\put(3.5,6.9){\vector(1,0){7}}
+\put(7,6.9){\makebox(0,0){\small$\times$}}
+\put(10.5,6.1){\vector(-1,0){7}}
+\put(7,6.1){\makebox(0,0){\small$\times$}}
 % Labels
-\put(3.0,3.0){\makebox(0,0){\scriptsize$N\!=\!8$}}
-\put(11.0,3.0){\makebox(0,0){\scriptsize$N\!=\!4$}}
+\put(3.5,2.8){\makebox(0,0){\scriptsize$N\!=\!8$}}
+\put(10.5,2.8){\makebox(0,0){\scriptsize$N\!=\!4$}}
 \put(5.2,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
 \put(8.8,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
 \end{picture}
@@ -346,7 +368,7 @@ No capability implies any other. Specifically:
 Each direction is proved by exhibiting a concrete Cayley table and verifying the claimed properties by \texttt{native\_decide} (or \texttt{decide} for $N\!=\!4, 8$). The tables are:
 
 \paragraph{$S \not\Rightarrow D$ ($N\!=\!8$, the Countermodel).}
-An $8 \times 8$ Cayley table defining an $\FRM$ with $Q = 2$, $E = 3$ (retraction pair), classifier at index~4, and two mixed elements (indices~5 and~7) whose rows on core contain both boolean and non-boolean values. Lean file: \texttt{Countermodel.lean}.
+An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Similarly, element~7's row on core is $(2, 1, 2, 2, 6, 3)$, mixing boolean and non-boolean outputs. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
 A $10 \times 10$ Cayley table defining a $\DRM$ satisfying the classifier dichotomy. Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$ (Theorem~\ref{thm:icp-equiv}), by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean} (DRM verification), \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
@@ -378,7 +400,7 @@ A concrete $10 \times 10$ Cayley table is exhibited that is simultaneously a $\D
 \end{proof}
 
 \paragraph{Minimum cardinality.}
-The $N\!=\!10$ witness uses pairwise distinct elements in all roles, but the definitions do not require this: the $\ICP$ witnesses $(a, b, c)$ need only be pairwise distinct non-absorbers and may coincide with the retraction pair or classifier. SAT search finds S+D+$\ICP$ models at $N\!=\!6$ where retraction pair members serve simultaneously as $\ICP$ witnesses. Whether $N\!=\!5$ admits S+D+H is open (SAT returns UNSAT at $N\!=\!5$ for the specific axiom encoding tested, but we have not proved a universal lower bound). The current state: $N\!=\!6$ is the smallest known witness; $N\!=\!10$ is the smallest Lean-verified witness.
+The $N\!=\!10$ witness uses pairwise distinct elements in all roles, but the definitions do not require this: the $\ICP$ witnesses $(a, b, c)$ need only be pairwise distinct non-absorbers and may coincide with the retraction pair or classifier. A Lean-verified $6 \times 6$ Cayley table exhibits S+D+$\ICP$ at $N\!=\!6$ where retraction pair members serve simultaneously as $\ICP$ witnesses (Lean file: \texttt{Witness6.lean}, theorem \texttt{sdh\_witness\_6}). Whether $N\!=\!5$ admits S+D+H is open (SAT returns UNSAT at $N\!=\!5$ for the specific axiom encoding tested, but we have not proved a universal lower bound).
 
 % ══════════════════════════════════════════════════════════════
 \section{Categorical Context}
@@ -440,7 +462,7 @@ We have shown that three capabilities of reflective computation — self-represe
 \begin{enumerate}
   \item \emph{Cross-formalism universality}: Does the three-capability separation appear in the $\lambda$-calculus, typed settings, or infinite algebras? The connection to algebraic effects (Section~\ref{sec:related}) suggests the concepts translate, but the no-associativity obstruction (Theorem~\ref{thm:no-assoc}) constrains the target setting.
   \item \emph{Categorical characterization of H}: Is the ICP equivalent to a standard universal property (e.g., existence of a partial internal hom)?
-  \item \emph{Minimum coexistence bound}: The smallest known S+D+H witness has $N\!=\!6$ (SAT); the smallest Lean-verified witness has $N\!=\!10$ (Section~\ref{sec:bound}). A universal lower bound is open.
+  \item \emph{Minimum coexistence bound}: The smallest known S+D+H witness has $N\!=\!6$ (Lean-verified; Section~\ref{sec:bound}). A universal lower bound is open.
 \end{enumerate}
 
 \paragraph{Artifact.}
@@ -539,5 +561,153 @@ Leonardo de~Moura and Sebastian Ullrich.
 \newblock In \emph{CADE}, 2021.
 
 \end{thebibliography}
+
+% ══════════════════════════════════════════════════════════════
+\appendix
+% ══════════════════════════════════════════════════════════════
+
+\section{Cayley Tables}
+\label{app:tables}
+
+All tables are extracted from the Lean source files and verified by \texttt{lake build}. Element $i$'s row is row~$i$; entry $(i,j)$ is $i \dotop j$.
+
+\paragraph{$N\!=\!4$: Minimal $\DRM$ ($s = r$).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = \tau$, $3 = s = r$. \quad Lean: \texttt{CatKripkeWallMinimal.lean}, \texttt{kripke4}.
+
+\medskip
+{\small
+\begin{tabular}{c|cccc}
+$\dotop$ & 0 & 1 & 2 & 3 \\\hline
+0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 \\
+2 & 0 & 1 & 0 & 1 \\
+3 & 0 & 0 & 2 & 3 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!5$: Minimal $\DRM$ ($s \neq r$).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$. \quad Lean: \texttt{CatKripkeWallMinimal.lean}, \texttt{kripke5}.
+
+\medskip
+{\small
+\begin{tabular}{c|ccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 1 & 0 & 3 & 4 & 2 \\
+3 & 0 & 2 & 4 & 2 & 3 \\
+4 & 0 & 1 & 1 & 0 & 0 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!6$: S+D+H Coexistence (role overlap).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$ (also ICP $a$), $3 = r$ (also ICP $b$), $4 = \tau$, $5 =$ ICP $c$. \quad Lean: \texttt{Witness6.lean}.
+
+\medskip
+{\small
+\begin{tabular}{c|cccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 3 & 4 & 2 & 5 & 3 \\
+3 & 0 & 1 & 3 & 5 & 2 & 4 \\
+4 & 0 & 0 & 1 & 0 & 1 & 1 \\
+5 & 2 & 2 & 5 & 4 & 3 & 2 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!8$: $S \not\Rightarrow D$ Counterexample.}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 =$ classifier, $5, 7 =$ mixed (violate dichotomy). \quad Lean: \texttt{Countermodel.lean}.
+
+\medskip
+{\small
+\begin{tabular}{c|cccccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 3 & 7 & 3 & 4 & 6 & 5 & 2 \\
+3 & 0 & 1 & 7 & 3 & 4 & 6 & 5 & 2 \\
+4 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+5 & 6 & 2 & 6 & 2 & 1 & 1 & 1 & 1 \\
+6 & 0 & 0 & 5 & 2 & 2 & 2 & 2 & 2 \\
+7 & 2 & 2 & 2 & 1 & 2 & 2 & 6 & 3 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!10$: $D \not\Rightarrow H$ Counterexample.}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$. No triple satisfies $\ICP$. \quad Lean: \texttt{Countermodels10.lean} (\texttt{dNotH}), \texttt{ICP.lean} (\texttt{dNotH\_no\_icp}).
+
+\medskip
+{\footnotesize
+\begin{tabular}{c|cccccccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 3 & 2 & 3 & 4 & 5 & 6 & 7 & 9 & 8 \\
+3 & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 9 & 8 \\
+4 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+5 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+6 & 2 & 3 & 9 & 9 & 9 & 9 & 9 & 9 & 9 & 8 \\
+7 & 3 & 2 & 9 & 9 & 9 & 9 & 9 & 9 & 9 & 8 \\
+8 & 1 & 0 & 1 & 0 & 1 & 1 & 1 & 1 & 0 & 0 \\
+9 & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 0 & 1 & 1 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!10$: $H \not\Rightarrow D$ Counterexample.}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$. $\ICP$ holds ($a\!=\!8, b\!=\!6, c\!=\!7$). Element~5 violates dichotomy. \quad Lean: \texttt{Countermodels10.lean} (\texttt{hNotD}).
+
+\medskip
+{\footnotesize
+\begin{tabular}{c|cccccccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 1 & 3 & 4 & 9 & 6 & 8 & 5 & 7 & 2 \\
+3 & 0 & 1 & 9 & 2 & 3 & 7 & 5 & 8 & 6 & 4 \\
+4 & 0 & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 \\
+5 & 0 & 0 & 2 & 0 & 0 & 0 & 0 & 0 & 3 & 1 \\
+6 & 2 & 2 & 2 & 8 & 3 & 9 & 4 & 7 & 9 & 7 \\
+7 & 8 & 3 & 2 & 8 & 3 & 9 & 4 & 7 & 3 & 1 \\
+8 & 9 & 2 & 2 & 3 & 8 & 1 & 3 & 7 & 1 & 7 \\
+9 & 2 & 2 & 2 & 2 & 4 & 7 & 6 & 7 & 2 & 0 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!10$: S+D+H Coexistence Witness (all roles distinct).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$, $5 = f$, $6 = g$ (Inert), $7 = \rho$ (Branch), $8 = \eta$ (Compose), $9 = Y$. \quad Lean: \texttt{Witness10.lean}.
+
+\medskip
+{\footnotesize
+\begin{tabular}{c|cccccccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 3 & 3 & 4 & 3 & 7 & 5 & 9 & 6 & 8 & 2 \\
+3 & 0 & 1 & 9 & 3 & 2 & 5 & 7 & 4 & 8 & 6 \\
+4 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 & 1 & 1 \\
+5 & 2 & 2 & 7 & 2 & 8 & 9 & 4 & 3 & 4 & 2 \\
+6 & 0 & 0 & 6 & 4 & 8 & 7 & 3 & 3 & 4 & 9 \\
+7 & 2 & 2 & 6 & 4 & 8 & 9 & 4 & 3 & 4 & 9 \\
+8 & 2 & 2 & 4 & 8 & 4 & 3 & 4 & 4 & 8 & 9 \\
+9 & 3 & 4 & 7 & 3 & 9 & 2 & 2 & 9 & 2 & 3 \\
+\end{tabular}}
+
+\section{Proof Inventory}
+\label{app:inventory}
+
+All Lean files compile with \texttt{lake build}, zero \texttt{sorry}. Proof styles: \emph{Algebraic} = pure equational reasoning (no \texttt{decide}); \emph{decide} = verified by kernel computation ($N \leq 8$); \emph{native\_decide} = verified by compiled native code ($N = 10$).
+
+\medskip
+{\small
+\begin{tabular}{lrcl}
+\textbf{File} & \textbf{Thms} & \textbf{Style} & \textbf{Content} \\
+\hline
+CatKripkeWallMinimal & 17 & Algebraic & Decomposition, bounds, wall \\
+NoCommutativity      &  3 & Algebraic & Asymmetry \\
+Functoriality        &  4 & Algebraic & Invariance under iso \\
+SelfSimulation       &  5 & Algebraic & Partial app.\ injectivity \\
+ICP                  & 20 & Alg.+decide & ICP $\Leftrightarrow$ Compose+Inert \\
+Countermodel         &  5 & decide & $S \not\Rightarrow D$ ($N\!=\!8$) \\
+Countermodels10      &  9 & native\_dec. & $D \not\Rightarrow H$, $H \not\Rightarrow D$ \\
+Witness10            &  6 & native\_dec. & S+D+H at $N\!=\!10$ \\
+Witness6             &  3 & decide & S+D+H at $N\!=\!6$ \\
+\hline
+\textbf{Total}       & \textbf{72} & & \\
+\end{tabular}}
 
 \end{document}

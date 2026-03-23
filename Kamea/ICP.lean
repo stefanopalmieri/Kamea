@@ -256,4 +256,102 @@ theorem s_not_implies_icp :
     ∃ (_ : FaithfulRetractMagma 4), ¬ HasICP 4 dotK4 0 1 :=
   ⟨kripke4.toFaithfulRetractMagma, by decide⟩
 
+-- ═══════════════════════════════════════════════════════════════════
+-- ICP conditions are individually necessary
+-- ═══════════════════════════════════════════════════════════════════
+
+/-! ### Necessity of pairwise-distinctness
+
+The Kripke-4 model satisfies ICP without the pairwise-distinctness condition
+(witnessed by a=b=c=3: 3·x = 3·(3·x)) but fails full ICP (only 2 non-absorbers).
+-/
+
+/-- ICP without pairwise-distinctness: a, b, c need not be distinct. -/
+@[reducible] def HasICPWeakDistinct (n : Nat) (dot : Fin n → Fin n → Fin n) (z₁ z₂ : Fin n) : Prop :=
+  ∃ a b c : Fin n,
+    -- All non-absorber (but NOT necessarily pairwise distinct)
+    a ≠ z₁ ∧ a ≠ z₂ ∧ b ≠ z₁ ∧ b ≠ z₂ ∧ c ≠ z₁ ∧ c ≠ z₂ ∧
+    -- b preserves core
+    (∀ x : Fin n, x = z₁ ∨ x = z₂ ∨ (dot b x ≠ z₁ ∧ dot b x ≠ z₂)) ∧
+    -- Factorization
+    (∀ x : Fin n, x = z₁ ∨ x = z₂ ∨ dot a x = dot c (dot b x)) ∧
+    -- Non-triviality
+    (∃ x y : Fin n, x ≠ z₁ ∧ x ≠ z₂ ∧ y ≠ z₁ ∧ y ≠ z₂ ∧ dot a x ≠ dot a y)
+
+/-- Kripke-4 fails full ICP. -/
+theorem kripke4_no_icp : ¬ HasICP 4 dotK4 0 1 := by decide
+
+/-- Kripke-4 satisfies ICP without pairwise-distinctness (a=b=c=3). -/
+theorem kripke4_has_weak_distinct : HasICPWeakDistinct 4 dotK4 0 1 := by decide
+
+/-- **Pairwise-distinctness is necessary for ICP.**
+    Kripke-4 separates HasICPWeakDistinct from HasICP. -/
+theorem icp_distinct_necessary :
+    ∃ (n : Nat) (dot : Fin n → Fin n → Fin n) (z₁ z₂ : Fin n),
+      HasICPWeakDistinct n dot z₁ z₂ ∧ ¬ HasICP n dot z₁ z₂ :=
+  ⟨4, dotK4, 0, 1, kripke4_has_weak_distinct, kripke4_no_icp⟩
+
+/-! ### Necessity of non-triviality
+
+A custom 6-element FRM satisfies ICP without non-triviality (a=4 is constant on core,
+factors through b=2, c=5) but fails full ICP (no non-trivially-factoring element exists).
+-/
+
+/-- ICP without non-triviality: a may be constant on core. -/
+@[reducible] def HasICPWeakNontriv (n : Nat) (dot : Fin n → Fin n → Fin n) (z₁ z₂ : Fin n) : Prop :=
+  ∃ a b c : Fin n,
+    -- Pairwise distinct
+    a ≠ b ∧ a ≠ c ∧ b ≠ c ∧
+    -- All non-absorber
+    a ≠ z₁ ∧ a ≠ z₂ ∧ b ≠ z₁ ∧ b ≠ z₂ ∧ c ≠ z₁ ∧ c ≠ z₂ ∧
+    -- b preserves core
+    (∀ x : Fin n, x = z₁ ∨ x = z₂ ∨ (dot b x ≠ z₁ ∧ dot b x ≠ z₂)) ∧
+    -- Factorization
+    (∀ x : Fin n, x = z₁ ∨ x = z₂ ∨ dot a x = dot c (dot b x))
+    -- (no non-triviality condition)
+
+-- The 6-element FRM witnessing non-triviality necessity
+private def rawNT6 : Nat → Nat → Nat
+  | 0, 0 => 0 | 0, 1 => 0 | 0, 2 => 0 | 0, 3 => 0 | 0, 4 => 0 | 0, 5 => 0
+  | 1, 0 => 1 | 1, 1 => 1 | 1, 2 => 1 | 1, 3 => 1 | 1, 4 => 1 | 1, 5 => 1
+  | 2, 0 => 5 | 2, 1 => 3 | 2, 2 => 3 | 2, 3 => 5 | 2, 4 => 4 | 2, 5 => 2
+  | 3, 0 => 0 | 3, 1 => 1 | 3, 2 => 5 | 3, 3 => 2 | 3, 4 => 4 | 3, 5 => 3
+  | 4, 0 => 2 | 4, 1 => 2 | 4, 2 => 1 | 4, 3 => 1 | 4, 4 => 1 | 4, 5 => 1
+  | 5, 0 => 3 | 5, 1 => 3 | 5, 2 => 1 | 5, 3 => 1 | 5, 4 => 1 | 5, 5 => 1
+  | _, _ => 0
+
+private theorem rawNT6_bound (a b : Fin 6) : rawNT6 a.val b.val < 6 := by
+  revert a b; decide
+
+def dotNT6 (a b : Fin 6) : Fin 6 := ⟨rawNT6 a.val b.val, rawNT6_bound a b⟩
+
+/-- The 6-element non-triviality witness is a FaithfulRetractMagma with Q=2, E=3. -/
+def nt6_frm : FaithfulRetractMagma 6 where
+  dot := dotNT6
+  zero₁ := 0
+  zero₂ := 1
+  sec := 2
+  ret := 3
+  zero₁_left := by decide
+  zero₂_left := by decide
+  zeros_distinct := by decide
+  no_other_zeros := by decide
+  extensional := by decide
+  ret_sec := by decide
+  sec_ret := by decide
+  ret_zero₁ := by decide
+
+/-- The NT6 model fails full ICP. -/
+theorem nt6_no_icp : ¬ HasICP 6 dotNT6 0 1 := by decide
+
+/-- The NT6 model satisfies ICP without non-triviality (a=4, b=2, c=5). -/
+theorem nt6_has_weak_nontriv : HasICPWeakNontriv 6 dotNT6 0 1 := by decide
+
+/-- **Non-triviality is necessary for ICP.**
+    The NT6 model separates HasICPWeakNontriv from HasICP. -/
+theorem icp_nontrivial_necessary :
+    ∃ (n : Nat) (dot : Fin n → Fin n → Fin n) (z₁ z₂ : Fin n),
+      HasICPWeakNontriv n dot z₁ z₂ ∧ ¬ HasICP n dot z₁ z₂ :=
+  ⟨6, dotNT6, 0, 1, nt6_has_weak_nontriv, nt6_no_icp⟩
+
 end KripkeWall
