@@ -79,7 +79,7 @@ All results are formalized in Lean~4~\cite{moura21} and verified by \texttt{lake
 \paragraph{Contributions.}
 \begin{enumerate}
   \item A characterization of H: the ICP is logically equivalent to Compose+Inert (Section~\ref{sec:icp}).
-  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples in all six directions at $N\!=\!4$ through $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!6$ (Section~\ref{sec:bound}).
+  \item An independence theorem: S, D, and H are pairwise independent, with Lean-verified counterexamples in all six directions at $N\!=\!5$ through $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!6$ (Section~\ref{sec:bound}).
   \item Universal algebraic obstructions: no extensional 2-pointed magma carrying both a classifier and a retraction pair has a right identity or is associative, ruling out semigroups, monoids, and groups (Section~\ref{sec:universal}).
   \item A decomposition invariance theorem: the three-category partition is preserved by isomorphisms (Section~\ref{sec:invariance}).
 \end{enumerate}
@@ -382,7 +382,7 @@ Each direction is proved by exhibiting a concrete Cayley table and verifying the
 An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$S \not\Rightarrow H$ ($N\!=\!6$, structural).}
-A $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) defining an extensional 2-pointed magma with a retraction pair ($s = r = 2$, an involution on core) but no $\ICP$. The 4 core elements are enough for $\ICP$ to be non-vacuous, so this is a structural failure, not a cardinality obstruction. Lean proves $\neg\,\texttt{HasICP}$ by exhaustive search via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{s\_not\_implies\_icp\_structural}.
+A $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) defining an extensional 2-pointed magma with a retraction pair ($s = r = 2$, an involution on core) but no $\ICP$. The core has 4 elements — more than the 3 pairwise distinct witnesses $\ICP$ requires — yet no triple satisfies the $\ICP$. Lean proves $\neg\,\texttt{HasICP}$ by exhaustive search via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{s\_not\_implies\_icp\_structural}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
 A $10 \times 10$ Cayley table satisfying D (and also S). Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$, by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean}, \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
