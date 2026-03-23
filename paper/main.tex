@@ -62,7 +62,7 @@ Our main result is that these three capabilities are pairwise independent: no ca
 
 Meta-circular evaluators combine mechanisms for internal representation, internal classification, and internal reduction. These co-occur in practice, but we prove they are independent: no mechanism implies any other in finite extensional magmas.
 
-We define three capabilities of a finite extensional 2-pointed magma~\cite{burris81} (a set with a binary operation, exactly two left-absorbers, and row-extensionality):
+We define three capabilities of a finite extensional 2-pointed magma~\cite{burris81} (a set with a binary operation, exactly two left-absorbers, and extensionality):
 
 \begin{itemize}
   \item \textbf{Self-representation (S):} a section-retraction pair on the core, providing a basic internal coding mechanism.
@@ -104,7 +104,7 @@ We write $\core(S) := S \setminus \{z_1, z_2\}$ for the non-absorber elements.
 
 \begin{definition}[Faithful Retract Magma]
 \label{def:frm}
-A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure).
+A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure). The remaining absorber outputs of $s$ and $r$ are unconstrained; the single anchoring condition suffices for the proofs.
 \end{definition}
 
 The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. Informally, this acts as a finite internal coding scheme, analogous in spirit to a G\"odel numbering.
@@ -292,7 +292,7 @@ For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
 \begin{proof}
 The bijection between witness triples is $(\eta, g, \rho) = (a, b, c)$: the composed element $a$ is $\eta$, the core-preserving element $b$ is $g$, and the outer element $c$ is $\rho$. Under this identification the factorization $a \dotop x = c \dotop (b \dotop x)$ becomes $\eta \dotop x = \rho \dotop (g \dotop x)$ (Compose), core-preservation of $b$ becomes Inert, and the remaining conditions (pairwise distinct, non-absorber) transfer directly.
 
-The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}).
+The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model (the minimal $\DRM$; Cayley table in Appendix~\ref{app:tables}) separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}).
 
 The proof is pure equational logic — no \texttt{decide}, no case analysis on $n$. It holds for every finite magma on a 2-pointed set, of any size. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.
 \end{proof}
@@ -305,7 +305,7 @@ Two additional axioms act as \emph{bridges} between capabilities, not capabiliti
   \item \emph{Branch}: $\rho \dotop x = f \dotop x$ if $\tau \dotop x = z_1$, else $\rho \dotop x = g \dotop x$. Branch connects D to H: the classifier's judgment controls the evaluator's dispatch. It requires both D and H as prerequisites.
   \item \emph{Y} (fixed-point): $Y \dotop \rho = \rho \dotop (Y \dotop \rho)$ with $Y \dotop \rho \in \core(S)$. Y extends H across the decidability boundary: bounded evaluation becomes unbounded recursion. It requires H as a prerequisite.
 \end{itemize}
-Both are irredundant (SAT-verified) and used in the accompanying artifact (a compiled reflective tower), but are not required for the independence or invariance results of this paper.
+Both are used in the accompanying artifact (a compiled reflective tower) but are not required for the independence or invariance results of this paper. Each is irredundant in the sense that removing it from the full axiom stack (S+D+H+Branch+Y) causes the reflective tower to fail; this was verified by SAT.
 
 \begin{figure}[t]
 \centering
@@ -507,22 +507,22 @@ All Lean files, counterexample tables, SAT reproduction scripts, and the 16-elem
 \bibitem{smith84}
 Brian Cantwell Smith.
 \newblock Reflection and semantics in {Lisp}.
-\newblock In \emph{POPL}, 1984.
+\newblock In \emph{POPL}, pages 23--35, 1984.
 
 \bibitem{friedman84}
 Daniel P. Friedman and Mitchell Wand.
 \newblock Reification: Reflection without metaphysics.
-\newblock In \emph{LFP}, 1984.
+\newblock In \emph{LFP}, pages 348--355, 1984.
 
 \bibitem{danvy88}
 Olivier Danvy and Karoline Malmkj{\ae}r.
 \newblock Intensions and extensions in a reflective tower.
-\newblock In \emph{LFP}, 1988.
+\newblock In \emph{LFP}, pages 28--39, 1988.
 
 \bibitem{amin18}
 Nada Amin and Tiark Rompf.
 \newblock Collapsing towers of interpreters.
-\newblock In \emph{POPL}, 2018.
+\newblock In \emph{POPL}, Article 52, pages 1--33, 2018.
 
 \bibitem{mogensen92}
 Torben Mogensen.
@@ -532,7 +532,7 @@ Torben Mogensen.
 \bibitem{brown16}
 Matt Brown and Jens Palsberg.
 \newblock Breaking through the normalization barrier: A self-interpreter for {F-omega}.
-\newblock In \emph{POPL}, 2016.
+\newblock In \emph{POPL}, pages 5--17, 2016.
 
 \bibitem{maclane71}
 Saunders Mac~Lane.
@@ -543,11 +543,6 @@ Saunders Mac~Lane.
 Peter~T. Johnstone.
 \newblock \emph{Sketches of an Elephant: A Topos Theory Compendium}, vol.~1.
 \newblock Oxford University Press, 2002.
-
-\bibitem{maclane92}
-Saunders Mac~Lane and Ieke Moerdijk.
-\newblock \emph{Sheaves in Geometry and Logic: A First Introduction to Topos Theory}.
-\newblock Springer, 1992.
 
 \bibitem{libkin04}
 Leonid Libkin.
@@ -564,30 +559,20 @@ Saul Kripke.
 \newblock Outline of a theory of truth.
 \newblock \emph{Journal of Philosophy}, 72(19), 1975.
 
-\bibitem{plotkin03}
-Gordon Plotkin and John Power.
-\newblock Algebraic operations and generic effects.
-\newblock \emph{Applied Categorical Structures}, 11(1), 2003.
-
 \bibitem{hyland06}
-Martin Hyland, Gordon Plotkin, and John Power.
+Martin Hyland, Paul Blain Levy, Gordon Plotkin, and John Power.
 \newblock Combining effects: Sum and tensor.
 \newblock \emph{Theoretical Computer Science}, 357(1--3), 2006.
 
 \bibitem{plotkin09}
 Gordon Plotkin and Matija Pretnar.
 \newblock Handlers of algebraic effects.
-\newblock In \emph{ESOP}, 2009.
-
-\bibitem{hyland07}
-Martin Hyland and John Power.
-\newblock The category theoretic understanding of universal algebra: {Lawvere} theories and monads.
-\newblock \emph{ENTCS}, 172:437--458, 2007.
+\newblock In \emph{ESOP}, pages 80--94, 2009.
 
 \bibitem{moura21}
 Leonardo de~Moura and Sebastian Ullrich.
 \newblock The {Lean}~4 theorem prover and programming language.
-\newblock In \emph{CADE}, 2021.
+\newblock In \emph{CADE}, pages 625--635, 2021.
 
 \end{thebibliography}
 
@@ -600,7 +585,7 @@ Leonardo de~Moura and Sebastian Ullrich.
 
 All tables are extracted from the Lean source files and verified by \texttt{lake build}. Element $i$'s row is row~$i$; entry $(i,j)$ is $i \dotop j$.
 
-\paragraph{$N\!=\!4$: Minimal $\DRM$ ($s = r$).}
+\paragraph{$N\!=\!4$: Minimal S+D witness ($s = r$).}
 Roles: $0 = z_1$, $1 = z_2$, $2 = \tau$, $3 = s = r$. \quad Lean: \texttt{CatKripkeWallMinimal.lean}, \texttt{kripke4}.
 
 \medskip
@@ -613,7 +598,7 @@ $\dotop$ & 0 & 1 & 2 & 3 \\\hline
 3 & 0 & 0 & 2 & 3 \\
 \end{tabular}}
 
-\paragraph{$N\!=\!5$: Minimal $\DRM$ ($s \neq r$).}
+\paragraph{$N\!=\!5$: Minimal S+D witness ($s \neq r$).}
 Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$. \quad Lean: \texttt{CatKripkeWallMinimal.lean}, \texttt{kripke5}.
 
 \medskip
