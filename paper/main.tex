@@ -60,9 +60,9 @@ Our main result is that these three capabilities are pairwise independent: no ca
 \section{Introduction}
 % ══════════════════════════════════════════════════════════════
 
-Meta-circular evaluators combine mechanisms for internal representation, internal classification, and internal reduction. These co-occur in practice, but we prove they are independent: no mechanism implies any other in finite extensional magmas.
+Meta-circular evaluators combine mechanisms for internal representation, internal classification, and internal reduction. These co-occur in practice, but we prove they are independent: no mechanism implies any other in finite extensional magmas. The connection to reflective computation is motivational: we isolate algebraic properties inspired by self-representation, self-description, and self-execution, and prove they are independent. Whether this independence lifts to richer computational settings is the primary open question (Section~\ref{sec:discussion}).
 
-We define three capabilities of a finite extensional 2-pointed magma~\cite{burris81} (a set with a binary operation, exactly two left-absorbers, and extensionality):
+We define three capabilities of a finite extensional 2-pointed magma (a set with a binary operation, exactly two left-absorbers, and extensionality; the framework follows universal algebra~\cite{burris81}):
 
 \begin{itemize}
   \item \textbf{Self-representation (S):} a section-retraction pair on the core, providing a basic internal coding mechanism.
@@ -292,7 +292,7 @@ For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
 \begin{proof}
 The bijection between witness triples is $(\eta, g, \rho) = (a, b, c)$: the composed element $a$ is $\eta$, the core-preserving element $b$ is $g$, and the outer element $c$ is $\rho$. Under this identification the factorization $a \dotop x = c \dotop (b \dotop x)$ becomes $\eta \dotop x = \rho \dotop (g \dotop x)$ (Compose), core-preservation of $b$ becomes Inert, and the remaining conditions (pairwise distinct, non-absorber) transfer directly.
 
-The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model (the minimal $\DRM$; Cayley table in Appendix~\ref{app:tables}) separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}).
+The pairwise-distinctness and non-triviality conditions are not cosmetic — they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model (the minimal $\DRM$; Cayley table in Appendix~\ref{app:tables}) separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}, \texttt{ICP.lean}).
 
 The proof is pure equational logic — no \texttt{decide}, no case analysis on $n$. It holds for every finite magma on a 2-pointed set, of any size. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.
 \end{proof}
@@ -310,13 +310,13 @@ Both are used in the accompanying artifact (a compiled reflective tower) but are
 \begin{figure}[t]
 \centering
 \begin{tabular}{@{}r@{~}l@{\quad}l@{}}
-\textsc{Input:} & $\text{rep}(a),\ \text{rep}(b)$ & \emph{S provides: $s, z_1$} \\
-$\to$ \textsc{Decode:} & peel $s$-layers via $r$ & \emph{S provides: $r$} \\
-$\to$ \textsc{Lookup:} & $\text{table}[a][b]$ & \emph{the algebra itself} \\
-$\to$ \textsc{Dispatch:} & branch on classifier & \emph{D provides: $\tau$} \\
-$\to$ \textsc{Compose:} & $\eta \dotop x = \rho \dotop (g \dotop x)$ & \emph{H provides: $\eta, g, \rho$} \\
-$\to$ \textsc{Encode:} & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1$} \\
-\textsc{Output:} & $\text{rep}(a \dotop b)$ & \\
+\textsc{Input}: & $\text{rep}(a),\ \text{rep}(b)$ & \emph{S provides: $s, z_1$} \\
+$\to$ \textsc{Decode}: & peel $s$-layers via $r$ & \emph{S provides: $r$} \\
+$\to$ \textsc{Lookup}: & $\text{table}[a][b]$ & \emph{the algebra itself} \\
+$\to$ \textsc{Dispatch}: & branch on classifier & \emph{D provides: $\tau$} \\
+$\to$ \textsc{Compose}: & $\eta \dotop x = \rho \dotop (g \dotop x)$ & \emph{H provides: $\eta, g, \rho$} \\
+$\to$ \textsc{Encode}: & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1$} \\
+\textsc{Output}: & $\text{rep}(a \dotop b)$ & \\
 \end{tabular}
 \caption{Information flow in self-simulation (when all three capabilities co-occur). S provides encoding/decoding (I/O). The algebra provides the lookup (computation). D organizes elements into roles (classification). H internalizes a non-trivial composition pattern (evaluation). Without H, an external machine must supply the Compose and Dispatch steps.}
 \label{fig:flow}
@@ -382,7 +382,7 @@ Each direction is proved by exhibiting a concrete Cayley table and verifying the
 An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$S \not\Rightarrow H$ ($N\!=\!4$).}
-The Kripke-4 model (the minimal $\DRM$, $N\!=\!4$) has exactly 2 non-absorbers. Since $\ICP$ requires 3 pairwise distinct non-absorbers, it fails trivially. Lean file: \texttt{ICP.lean}, theorem \texttt{s\_not\_implies\_icp}.
+The Kripke-4 model (the minimal $\DRM$, $N\!=\!4$) has exactly 2 non-absorbers. Since $\ICP$ requires 3 pairwise distinct non-absorbers, it fails trivially. Lean file: \texttt{ICP.lean}, theorem \texttt{s\_not\_implies\_icp}. This is a cardinality obstruction. Whether a larger extensional 2-pointed magma satisfying S but failing H for structural (non-cardinality) reasons exists at intermediate sizes is not explored here; the $N\!=\!4$ witness suffices for the non-implication.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
 A $10 \times 10$ Cayley table satisfying D (and also S). Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$, by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean}, \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
@@ -400,7 +400,7 @@ All tables are generated by Z3 SAT solver and independently verified. The Cayley
 \end{proof}
 
 \paragraph{Methodology.}
-Each counterexample was found by encoding the relevant capability axioms (and the negation of the target capability) as a SAT problem over an $n \times n$ Cayley table, then solving with Z3. The search space is $n^{n^2}$ (all possible binary operations on $\Fin(n)$); the axioms reduce this to a manageable constraint system. The sizes $N\!=\!8$ and $N\!=\!10$ were discovered by incrementing $n$ from the minimum until SAT returned a model. Once found, each table was frozen in \texttt{counterexamples.json} and independently verified in Lean.
+Each counterexample was found by encoding the relevant capability axioms (and the negation of the target capability) as a SAT problem over an $n \times n$ Cayley table, then solving with Z3. The search space is $n^{n^2}$ (all possible binary operations on $\Fin(n)$); the axioms reduce this to a manageable constraint system. The sizes $N\!=\!8$ and $N\!=\!10$ were discovered by incrementing $n$ from the minimum until SAT returned a model. Once found, each table was frozen in \texttt{counterexamples.json} and independently verified in Lean. The counterexample sizes are minimal in the sense that SAT returned UNSAT at all smaller sizes with the same role assignments, but we have not proved universal minimality.
 
 \paragraph{Interpretation.}
 The $H \not\Rightarrow D$ direction shows that an algebra can internalize a non-trivial composition pattern, as captured by the $\ICP$, without also satisfying the classifier dichotomy. Thus self-execution in our sense does not force the organizational separation expressed by D.
@@ -429,7 +429,7 @@ A concrete $10 \times 10$ Cayley table (Appendix~\ref{app:tables}) satisfies all
 \end{proof}
 
 \paragraph{Minimum cardinality.}
-Whether $N\!=\!5$ admits S+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the retraction pair fixed at $(s, r) = (2, 3)$ and each classifier assignment tested individually, but this does not rule out other role assignments or overlapping role encodings. We have not proved a universal lower bound.
+Whether $N\!=\!5$ admits S+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the retraction pair fixed at $(s, r) = (2, 3)$ iterating over all possible classifier assignments among the remaining core elements, but this does not rule out other role assignments or overlapping role encodings. We have not proved a universal lower bound.
 
 % ══════════════════════════════════════════════════════════════
 \section{Categorical Context}
@@ -456,7 +456,7 @@ Smith's 3-Lisp~\cite{smith84} introduced the reflective tower — an infinite ch
 Mogensen~\cite{mogensen92} constructs self-interpreters for the $\lambda$-calculus. Brown and Palsberg~\cite{brown16} show that self-interpretation is possible in strongly-normalizing typed languages, contradicting earlier impossibility results. These works study self-interpretation (our S) but do not address the independence of S from D or H.
 
 \paragraph{Algebraic effects and handlers.}
-Plotkin and Pretnar~\cite{plotkin09} show that effect handlers are algebra homomorphisms from a free model; there is a structural resemblance to section-retraction patterns familiar from algebraic semantics, although our setting is much more elementary: a finite single-sorted algebra with distinguished elements rather than free/forgetful constructions over effect signatures. Hyland, Levy, Plotkin, and Power~\cite{hyland06} show that the continuation monad is not algebraic; the flavor of obstruction is similar to our no-associativity result (Theorem~\ref{thm:no-assoc}), though the mechanisms differ — failure of a monad to admit a presentation by operations and equations vs.\ an algebraic impossibility in a finite magma. The algebraic effects literature studies finitary theories over infinite carriers; our contribution operates in the complementary setting of finite carriers with no equations.
+Plotkin and Power~\cite{plotkin03} decompose computational effects into algebraic operations and generic effects. Plotkin and Pretnar~\cite{plotkin09} show that effect handlers are algebra homomorphisms from a free model; there is a structural resemblance to section-retraction patterns familiar from algebraic semantics, although our setting is much more elementary: a finite single-sorted algebra with distinguished elements rather than free/forgetful constructions over effect signatures. Hyland, Levy, Plotkin, and Power~\cite{hyland06} show that the continuation monad is not algebraic; the flavor of obstruction is similar to our no-associativity result (Theorem~\ref{thm:no-assoc}), though the mechanisms differ — failure of a monad to admit a presentation by operations and equations vs.\ an algebraic impossibility in a finite magma. The algebraic effects literature studies finitary theories over infinite carriers; our contribution operates in the complementary setting of finite carriers with no equations.
 
 \paragraph{Finite model theory.}
 Independence results via finite counterexamples are standard in finite model theory~\cite{libkin04}. Our contribution is not the technique but the specific separation: three independently-motivated capabilities of reflective computation, shown independent in an algebraic setting, with machine-checked proofs.
@@ -476,7 +476,7 @@ Non-associativity is essential for D in our setting. Theorem~\ref{thm:no-assoc} 
 Whether the three-capability separation appears in other settings ($\lambda$-calculus, typed systems, infinite algebras) is the primary open question. Theorem~\ref{thm:no-assoc} constrains the target: any such translation must work without associativity or identity. A categorical characterization of H as a universal property (stronger than the analogy in Section~\ref{sec:categorical}) is also open.
 
 \paragraph{The cost of legibility.}
-The three capabilities coexist at $N\!=\!6$ (Section~\ref{sec:bound}). Additional organizational axioms push the minimum to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are the subject of a companion paper.
+The three capabilities coexist at $N\!=\!6$ (Section~\ref{sec:bound}), and the enrichments Branch and Y also hold in that witness. Additional organizational axioms push the minimum to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are the subject of a companion paper.
 
 \paragraph{Realization freedom.}
 Each capability admits multiple axiom forms. For H, replacing $\eta = \rho \circ g$ with alternatives (e.g., $g \circ \rho$) produces different classifier distributions; the independence result holds for all variants.
@@ -501,7 +501,6 @@ All Lean files, counterexample tables, SAT reproduction scripts, and the 16-elem
 % References
 % ══════════════════════════════════════════════════════════════
 
-\bibliographystyle{ACM-Reference-Format}
 \begin{thebibliography}{10}
 
 \bibitem{smith84}
@@ -527,7 +526,7 @@ Nada Amin and Tiark Rompf.
 \bibitem{mogensen92}
 Torben Mogensen.
 \newblock Efficient self-interpretation in lambda calculus.
-\newblock \emph{Journal of Functional Programming}, 2(3), 1992.
+\newblock \emph{Journal of Functional Programming}, 2(3):279--291, 1992.
 
 \bibitem{brown16}
 Matt Brown and Jens Palsberg.
@@ -557,12 +556,17 @@ Stanley Burris and H.~P. Sankappanavar.
 \bibitem{kripke75}
 Saul Kripke.
 \newblock Outline of a theory of truth.
-\newblock \emph{Journal of Philosophy}, 72(19), 1975.
+\newblock \emph{Journal of Philosophy}, 72(19):690--716, 1975.
 
 \bibitem{hyland06}
 Martin Hyland, Paul Blain Levy, Gordon Plotkin, and John Power.
 \newblock Combining effects: Sum and tensor.
-\newblock \emph{Theoretical Computer Science}, 357(1--3), 2006.
+\newblock \emph{Theoretical Computer Science}, 357(1--3):70--99, 2006.
+
+\bibitem{plotkin03}
+Gordon Plotkin and John Power.
+\newblock Algebraic operations and generic effects.
+\newblock \emph{Applied Categorical Structures}, 11(1):69--94, 2003.
 
 \bibitem{plotkin09}
 Gordon Plotkin and Matija Pretnar.
