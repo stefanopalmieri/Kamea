@@ -104,7 +104,7 @@ We write $\core(S) := S \setminus \{z_1, z_2\}$ for the non-absorber elements.
 
 \begin{definition}[Faithful Retract Magma]
 \label{def:frm}
-A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure). The remaining absorber outputs of $s$ and $r$ are unconstrained; the single anchoring condition suffices for the proofs.
+A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring the retraction to the zero structure). The remaining absorber outputs of $s$ and $r$ are unconstrained; the single anchoring condition suffices for the proofs. The Lean formalization additionally requires $s \dotop (r \dotop x) = x$ on core (making $s$ and $r$ mutual inverses); this stronger condition is used only for section-side placement and the tight cardinality bound $|S| \geq 5$ when $s \neq r$. No other result depends on it.
 \end{definition}
 
 The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. Informally, this acts as a finite internal coding scheme, analogous in spirit to a G\"odel numbering.
@@ -178,12 +178,12 @@ No extensional magma with two distinct left-absorbers is commutative.
 
 \begin{theorem}[Retraction Pair Placement]
 \label{thm:placement}
-In any extensional 2-pointed magma satisfying both S and D, any witnesses $s, r$ to S are non-classifiers: $s, r \in N$.
+In any extensional 2-pointed magma satisfying both S and D, any witness $r$ to S is a non-classifier: $r \in N$. (Under the stronger mutual-inverse condition in the Lean formalization, $s \in N$ also holds.)
 \end{theorem}
 
 \begin{theorem}[Cardinality Bounds]
 \label{thm:card}
-$|S| \geq 4$ for any $\DRM$ (S+D), and $|S| \geq 5$ when $s \neq r$. Both bounds are tight.
+$|S| \geq 4$ for any $\DRM$ (S+D). This bound is tight: a 4-element witness with $s = r$ is exhibited in Appendix~\ref{app:tables}. Under the stronger mutual-inverse condition, $|S| \geq 5$ when $s \neq r$ (also tight).
 \end{theorem}
 
 \begin{theorem}[No Right Identity]
@@ -438,7 +438,7 @@ Whether $N\!=\!5$ admits S+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the 
 
 Each capability connects to standard categorical vocabulary.
 
-\paragraph{S = section-retraction pair.} Definition~\ref{def:frm} is a section-retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core~\cite{maclane71} in the endomorphism category of the magma. The connection is exact: the Lean formalization uses this structure directly.
+\paragraph{S = section-retraction pair.} Definition~\ref{def:frm} is a section-retraction pair $(s, r)$ with $r \circ s = \mathrm{id}$ on core~\cite{maclane71} in the endomorphism category of the magma. The Lean formalization uses the stronger mutual-inverse condition ($s \circ r = \mathrm{id}$ on core as well), but no main theorem depends on it (see Definition~\ref{def:frm}).
 
 \paragraph{D $\approx$ decidable subobject classifier.} The classifier dichotomy parallels the $\Omega$-valued / non-$\Omega$-valued partition in a topos~\cite{johnstone02}. The three-category decomposition and its functoriality (Theorem~\ref{thm:functoriality}) are proved; the identification of $C$ with a subobject classifier image is an analogy (our totality condition — no partial classifiers — has no direct topos-theoretic counterpart).
 
