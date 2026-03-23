@@ -169,6 +169,55 @@ theorem h_not_implies_s :
   ⟨hNoS_e2pm, hNoS_has_icp, hNoS_no_retract⟩
 
 -- ═══════════════════════════════════════════════════════════════════
+-- Structural S ⇏ H witness: N=6 E2PM with retraction pair, no ICP
+-- ═══════════════════════════════════════════════════════════════════
+
+/-! The N=4 S⇏H witness (Kripke-4, in `ICP.lean`) is a cardinality obstruction:
+    ICP needs 3 pairwise distinct core elements, but N=4 has only 2.
+    This N=6 witness has 4 core elements, so ICP is non-vacuous.
+    The retraction pair is an involution: s=r=2 with 2·(2·x)=x on core.
+    No triple satisfies ICP — the failure is structural. -/
+
+private def rawSnoH6 : Nat → Nat → Nat
+  | 0, 0 => 0 | 0, 1 => 0 | 0, 2 => 0 | 0, 3 => 0 | 0, 4 => 0 | 0, 5 => 0
+  | 1, 0 => 1 | 1, 1 => 1 | 1, 2 => 1 | 1, 3 => 1 | 1, 4 => 1 | 1, 5 => 1
+  | 2, 0 => 0 | 2, 1 => 3 | 2, 2 => 3 | 2, 3 => 2 | 2, 4 => 5 | 2, 5 => 4
+  | 3, 0 => 2 | 3, 1 => 4 | 3, 2 => 5 | 3, 3 => 5 | 3, 4 => 1 | 3, 5 => 4
+  | 4, 0 => 5 | 4, 1 => 3 | 4, 2 => 0 | 4, 3 => 0 | 4, 4 => 3 | 4, 5 => 2
+  | 5, 0 => 4 | 5, 1 => 2 | 5, 2 => 2 | 5, 3 => 2 | 5, 4 => 2 | 5, 5 => 2
+  | _, _ => 0
+
+private theorem rawSnoH6_bound (a b : Fin 6) : rawSnoH6 a.val b.val < 6 := by
+  revert a b; decide
+
+def dotSnoH6 (a b : Fin 6) : Fin 6 := ⟨rawSnoH6 a.val b.val, rawSnoH6_bound a b⟩
+
+/-- The N=6 structural S⇏H witness is an E2PM. -/
+def sNoH6_e2pm : Ext2PointedMagma 6 where
+  dot := dotSnoH6
+  zero₁ := 0
+  zero₂ := 1
+  zero₁_left := by decide
+  zero₂_left := by decide
+  zeros_distinct := by decide
+  no_other_zeros := by decide
+  extensional := by decide
+
+/-- The structural S⇏H witness has a retraction pair (s=r=2, an involution). -/
+theorem sNoH6_has_retract : HasRetractPair 6 dotSnoH6 0 1 := by decide
+
+/-- The structural S⇏H witness has NO ICP — despite having 4 core elements. -/
+theorem sNoH6_no_icp : ¬ HasICP 6 dotSnoH6 0 1 := by decide
+
+/-- **Structural S ⇏ H**: A retraction pair does not imply the Internal
+    Composition Property, even when enough core elements exist for ICP
+    to be non-vacuous. -/
+theorem s_not_implies_icp_structural :
+    ∃ (_ : Ext2PointedMagma 6),
+    HasRetractPair 6 dotSnoH6 0 1 ∧ ¬ HasICP 6 dotSnoH6 0 1 :=
+  ⟨sNoH6_e2pm, sNoH6_has_retract, sNoH6_no_icp⟩
+
+-- ═══════════════════════════════════════════════════════════════════
 -- Full 6-way independence summary
 -- ═══════════════════════════════════════════════════════════════════
 
@@ -180,7 +229,8 @@ With all six directions now Lean-verified:
 | Direction | Model | File |
 |-----------|-------|------|
 | S ⇏ D | N=8 FRM, dichotomy fails | `Countermodel.lean` |
-| S ⇏ H | N=4 FRM (Kripke-4), ICP fails | `ICP.lean` |
+| S ⇏ H | N=6 E2PM with retraction pair, ICP fails (structural) | this file |
+| S ⇏ H | N=4 FRM (Kripke-4), ICP fails (cardinality) | `ICP.lean` |
 | D ⇏ H | N=10 DRM, ICP fails | `Countermodels10.lean` + `ICP.lean` |
 | H ⇏ D | N=10 FRM with ICP, dichotomy fails | `Countermodels10.lean` + `ICP.lean` |
 | D ⇏ S | N=5 E2PM with dichotomy, no retraction pair | this file |

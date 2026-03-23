@@ -51,7 +51,7 @@
 \begin{abstract}
 We study three algebraic properties of finite extensional 2-pointed magmas associated with reflective computation: self-representation, self-description, and self-execution. Self-representation is the existence of a section-retraction pair on the core. Self-description is the classifier dichotomy: every core element acts on the core either entirely through the distinguished absorber values $\{z_1,z_2\}$ or entirely outside them. Self-execution is the Internal Composition Property: some core action factors non-trivially through two others, one core-preserving.
 
-Our main result is that these three capabilities are pairwise independent: no capability implies any other. The six non-implications are witnessed by Lean-verified finite counterexamples of sizes $N\!=\!4, 5, 6, 8,$ and $10$. We also prove that the decomposition induced by self-description is invariant under isomorphism, and that associativity is incompatible with the classifier structure used for self-description. All results are formalized in Lean~4 without \texttt{sorry}.
+Our main result is that these three capabilities are pairwise independent: no capability implies any other. The six non-implications are witnessed by Lean-verified finite counterexamples of sizes $N\!=\!5, 6, 8,$ and $10$. We also prove that the decomposition induced by self-description is invariant under isomorphism, and that associativity is incompatible with the classifier structure used for self-description. All results are formalized in Lean~4 without \texttt{sorry}.
 \end{abstract}
 
 \maketitle
@@ -352,7 +352,7 @@ $\to$ \textsc{Encode}: & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1
 \put(7,6.1){\makebox(0,0){\small$\times$}}
 % Labels
 \put(3.3,3.1){\makebox(0,0){\scriptsize$N\!=\!8$}}
-\put(10.7,3.1){\makebox(0,0){\scriptsize$N\!=\!4$}}
+\put(10.7,3.1){\makebox(0,0){\scriptsize$N\!=\!6$}}
 \put(5.7,4.8){\makebox(0,0){\scriptsize$N\!=\!5$}}
 \put(8.3,4.8){\makebox(0,0){\scriptsize$N\!=\!6$}}
 \put(5.2,7.5){\makebox(0,0){\scriptsize$N\!=\!10$}}
@@ -367,7 +367,7 @@ $\to$ \textsc{Encode}: & $\text{rep}(\text{result})$ & \emph{S provides: $s, z_1
 No capability implies any other. Specifically, all six pairwise non-implications hold:
 \begin{enumerate}
   \item $S \not\Rightarrow D$: An extensional 2-pointed magma of size $8$ satisfying S contains a classifier element but fails the global dichotomy condition.
-  \item $S \not\Rightarrow H$: An extensional 2-pointed magma of size $4$ satisfying both S and D has only 2 non-absorber elements; $\ICP$ requires 3.
+  \item $S \not\Rightarrow H$: An extensional 2-pointed magma of size $6$ satisfying S has 4 core elements (enough for $\ICP$ to be non-vacuous) but no triple satisfies the $\ICP$.
   \item $D \not\Rightarrow H$: An extensional 2-pointed magma of size $10$ satisfying both S and D has no triple satisfying the $\ICP$.
   \item $H \not\Rightarrow D$: An extensional 2-pointed magma of size $10$ satisfies $\ICP$ but violates the classifier dichotomy.
   \item $D \not\Rightarrow S$: An extensional 2-pointed magma of size $5$ satisfies the classifier dichotomy but admits no retraction pair.
@@ -381,8 +381,8 @@ Each direction is proved by exhibiting a concrete Cayley table and verifying the
 \paragraph{$S \not\Rightarrow D$ ($N\!=\!8$, the Countermodel).}
 An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ — it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
 
-\paragraph{$S \not\Rightarrow H$ ($N\!=\!4$).}
-The Kripke-4 model (the minimal $\DRM$, $N\!=\!4$) has exactly 2 non-absorbers. Since $\ICP$ requires 3 pairwise distinct non-absorbers, it fails trivially. Lean file: \texttt{ICP.lean}, theorem \texttt{s\_not\_implies\_icp}. This is a cardinality obstruction. Whether a larger extensional 2-pointed magma satisfying S but failing H for structural (non-cardinality) reasons exists at intermediate sizes is not explored here; the $N\!=\!4$ witness suffices for the non-implication.
+\paragraph{$S \not\Rightarrow H$ ($N\!=\!6$, structural).}
+A $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) defining an extensional 2-pointed magma with a retraction pair ($s = r = 2$, an involution on core) but no $\ICP$. The 4 core elements are enough for $\ICP$ to be non-vacuous, so this is a structural failure, not a cardinality obstruction. Lean proves $\neg\,\texttt{HasICP}$ by exhaustive search via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{s\_not\_implies\_icp\_structural}.
 
 \paragraph{$D \not\Rightarrow H$ ($N\!=\!10$).}
 A $10 \times 10$ Cayley table satisfying D (and also S). Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$, by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean}, \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
@@ -648,6 +648,21 @@ $\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\\hline
 7 & 2 & 2 & 2 & 1 & 2 & 2 & 6 & 3 \\
 \end{tabular}}
 
+\paragraph{$N\!=\!6$: $S \not\Rightarrow H$ Counterexample (structural).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s = r$ (involution on core). Retraction pair holds; no triple satisfies $\ICP$ despite 4 core elements. \quad Lean: \texttt{E2PM.lean} (\texttt{sNoH6\_e2pm}).
+
+\medskip
+{\small
+\begin{tabular}{c|cccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 & 5 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 0 & 3 & 3 & 2 & 5 & 4 \\
+3 & 2 & 4 & 5 & 5 & 1 & 4 \\
+4 & 5 & 3 & 0 & 0 & 3 & 2 \\
+5 & 4 & 2 & 2 & 2 & 2 & 2 \\
+\end{tabular}}
+
 \paragraph{$N\!=\!10$: $D \not\Rightarrow H$ Counterexample.}
 Roles: $0 = z_1$, $1 = z_2$, $2 = s$, $3 = r$, $4 = \tau$. No triple satisfies $\ICP$. \quad Lean: \texttt{Countermodels10.lean} (\texttt{dNotH}), \texttt{ICP.lean} (\texttt{dNotH\_no\_icp}).
 
@@ -751,11 +766,11 @@ SelfSimulation       &  5 & Algebraic & Partial app.\ injectivity \\
 ICP                  & 20 & Alg.+decide & ICP $\Leftrightarrow$ Compose+Inert \\
 Countermodel         &  5 & decide & $S \not\Rightarrow D$ ($N\!=\!8$) \\
 Countermodels10      &  9 & native\_dec. & $D \not\Rightarrow H$, $H \not\Rightarrow D$ \\
-E2PM                 &  7 & decide & $D \not\Rightarrow S$, $H \not\Rightarrow S$ \\
+E2PM                 & 10 & decide & $D \not\Rightarrow S$, $H \not\Rightarrow S$, $S \not\Rightarrow H$ \\
 Witness10            &  6 & native\_dec. & S+D+H at $N\!=\!10$ \\
 Witness6             &  3 & decide & S+D+H at $N\!=\!6$ \\
 \hline
-\textbf{Total}       & \textbf{79} & & \\
+\textbf{Total}       & \textbf{82} & & \\
 \end{tabular}}
 
 \end{document}
