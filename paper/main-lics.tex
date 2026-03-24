@@ -54,7 +54,7 @@
 \keywords{finite algebra, self-simulation, independence, partial combinatory algebra, Lean~4, machine-checked proofs}
 
 \begin{abstract}
-Partial combinatory algebras (PCAs), total combinatory algebras (TCAs), and Turing categories provide the algebraic and categorical foundations of computability. All three study what can be computed or how computability composes, but none classifies the elements of the underlying algebra by their input-output behavior or derives structural constraints from that classification. In the setting of finite extensional 2-pointed magmas --- total binary operations on finite sets with two distinguished absorbers and extensionality --- we identify three algebraic properties associated with self-simulation: self-representation~(R), the classifier dichotomy~(D), and the Internal Composition Property~(H). We prove these three properties are pairwise independent: six Lean-verified finite counterexamples (sizes $5$--$10$) establish all six non-implications. We also prove that self-simulation forces discrimination (the partial application map must be injective), that associativity is incompatible with the classifier structure (ruling out semigroups, monoids, groups, and rings), and that the three-category decomposition induced by D is an isomorphism invariant. A classical result shows that nontrivial combinatory algebras with S and K must be infinite; our finite magmas avoid this obstruction by using left-absorbers instead of a K combinator, enabling an algebraic analysis of self-simulation that the infinite PCA/TCA setting obscures. All results are formalized in Lean~4 with zero \texttt{sorry}.
+Partial combinatory algebras (PCAs), total combinatory algebras (TCAs), and Turing categories provide the algebraic and categorical foundations of computability. All three study what can be computed or how computability composes, but none classifies the elements of the underlying algebra by their input-output behavior or derives structural constraints from that classification. In the setting of finite extensional 2-pointed magmas --- total binary operations on finite sets with two distinguished absorbers and extensionality --- we identify three algebraic properties associated with self-simulation: self-representation~(R), the classifier dichotomy~(D), and the Internal Composition Property~(H). We prove these three properties are pairwise independent: six Lean-verified finite counterexamples (sizes $5$--$10$) establish all six non-implications. The minimum self-simulating coexistence witness has $N\!=\!5$ (Lean-verified), which is optimal: ICP requires 3 pairwise distinct core elements, so $N \geq 5$. We also prove that self-simulation forces discrimination (the partial application map must be injective), that associativity is incompatible with the classifier structure (ruling out semigroups, monoids, groups, and rings), and that the three-category decomposition induced by D is an isomorphism invariant. A classical result shows that nontrivial combinatory algebras with S and K must be infinite; our finite magmas avoid this obstruction by using left-absorbers instead of a K combinator, enabling an algebraic analysis of self-simulation that the infinite PCA/TCA setting obscures. All results are formalized in Lean~4 with zero \texttt{sorry}.
 \end{abstract}
 
 \maketitle
@@ -70,19 +70,21 @@ There is a structural reason for this omission. Nontrivial combinatory algebras 
 
 We work in the setting of finite extensional 2-pointed magmas (a finite set with a binary operation, exactly two left-absorbers, and extensionality; the framework follows universal algebra~\cite{burris81}). We study three algebraic properties that arise as components of self-simulation --- computing one's own operation table from within --- but are independently formalizable: self-representation~(R), the existence of a section-retraction pair on the non-absorber elements (the \emph{core}); the classifier dichotomy~(D), a clean partition of core elements into those whose action on core lands entirely in the absorbers and those whose action avoids them entirely; and the Internal Composition Property~(H), the existence of a non-trivial factorization in the left-regular representation restricted to core. Each property has an independent algebraic motivation (Section~\ref{sec:discussion}), and self-simulation provides a unifying computational context in which all three co-occur (Section~\ref{sec:selfsim}). Our main result is that R, D, and H are pairwise independent: no one implies any other.
 
-Six Lean-verified finite counterexamples of sizes $N\!=\!5, 6, 8,$ and $10$ establish all six non-implications; a coexistence witness at $N\!=\!6$ shows all three can hold simultaneously. Each counterexample is a concrete Cayley table found by SAT search and independently verified in Lean~4~\cite{moura21}, zero \texttt{sorry}.
+Six Lean-verified finite counterexamples of sizes $N\!=\!5, 6, 8,$ and $10$ establish all six non-implications; coexistence witnesses at $N\!=\!5$ and $N\!=\!6$ show all three can hold simultaneously, and both self-simulate. The $N\!=\!5$ bound is optimal: ICP requires 3 pairwise distinct core elements, forcing $|S| \geq 5$. Each counterexample is a concrete Cayley table found by SAT search and independently verified in Lean~4~\cite{moura21}, zero \texttt{sorry}.
 
 The three properties arise naturally in the study of reflective computation. Smith's 3-Lisp~\cite{smith84}, Friedman and Wand's reification~\cite{friedman84}, Amin and Rompf's collapsed towers~\cite{amin18}, and Brown and Palsberg's typed self-interpreters~\cite{brown16} all combine representation, classification, and composition without separating them. In the finite algebraic setting, we show that this bundling is not structurally forced; whether the independence extends to $\lambda$-calculus or typed settings is an open question (Section~\ref{sec:discussion}).
 
 Beyond independence, we prove several additional structural results. Self-simulation forces discrimination: any self-simulating algebra must produce $n$ distinct intermediate terms for $n$ elements (Theorem~\ref{thm:injectivity}). Universal obstructions rule out the classical algebraic hierarchy: no extensional 2-pointed magma carrying both a classifier and a retraction pair has a right identity or is associative (Theorem~\ref{thm:no-assoc}). The three-category decomposition induced by~D is an algebraic invariant (Theorem~\ref{thm:functoriality}), and the ICP is equivalent to the standard Compose+Inert axioms (Theorem~\ref{thm:icp-equiv}).
 
+The setting of finite extensional 2-pointed magmas is not an arbitrary choice but is forced by known obstructions. The K-infinity theorem (Theorem~\ref{thm:k-infinity}) rules out finite combinatory algebras: any nontrivial algebra with a $\mathbf{k}$ combinator must be infinite. The no-associativity theorem (Theorem~\ref{thm:no-assoc}) rules out semigroups, monoids, groups, and rings: associativity collapses any classifier to an absorber. Extensionality is required for the discrimination theorem (Theorem~\ref{thm:injectivity}): the final step derives element equality from identical rows. Two absorbers are required for binary classification (the classifier must distinguish at least two outcomes). Finite extensional 2-pointed magmas are the minimal remaining setting after these obstructions.
+
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item An independence theorem: R, D, and H are pairwise independent, with Lean-verified counterexamples in all six directions at $N\!=\!5$ through $N\!=\!10$ (Section~\ref{sec:independence}), and a coexistence witness at $N\!=\!6$ (Section~\ref{sec:bound}).
-  \item A discrimination theorem: self-simulation forces the partial application map to be injective (Section~\ref{sec:selfsim}). The $N\!=\!6$ coexistence witness illustrates how R, D, and H serve as components of a self-simulation pipeline, though formalizing self-simulation for this specific witness remains open.
+  \item An independence theorem: R, D, and H are pairwise independent, with Lean-verified counterexamples in all six directions at $N\!=\!5$ through $N\!=\!10$ (Section~\ref{sec:independence}), and self-simulating coexistence witnesses at $N\!=\!5$ and $N\!=\!6$ (Sections~\ref{sec:bound} and~\ref{sec:selfsim}).
+  \item An optimal bound: $N\!=\!5$ is the minimum carrier size for R+D+H coexistence, and both the $N\!=\!5$ and $N\!=\!6$ witnesses self-simulate (Lean-verified). ICP is impossible at $N\!=\!4$ by pigeonhole (Theorem~\ref{thm:no-icp-4}). Self-simulation also forces the partial application map to be injective (Theorem~\ref{thm:injectivity}).
   \item Universal algebraic obstructions: no extensional 2-pointed magma carrying both a classifier and a retraction pair has a right identity or is associative, ruling out semigroups, monoids, groups, and rings (Section~\ref{sec:universal}).
   \item Decomposition invariance: the three-category partition is preserved by isomorphisms (Section~\ref{sec:invariance}).
-  \item A characterization of H: the ICP is logically equivalent to Compose+Inert (Section~\ref{sec:icp}).
+  \item A characterization of H confirming the ICP is not ad hoc: it is logically equivalent to Compose+Inert under variable renaming, with necessity of the non-degeneracy conditions demonstrated by Lean-verified witnesses (Section~\ref{sec:icp}).
 \end{enumerate}
 
 % ══════════════════════════════════════════════════════════════
@@ -108,9 +110,9 @@ We write $\core(S) := S \setminus \{z_1, z_2\}$ for the non-absorber elements.
 A \emph{Faithful Retract Magma} $(\FRM)$ extends an extensional 2-pointed magma with a \emph{retraction pair} $s, r \in \core(S)$ satisfying $r \dotop (s \dotop x) = x$ for all $x \in \core(S)$, with $r \dotop z_1 = z_1$ (anchoring). The remaining absorber outputs of $s$ and $r$ are unconstrained.
 \end{definition}
 
-\begin{remark}[One-sided vs.\ mutual inverse]
+\begin{remark}[Retraction pair convention]
 \label{rem:mutual}
-The Lean formalization additionally requires $s \dotop (r \dotop x) = x$ on core, making $s$ and $r$ mutual inverses. To help the reader track which results use which condition, we list them explicitly. \textbf{Mutual-inverse results} (2 of 11 theorems): section-side placement (Theorem~\ref{thm:placement}: both $s, r \in N$) and the tight bound $|S| \geq 5$ when $s \neq r$ (Theorem~\ref{thm:card}). \textbf{One-sided results} (all others): the no-associativity theorem (Theorem~\ref{thm:no-assoc}), no right identity (Theorem~\ref{thm:no-rid}), the ICP equivalence (Theorem~\ref{thm:icp-equiv}), functoriality (Theorem~\ref{thm:functoriality}), partial application injectivity (Theorem~\ref{thm:injectivity}), and the full independence theorem (Theorem~\ref{thm:independence}).
+Throughout this paper, the retraction pair $(s, r)$ satisfies mutual inverse on core: $r \dotop (s \dotop x) = x$ and $s \dotop (r \dotop x) = x$ for all $x \in \core(S)$. This matches the Lean formalization. Most theorems (9 of 11) require only the one-sided condition $r \dotop (s \dotop x) = x$; two results --- retraction pair placement (both $s, r \in N$; Theorem~\ref{thm:placement}) and the tight bound $|S| \geq 5$ when $s \neq r$ (Theorem~\ref{thm:card}) --- use the full mutual inverse. We adopt the stronger convention for uniformity and note the weaker hypotheses where relevant.
 \end{remark}
 
 The retraction pair provides encoding infrastructure: element $a$ can be represented as $s^k(z_1)$ for its index $k$, and $r$ peels one layer. Informally, this acts as a finite internal coding scheme, analogous in spirit to a G\"odel numbering.
@@ -147,7 +149,7 @@ A magma $(S, \dotop, z_1, z_2)$ satisfies the \emph{Internal Composition Propert
 ICP says: the left-regular representation admits a non-trivial factorization on core. One core action factors through two others, one of them core-preserving --- a single fragment of internal composition. In Section~\ref{sec:icp} we prove that $\ICP$ is equivalent to the standard operational axioms Compose+Inert (Theorem~\ref{thm:icp-equiv}).
 
 \begin{definition}[Capability R]
-An extensional 2-pointed magma has capability $R$ (self-representation) if it admits a retraction pair.
+An extensional 2-pointed magma has capability $R$ (self-representation) if it admits a retraction pair. (We write R rather than S to avoid overloading with the carrier set~$S$.)
 \end{definition}
 
 \begin{definition}[Capability D]
@@ -158,7 +160,7 @@ An extensional 2-pointed magma has capability $D$ (self-description) if it satis
 An extensional 2-pointed magma has capability $H$ (self-execution) if it satisfies the $\ICP$.
 \end{definition}
 
-All three capabilities are properties of the same base structure (Definition~\ref{def:epm}). None is defined as an extension of any other, making the independence theorem (Section~\ref{sec:independence}) a statement about six non-implications, all proved by Lean-verified counterexamples. We write R rather than S for the self-representation capability to avoid overloading with the carrier set~$S$.
+All three capabilities are properties of the same base structure (Definition~\ref{def:epm}). None is defined as an extension of any other, making the independence theorem (Section~\ref{sec:independence}) a statement about six non-implications, all proved by Lean-verified counterexamples.
 
 % ══════════════════════════════════════════════════════════════
 \section{Universal Theorems}
@@ -268,7 +270,7 @@ An extensional 2-pointed magma $(S, \dotop, z_1, z_2)$ with a retraction pair $(
 where $\text{rep}(a) = s^{a}(z_1)$ is the $s$-depth encoding of element $a$.
 \end{definition}
 
-One program $t$ computes the entire $n \times n$ Cayley table: given encoded inputs $\text{rep}(a)$ and $\text{rep}(b)$, it returns the atom $a \dotop b$. The definition requires only R (for the encoding) and compositional evaluation --- it does not presuppose D or H.
+We require $\text{eval}(\text{atom}(a)) = \text{atom}(a)$ for all $a$ (atoms are fixed points of evaluation). The self-simulation condition then requires the output to be an atom: $\text{eval}(\text{App}(\text{App}(t, \text{rep}(a)), \text{rep}(b))) = \text{atom}(a \dotop b)$. One program $t$ computes the entire $n \times n$ Cayley table: given encoded inputs $\text{rep}(a)$ and $\text{rep}(b)$, it returns the atom $a \dotop b$. The definition requires only R (for the encoding) and compositional evaluation --- it does not presuppose D or H.
 
 \begin{theorem}[Partial Application Injectivity]
 \label{thm:injectivity}
@@ -290,16 +292,27 @@ Equal partial applications imply identical rows: if $\text{eval}(\text{App}(t, \
 
 Note that injectivity of $\text{rep}$ itself follows from the retraction property alone ($r \dotop (s \dotop x) = x$ on core ensures distinct elements have distinct encodings) and does not require self-simulation. The content of Theorem~\ref{thm:injectivity} is stronger: even the \emph{evaluated partial applications} --- the self-simulator's intermediate states --- must be distinct. The self-simulator must produce $n$ distinct intermediate terms for $n$ elements. This is the information-theoretic content: a self-simulating algebra cannot compress its own elements during evaluation.
 
-\begin{observation}[Role Decomposition in the Coexistence Witness]
-\label{obs:roles}
-In the $N\!=\!6$ coexistence witness (Theorem~\ref{thm:bound}), R, D, and H provide the three components that any self-simulation pipeline requires (Figure~\ref{fig:flow}):
+\begin{theorem}[Self-Simulation at $N\!=\!6$]
+\label{thm:selfsim6}
+The $N\!=\!6$ coexistence witness (Theorem~\ref{thm:bound}) self-simulates in the sense of Definition~\ref{def:selfsim}. The self-simulation term is $t = \text{atom}(r)$: the retraction element itself serves as the universal Cayley table lookup. All $6 \times 6 = 36$ cells verified by \texttt{native\_decide}. Lean file: \texttt{SelfSim6.lean}, theorem \texttt{witness6\_self\_simulates}.
+\end{theorem}
+
+In this witness, R, D, and H provide the three components of the self-simulation pipeline (Figure~\ref{fig:flow}):
 \begin{itemize}
   \item \emph{R provides faithful encoding}: the retraction pair ($s\!=\!2, r\!=\!3$) satisfies $r \dotop (s \dotop x) = x$ for all core $x$, giving a faithful encoding of all 4 core elements via $\text{rep}(a) = s^a(z_1)$.
   \item \emph{D provides classification}: the classifier ($\tau\!=\!4$) partitions core elements into two non-empty classes, with $\tau \dotop x \in \{0, 1\}$ for all $x$.
   \item \emph{H provides internal factorization}: the ICP witness ($a\!=\!2, b\!=\!3, c\!=\!5$) satisfies $2 \dotop x = 5 \dotop (3 \dotop x)$ for all core $x$, with $3$ core-preserving and $2$ taking $\geq 2$ distinct values.
 \end{itemize}
-All three component properties are Lean-verified for this specific Cayley table (\texttt{Witness6.lean}). \textbf{Caveat:} the $N\!=\!6$ witness has not been shown to self-simulate in the formal sense of Definition~\ref{def:selfsim}. The observation shows that R, D, and H provide the \emph{ingredients} for a self-simulation pipeline; whether a self-simulation term exists for this witness is open. (A 16-element algebra in the accompanying artifact does self-simulate, verified by exhaustive trace, but that verification is not Lean-formalized.)
-\end{observation}
+All three component properties are independently Lean-verified (\texttt{Witness6.lean}).
+
+\begin{theorem}[Self-Simulation at $N\!=\!5$]
+\label{thm:selfsim5}
+The optimal $N\!=\!5$ coexistence witness (Theorem~\ref{thm:bound}) also self-simulates. The self-simulation term is $t = \text{atom}(3)$, a \emph{classifier} element, not the retraction element ($s\!=\!r\!=\!2$). The evaluation function is lazy in atoms~$2$ and~$3$: atom~$2$ preserves the s-depth encoding, while atom~$3$ triggers a row lookup upon double application. All $5 \times 5 = 25$ cells verified by \texttt{native\_decide}. Lean file: \texttt{SelfSim5.lean}, theorem \texttt{witness5\_self\_simulates}.
+\end{theorem}
+
+\begin{remark}[Role decoupling]
+In the $N\!=\!6$ witness, the self-simulation term is the retraction element ($t = \text{atom}(r)$, a non-classifier). In the $N\!=\!5$ witness, it is a classifier ($t = \text{atom}(3)$). The term-algebraic role of simulation trigger is decoupled from the magma-algebraic role of the element. This suggests that self-simulation is a property of the algebra's global structure, not of any particular element's behavioral category.
+\end{remark}
 
 % ══════════════════════════════════════════════════════════════
 \section{Decomposition Invariance}
@@ -354,14 +367,13 @@ For any finite magma on a 2-pointed set $(S, \dotop, z_1, z_2)$ of any size $n$:
 \begin{proof}
 The bijection between witness triples is $(\eta, g, \rho) = (a, b, c)$: the composed element $a$ is $\eta$, the core-preserving element $b$ is $g$, and the outer element $c$ is $\rho$. Under this identification the factorization $a \dotop x = c \dotop (b \dotop x)$ becomes $\eta \dotop x = \rho \dotop (g \dotop x)$ (Compose), core-preservation of $b$ becomes Inert, and the remaining conditions (pairwise distinct, non-absorber) transfer directly.
 
-The pairwise-distinctness and non-triviality conditions are not cosmetic --- they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the Kripke-4 model (the minimal R{+}D model; Cayley table in Appendix~\ref{app:tables}) separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}, \texttt{ICP.lean}).
+The pairwise-distinctness and non-triviality conditions are not cosmetic --- they block two degeneracies, and both are proved necessary by Lean-verified witnesses (\texttt{ICP.lean}). Without pairwise-distinctness, the retraction pair $(s, r)$ with $s = r$ trivially satisfies factorization via $s \dotop x = s \dotop (s \dotop x)$, giving every $\FRM$ a spurious $\ICP$; the minimal R{+}D model at $N\!=\!4$ (Cayley table in Appendix~\ref{app:tables}; Lean name \texttt{kripke4}) separates the weakened definition from the full one (theorem \texttt{icp\_distinct\_necessary}). Without non-triviality, any constant-on-core element $a$ (with $a \dotop x = v$ for all core $x$) trivially factors through any core-preserving $b$ by taking $c$ with $c \dotop y = v$; a custom 6-element $\FRM$ separates the weakened definition from the full one (theorem \texttt{icp\_nontrivial\_necessary}, \texttt{ICP.lean}).
 
 The proof is pure equational logic --- no \texttt{decide}, no case analysis on $n$. It holds for every finite magma on a 2-pointed set, of any size. Lean file: \texttt{ICP.lean}, theorem \texttt{icp\_iff\_composeInert}.
 \end{proof}
 
 This equivalence gives H a single-concept definition: the left-regular representation contains a non-trivially composed element. The operational axioms (Compose, Inert) and the $\ICP$ are the same property under variable renaming. Additionally, $\ICP$ is invariant under $\FRM$ isomorphisms (algebraic proof, no \texttt{decide}; \texttt{ICP.lean}, theorem \texttt{FRMIso.preserves\_icp}).
 
-\paragraph{Enrichments.}
 \paragraph{Enrichments (not used in this paper).}
 Two additional axioms connect the capabilities and are used in the accompanying artifact: \emph{Branch} ($\rho \dotop x = f \dotop x$ when $\tau \dotop x = z_1$, else $\rho \dotop x = g \dotop x$, for distinguished $f, \rho \in \core(S)$), which bridges D and H by making the classifier's judgment control evaluation dispatch; and a \emph{fixed-point axiom} ($Y \dotop \rho = \rho \dotop (Y \dotop \rho)$ with $Y \dotop \rho \in \core(S)$), which extends H across the decidability boundary. Neither is required for the independence, invariance, or obstruction results of this paper.
 
@@ -376,7 +388,7 @@ $\to$ \textsc{Compose}: & $\eta \dotop x = \rho \dotop (g \dotop x)$ & \emph{H p
 $\to$ \textsc{Encode}: & $\text{rep}(\text{result})$ & \emph{R provides: $s, z_1$} \\
 \textsc{Output}: & $\text{rep}(a \dotop b)$ & \\
 \end{tabular}
-\caption{Information flow in self-simulation (when all three capabilities co-occur). R provides encoding/decoding (I/O). The algebra provides the lookup (computation). D organizes elements into roles (classification). H internalizes a non-trivial composition pattern (evaluation). Without H, an external machine must supply the Compose and Dispatch steps.}
+\caption{Information flow in self-simulation (when all three capabilities co-occur). R provides encoding/decoding (I/O). The algebra provides the lookup (computation). D organizes elements into roles (classification). H internalizes a non-trivial composition pattern (evaluation). Without H, an external machine must supply the Compose and Dispatch steps. This pipeline is illustrative, not prescriptive: the paper does not prove that self-simulation must follow this architecture. The $N\!=\!6$ witness (Theorem~\ref{thm:selfsim6}) demonstrates one realization.}
 \label{fig:flow}
 \end{figure}
 
@@ -450,7 +462,7 @@ No capability implies any other. Specifically, all six pairwise non-implications
 Each direction is proved by exhibiting a concrete Cayley table and verifying the claimed properties by \texttt{native\_decide} (or \texttt{decide} for $N \leq 8$). The tables are:
 
 \paragraph{$R \not\Rightarrow D$ ($N\!=\!8$, the Countermodel).}
-An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ --- it maps core inputs 2 and 3 to non-boolean values (6 and 2), while mapping inputs 4--7 to boolean value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely boolean-valued nor entirely non-boolean-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
+An $8 \times 8$ Cayley table (Appendix~\ref{app:tables}) defining an $\FRM$ with $s = 2$, $r = 3$. The retraction pair works: $r \dotop (s \dotop x) = x$ for all core $x \in \{2,\ldots,7\}$ (e.g., $3 \dotop (2 \dotop 5) = 3 \dotop 6 = 5$). Element~4 is a classifier: its row on core is $(0,0,0,0,1,0) \subseteq \{z_1, z_2\}$. But element~5's row on core is $(6, 2, 1, 1, 1, 1)$ --- it maps core inputs 2 and 3 to non-absorber values (6 and 2), while mapping inputs 4--7 to absorber value~1. This mixed behavior violates the classifier dichotomy: element~5 is neither entirely absorber-valued nor entirely non-absorber-valued on core. Self-representation holds; self-description fails. Lean file: \texttt{Countermodel.lean}.
 
 \paragraph{$R \not\Rightarrow H$ ($N\!=\!6$, structural).}
 A $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) defining an extensional 2-pointed magma with a retraction pair ($s = r = 2$, an involution on core) but no $\ICP$. The core has 4 elements --- more than the 3 pairwise distinct witnesses $\ICP$ requires --- yet no triple satisfies the $\ICP$. Lean proves $\neg\,\texttt{HasICP}$ by exhaustive search via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{s\_not\_implies\_icp\_structural}.
@@ -459,7 +471,7 @@ A $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) defining an extensional 
 A $10 \times 10$ Cayley table satisfying D (and also R). Lean proves that no triple $(a, b, c)$ of pairwise distinct non-absorbers satisfies the $\ICP$, by exhaustive search via \texttt{native\_decide}. Lean files: \texttt{Countermodels10.lean}, \texttt{ICP.lean} (theorem \texttt{dNotH\_no\_icp}).
 
 \paragraph{$H \not\Rightarrow D$ ($N\!=\!10$).}
-A $10 \times 10$ Cayley table defining an extensional 2-pointed magma with a retraction pair, satisfying $\ICP$ (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$), yet violating the dichotomy: element~5 has both boolean and non-boolean outputs on core. Lean file: \texttt{Countermodels10.lean}.
+A $10 \times 10$ Cayley table defining an extensional 2-pointed magma with a retraction pair, satisfying $\ICP$ (witnessed by $a\!=\!8, b\!=\!6, c\!=\!7$), yet violating the dichotomy: element~5 has both absorber-valued and non-absorber-valued outputs on core. Lean file: \texttt{Countermodels10.lean}.
 
 \paragraph{$D \not\Rightarrow R$ ($N\!=\!5$).}
 A $5 \times 5$ Cayley table defining an extensional 2-pointed magma with the classifier dichotomy (classifier at index~2, non-classifiers at 3 and 4), but admitting no retraction pair. Lean proves $\neg\,\texttt{HasRetractPair}$ by exhaustive search over all candidate pairs via \texttt{decide}. Lean file: \texttt{E2PM.lean}, theorem \texttt{d\_not\_implies\_s}.
@@ -477,25 +489,30 @@ Each counterexample was found by encoding the relevant capability axioms (and th
 The $H \not\Rightarrow D$ direction shows that an algebra can internalize a non-trivial composition pattern, as captured by the $\ICP$, without also satisfying the classifier dichotomy. Thus self-execution in our sense does not force the organizational separation expressed by D.
 
 \paragraph{Decomposition of self-simulation.}
-The independence result decomposes self-simulation into three independently satisfiable components. An algebra can encode and decode without classifying (R without D). An algebra can classify without encoding (D without R). An algebra can internally compose without classifying or encoding (H without R or D). Structured self-simulation uses all three simultaneously in the $N\!=\!6$ witness (Observation~\ref{obs:roles}), but the algebra can acquire each capability independently. Whether self-simulation \emph{strictly requires} all three depends on the precise formalization; what the independence result establishes is that no capability algebraically forces any other.
+The independence result decomposes self-simulation into three independently satisfiable components. An algebra can encode and decode without classifying (R without D). An algebra can classify without encoding (D without R). An algebra can internally compose without classifying or encoding (H without R or D). Structured self-simulation uses all three simultaneously in the $N\!=\!5$ and $N\!=\!6$ witnesses (Theorems~\ref{thm:selfsim5} and~\ref{thm:selfsim6}), but the algebra can acquire each capability independently. Whether self-simulation \emph{strictly requires} all three depends on the precise formalization; what the independence result establishes is that no capability algebraically forces any other.
 
 % ══════════════════════════════════════════════════════════════
 \section{Coexistence}
 \label{sec:bound}
 % ══════════════════════════════════════════════════════════════
 
+\begin{theorem}[No ICP at $N\!=\!4$]
+\label{thm:no-icp-4}
+No extensional 2-pointed magma of size $4$ satisfies the $\ICP$. The core $\{2,3\}$ has only 2 elements, but $\ICP$ requires 3 pairwise distinct non-absorbers. Lean: \texttt{Witness5.lean}, \texttt{no\_icp\_at\_4}.
+\end{theorem}
+
 \begin{theorem}[Coexistence Witness]
 \label{thm:bound}
-The three capabilities R, D, and H are simultaneously satisfiable. A Lean-verified witness exists at $N\!=\!6$.
+The three capabilities R, D, and H are simultaneously satisfiable. A Lean-verified witness exists at $N\!=\!5$, which is optimal by Theorem~\ref{thm:no-icp-4}.
 \end{theorem}
 
 \begin{proof}
-A concrete $6 \times 6$ Cayley table (Appendix~\ref{app:tables}) is exhibited that satisfies R (retraction pair at $s\!=\!2, r\!=\!3$), D (classifier at $\tau\!=\!4$, dichotomy verified), and H ($\ICP$ witnessed by $a\!=\!2, b\!=\!3, c\!=\!5$). The retraction pair members serve simultaneously as $\ICP$ witnesses, demonstrating that role overlap enables coexistence at small sizes. Lean file: \texttt{Witness6.lean}, theorem \texttt{sdh\_witness\_6}.
+A concrete $5 \times 5$ Cayley table is exhibited with $s\!=\!r\!=\!2$ (identity on core), classifiers $\tau \in \{3,4\}$, and $\ICP$ witnessed by $a\!=\!3, b\!=\!2, c\!=\!4$. The retraction pair collapses to a single element ($s\!=\!r$) which doubles as the $\ICP$'s core-preserving map; since $b$ is the identity, the factorization $a \cdot x = c \cdot (b \cdot x)$ reduces to $a \cdot x = c \cdot x$ on core --- two classifiers agreeing on core but distinguished by their absorber columns. The lower bound is pigeonhole: at $N\!=\!4$, the core $\{2,3\}$ has only 2 elements, but $\ICP$ requires 3 pairwise distinct non-absorbers (\texttt{no\_icp\_at\_4}). Lean file: \texttt{Witness5.lean}, theorem \texttt{sdh\_witness\_5}. A $6 \times 6$ witness with $s \neq r$ is also verified (\texttt{Witness6.lean}).
 \end{proof}
 
 \begin{proposition}[Separated-Role Witness]
 \label{thm:separated}
-There is a witness at $N\!=\!10$ in which the principal roles (2 absorbers, 2 retraction pair, 1 classifier, 3 $\ICP$ witnesses, 2 enrichment elements) are pairwise distinct.
+There is a witness at $N\!=\!10$ in which the principal R+D+H roles (2 absorbers, 2 retraction pair, 1 classifier, 3 $\ICP$ witnesses) occupy 8 distinct elements, with 2 additional elements serving the enrichment axioms (Branch and Y, defined in Section~\ref{sec:icp}).
 \end{proposition}
 
 \begin{proof}
@@ -503,7 +520,7 @@ A concrete $10 \times 10$ Cayley table (Appendix~\ref{app:tables}) satisfies all
 \end{proof}
 
 \paragraph{Minimum cardinality.}
-Whether $N\!=\!5$ admits R+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the retraction pair fixed at $(s, r) = (2, 3)$ iterating over all possible classifier assignments among the remaining core elements, but this does not rule out other role assignments or overlapping role encodings. We have not proved a universal lower bound.
+$N\!=\!5$ is the optimal minimum for R+D+H coexistence (Lean-verified; \texttt{Witness5.lean}). The witness uses $s = r$ (identity on core), two classifiers, and one non-classifier: the retraction pair member doubles as the ICP's core-preserving element. At $N\!=\!4$ the core has only 2 elements but ICP requires 3 pairwise distinct non-absorbers, so $N\!=\!4$ is impossible (\texttt{no\_icp\_at\_4}). The prior SAT search (with $s \neq r$ fixed) missed this because it excluded $s = r$ overlapping encodings.
 
 % ══════════════════════════════════════════════════════════════
 \section{Related Work}
@@ -514,7 +531,7 @@ Whether $N\!=\!5$ admits R+D+H is open. SAT returns UNSAT at $N\!=\!5$ with the 
 PCAs~\cite{vanoosten08,longley15} and TCAs~\cite{bethke88} provide the standard algebraic framework for realizability and computability. PCA theory has a rich structural theory: morphisms between PCAs, the lattice of PCA quotients, and totalizability~\cite{bethke96} all involve detailed analysis of the application operation. However, this analysis concerns \emph{which functions are representable} and \emph{how PCAs relate to each other}, not the element-level structure of the operation table --- absorbers, idempotent patterns, or classification of elements into behavioral types by their input-output profiles are not studied. Bethke and Klop~\cite{bethke96} proved that some PCAs cannot be extended to total ones, a structural result about the relationship between partiality and totality. The K-infinity theorem (our Theorem~\ref{thm:k-infinity}) shows that nontrivial S+K algebras must be infinite, explaining why finite algebras fall outside this framework and why our setting requires a different combinator basis.
 
 \paragraph{Turing categories.}
-Cockett and Hofstra~\cite{cockett08} define a Turing category as a cartesian restriction category with a Turing object~$A$ and a Turing morphism $\bullet : A \times A \to A$ that universally simulates all morphisms in the category. The Structure Theorem establishes that PCAs and Turing categories are two views of the same concept. Turing objects have cardinality ``one or infinite''~\cite{barendregt84}, ruling out nontrivial finite Turing objects. The Turing morphism is described as ``the heart of the whole structure'' but its algebraic properties --- row structure, element classification, associativity constraints --- are not studied. Our self-simulation definition (Definition~\ref{def:selfsim}) resembles the Turing morphism's universality condition, but operates on the term algebra of a finite ground set and has algebraic consequences (Theorem~\ref{thm:injectivity}: injectivity of partial application) that Turing morphisms lack. Where Turing categories distribute computational roles across distinct objects (programs, data, evaluators), our finite algebras develop the same roles internally as emergent behavioral regions within a single carrier set: absorbers encode failure, classifiers provide boolean judgment, and the retraction pair provides encoding.
+Cockett and Hofstra~\cite{cockett08} define a Turing category as a cartesian restriction category with a Turing object~$A$ and a Turing morphism $\bullet : A \times A \to A$ that universally simulates all morphisms in the category. The Structure Theorem establishes that PCAs and Turing categories are two views of the same concept. Turing objects have cardinality ``one or infinite''~\cite{barendregt84}, ruling out nontrivial finite Turing objects. The Turing morphism is described as ``the heart of the whole structure'' but its algebraic properties --- row structure, element classification, associativity constraints --- are not studied. Our self-simulation definition (Definition~\ref{def:selfsim}) resembles the Turing morphism's universality condition, but operates on the term algebra of a finite ground set and has algebraic consequences (Theorem~\ref{thm:injectivity}: injectivity of partial application) that Turing morphisms lack. Where Turing categories distribute computational roles across distinct objects (programs, data, evaluators), our finite algebras develop the same roles internally as emergent behavioral regions within a single carrier set: absorbers encode failure, classifiers provide absorber-valued judgment, and the retraction pair provides encoding.
 
 \paragraph{Reflective towers.}
 Smith's 3-Lisp~\cite{smith84} introduced the reflective tower --- an infinite chain of meta-interpreters. Subsequent work~\cite{friedman84,danvy88} explored reification, intensions, and live meta-modification in reflective towers. Amin and Rompf~\cite{amin18} showed how to compile through the tower via stage polymorphism. All of these systems combine self-representation, self-description, and self-execution without separating them. Our contribution is to show that in finite extensional 2-pointed magmas, the three capabilities are separable: no capability implies any other.
@@ -534,35 +551,46 @@ Independence results via finite counterexamples are standard in finite model the
 % ══════════════════════════════════════════════════════════════
 
 \paragraph{The classifier dichotomy is organizational.}
-In an algebra with R, the retraction pair provides the encoding to compute the Cayley table. D organizes that computation into coherent categories --- classifiers that test and non-classifiers that transform. The $H \not\Rightarrow D$ result (Section~\ref{sec:independence}) shows that an algebra can internalize a non-trivial composition pattern without organizing its elements into stable semantic roles. Informally, the separation between R and D marks a difference between having an internal coding mechanism and having a clean internal role structure. The classifier dichotomy is an organizational property rather than a compositional one in the sense captured by H: it contributes semantic structure rather than forcing the compositional behavior captured by the $\ICP$.
+D organizes elements into coherent categories --- classifiers that test and non-classifiers that transform. The $H \not\Rightarrow D$ result shows that an algebra can internalize composition without this organization. D contributes semantic structure rather than compositional behavior.
 
 \paragraph{Why magmas?}
 Magmas are not a limitation but a necessity, for two independent reasons. First, the K-infinity theorem (Theorem~\ref{thm:k-infinity}) shows that nontrivial combinatory algebras with $\mathbf{s}$ and $\mathbf{k}$ must be infinite: the $\mathbf{k}$ combinator is a non-surjective injection on any finite set with $\geq 2$ elements. Finite self-description requires a different combinator basis --- one without a K-like projector --- and our extensional 2-pointed magmas provide exactly this. Second, Theorem~\ref{thm:no-assoc} shows that associativity forces any classifier to have a constant row, collapsing it to an absorber. Combined with the no-right-identity result (Theorem~\ref{thm:no-rid}), this independently rules out the entire classical algebraic hierarchy: no semigroup, monoid, group, or ring can support the classifier dichotomy alongside a retraction pair. Self-description lives outside both the PCA/TCA framework (by cardinality) and the classical algebraic hierarchy (by associativity). This connects to the broader observation that reflective systems are inherently non-associative: $\lambda$-calculus application is non-associative ($(f\,g)\,x \neq f\,(g\,x)$ in general). The no-associativity theorem shows this is algebraically forced, not a design accident.
 
-\paragraph{Naturality of the definitions.}
+\paragraph{The role of extensionality.}
+Extensionality (distinct elements have distinct rows) is load-bearing throughout. Without it, the partial application injectivity theorem (Theorem~\ref{thm:injectivity}) fails: the final step derives $a_1 = a_2$ from identical rows, which requires extensionality. Without it, the no-associativity proof fails: Step~4 derives $\tau = v$ from identical rows. Without it, any constant-row element trivially satisfies both classifier and non-classifier conditions, making the three-category decomposition degenerate. Extensionality is not merely a convenience --- it is the condition that makes element-level classification meaningful. An element's identity \emph{is} its row in the Cayley table; extensionality formalizes this.
+
 \paragraph{Why these three properties?}
 The definitions of R, D, and H are motivated by two complementary considerations. First, each corresponds to a step in the self-simulation pipeline (Figure~\ref{fig:flow}): R provides encoding/decoding, D provides element classification, and H internalizes composition. A skeptical reader might ask why \emph{these} three steps rather than others; the answer is that R, D, and H are the independently formalizable algebraic properties that emerge when one asks what a self-simulation pipeline requires, and the independence theorem confirms they cannot be collapsed. Second, each property connects to a standard algebraic or categorical concept. Capability~R is a section-retraction pair~\cite{maclane71}: two core elements $s, r$ satisfying $r \circ s = \mathrm{id}$ on core. Capability~D parallels the partition of morphisms into characteristic and non-characteristic in presheaf categories~\cite{johnstone02}; the global dichotomy condition (no partial classifiers) is the finite-algebraic analogue of requiring a subobject classifier to be total. Capability~H asks for a non-trivial factorization in the left-regular representation $\{L_a\}$. The D and H connections are analogies, not formal correspondences: whether D is equivalent to a subobject-classifier condition or H to a standard categorical universal property remains open.
+
+\paragraph{Why the independence holds.}
+The independence of D and H reflects incompatible row constraints under finiteness. A classifier's row is fully committed to absorber values on core: every core input maps to $z_1$ or $z_2$. An ICP witness $a$ requires $a \dotop x = c \dotop (b \dotop x)$ with at least two distinct values on core --- its row must be non-trivially structured. These demands are incompatible for any single element, so different elements must carry these roles. The independence holds because finiteness limits the total supply of elements and constrains which row patterns can coexist under extensionality. The $H \not\Rightarrow D$ direction has the same character: an ICP triple $(a, b, c)$ constrains three rows to satisfy a factorization equation, but this imposes no absorber-output condition on any fourth element.
+
+\paragraph{The infinite boundary.}
+In infinite carriers where the set of left-multiplication maps is unconstrained --- such as the full function space over a countable set --- the row-scarcity constraint dissolves. The carrier is large enough to accommodate elements with arbitrary row patterns, and the tension between classifier rows and factorization rows need not arise. Whether the independence survives in specific infinite algebraic settings is open. This is an observation about resource limitations, not a theorem about Turing completeness: the precise conditions under which the independence transfers require defining the relevant algebraic properties for infinite carriers, which is beyond this paper's scope.
+
+\paragraph{R as a separate design choice.}
+The independence of R from D and H plausibly extends beyond finite magmas. A faithful internal encoding --- a section-retraction pair on the carrier --- is a separate design choice from classification or composition. Mogensen's self-interpreter for the $\lambda$-calculus~\cite{mogensen92} requires an explicit quoting convention; without it, the calculus is computationally universal but lacks internal self-representation. This suggests that the R independence is not an artifact of finiteness but reflects a genuine structural distinction between having computational capabilities and having a faithful encoding of one's own elements as data.
 
 \paragraph{Scope and limitations.}
 Whether the three-capability separation appears in other settings ($\lambda$-calculus, typed systems, infinite algebras) is the primary open question. Theorem~\ref{thm:no-assoc} constrains the target: any such translation must work without associativity or identity. A categorical characterization of H as a universal property (stronger than the analogy above) is also open. Two further directions connect to the frameworks discussed in Section~\ref{sec:related}: (1)~the \emph{extraction theorem} --- do the emergent behavioral roles (absorbers, classifiers, non-classifiers) formally yield a Turing category when used as objects, with role-respecting elements as morphisms? (2)~the \emph{realizability connection} --- does the classifier dichotomy, viewed as a property of an underlying PCA, predict specific logical principles in the associated realizability topos?
 
 \paragraph{The cost of legibility.}
-The three capabilities coexist at $N\!=\!6$ (Section~\ref{sec:bound}), and the enrichments Branch and Y also hold in that witness. Additional organizational axioms push the minimum to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are the subject of a companion paper.
+Additional organizational axioms push the minimum coexistence size to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are the subject of a companion paper.
 
 \paragraph{Realization freedom.}
-Each capability admits multiple axiom forms. For H, replacing $\eta = \rho \circ g$ with alternatives (e.g., $g \circ \rho$) produces different classifier distributions; the independence result holds for all variants.
+Each capability admits multiple axiom forms; the independence result holds for all variants.
 
 % ══════════════════════════════════════════════════════════════
 \section{Conclusion}
 % ══════════════════════════════════════════════════════════════
 
-We have proved that three natural properties of finite extensional 2-pointed magmas --- self-representation~(R), the classifier dichotomy~(D), and the Internal Composition Property~(H) --- are pairwise independent. Reflective systems in practice use all three; the independence result shows that in finite extensional 2-pointed magmas, this usage is not algebraically forced. The six non-implications are machine-checked in Lean~4. The partial application injectivity theorem (Theorem~\ref{thm:injectivity}) provides a formal bridge from computation to algebra, showing that self-simulation forces discrimination. Associativity is incompatible with the classifier structure (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, groups, and rings as settings for self-description. We also exhibit concrete algebras in which all three capabilities coexist, including a Lean-verified witness at $N\!=\!6$. To our knowledge, this is the first machine-checked independence result for operational properties of finite magmas, and the first formal proof that associativity is incompatible with the classifier-retraction pair combination.
+We have proved that three natural properties of finite extensional 2-pointed magmas --- self-representation~(R), the classifier dichotomy~(D), and the Internal Composition Property~(H) --- are pairwise independent. Reflective systems in practice use all three; the independence result shows that in finite extensional 2-pointed magmas, this usage is not algebraically forced. The six non-implications are machine-checked in Lean~4. The optimal $N\!=\!5$ coexistence witness (Theorem~\ref{thm:bound}) self-simulates (\texttt{SelfSim5.lean}), and the partial application injectivity theorem (Theorem~\ref{thm:injectivity}) shows that self-simulation forces discrimination. Associativity is incompatible with the classifier structure (Theorem~\ref{thm:no-assoc}), ruling out semigroups, monoids, groups, and rings as settings for self-description. All results are formalized in Lean~4 (90 theorems across 13 files, zero \texttt{sorry}).
 
 \paragraph{Open problems.}
 \begin{enumerate}
   \item \emph{Cross-formalism universality}: Does the three-capability separation appear in the $\lambda$-calculus, typed settings, or infinite algebras? The no-associativity obstruction (Theorem~\ref{thm:no-assoc}) constrains the target setting.
   \item \emph{Categorical characterization of H}: Is the ICP equivalent to a standard universal property (e.g., existence of a partial internal hom)?
-  \item \emph{Minimum coexistence bound}: The smallest known R+D+H witness has $N\!=\!6$ (Lean-verified; Section~\ref{sec:bound}). A universal lower bound is open.
+  \item \emph{Decoupling of term-algebraic and magma-algebraic roles}: The $N\!=\!5$ self-simulation term is a classifier, not the retraction element. At $N\!=\!6$ the term happens to be the retraction element. Is there a structural criterion determining when the simulation term must belong to a particular behavioral class?
 \end{enumerate}
 
 \paragraph{Artifact.}
@@ -623,7 +651,6 @@ Leonid Libkin.
 Stanley Burris and H.~P. Sankappanavar.
 \newblock \emph{A Course in Universal Algebra}.
 \newblock Springer, 1981.
-
 
 \bibitem{mccune10}
 William McCune.
@@ -701,6 +728,20 @@ $\dotop$ & 0 & 1 & 2 & 3 & 4 \\\hline
 2 & 1 & 0 & 3 & 4 & 2 \\
 3 & 0 & 2 & 4 & 2 & 3 \\
 4 & 0 & 1 & 1 & 0 & 0 \\
+\end{tabular}}
+
+\paragraph{$N\!=\!5$: R+D+H Optimal Coexistence ($s = r$, self-simulates).}
+Roles: $0 = z_1$, $1 = z_2$, $2 = s = r$ (identity on core, ICP $b$), $3 = \tau$ (classifier, ICP $a$, self-sim term), $4 = \tau_2$ (classifier, ICP $c$). \quad Lean: \texttt{Witness5.lean}, \texttt{SelfSim5.lean}.
+
+\medskip
+{\small
+\begin{tabular}{c|ccccc}
+$\dotop$ & 0 & 1 & 2 & 3 & 4 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 \\
+2 & 0 & 2 & 2 & 3 & 4 \\
+3 & 0 & 0 & 0 & 1 & 0 \\
+4 & 0 & 1 & 0 & 1 & 0 \\
 \end{tabular}}
 
 \paragraph{$N\!=\!6$: R+D+H Coexistence (role overlap).}
@@ -855,9 +896,12 @@ Countermodel         &  5 & decide & $R \not\Rightarrow D$ ($N\!=\!8$) \\
 Countermodels10      &  9 & native\_dec. & $D \not\Rightarrow H$, $H \not\Rightarrow D$ \\
 E2PM                 & 10 & decide & $D \not\Rightarrow R$, $H \not\Rightarrow R$, $R \not\Rightarrow H$ \\
 Witness10            &  6 & native\_dec. & R+D+H at $N\!=\!10$ \\
+Witness5             &  3 & decide & R+D+H at $N\!=\!5$, no ICP at $N\!=\!4$ \\
 Witness6             &  3 & decide & R+D+H at $N\!=\!6$ \\
+SelfSim5             &  2 & native\_dec. & Self-simulation at $N\!=\!5$ \\
+SelfSim6             &  3 & native\_dec. & Self-simulation at $N\!=\!6$ \\
 \hline
-\textbf{Total}       & \textbf{82} & & \\
+\textbf{Total}       & \textbf{90} & & \\
 \end{tabular}}
 
 \end{document}
