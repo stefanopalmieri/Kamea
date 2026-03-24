@@ -102,9 +102,9 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-The demo exercises all three capabilities: computation on the algebra (S), verification of the Cayley table's invariants (D), and continuation reification + branch swap within a meta-circular evaluator (H). The reflective stack is grounded in a 16×16 verified Cayley table — the table is not an implementation of the algebra, it is the algebra. See [`docs/artifact.md`](docs/artifact.md) for the full artifact description and additional demos.
+The demo exercises all three capabilities: computation on the algebra (S), verification of the Cayley table's invariants (D), and continuation reification + branch swap within a meta-circular evaluator (H). The reflective stack is grounded in a 16×16 verified Cayley table — the 256-byte table is a complete specification of the algebra, not an approximation or encoding. See [`docs/artifact.md`](docs/artifact.md) for the full artifact description and additional demos.
 
-### Compiled Boba's Tower
+### Compiled Grounded Reflective Tower
 
 ```bash
 python3 psi_transpile.py --target rust \
@@ -114,7 +114,7 @@ rustc -O -o /tmp/tower /tmp/tower.rs
 /tmp/tower    # 2.2 ms — same output, 20,000x faster
 ```
 
-Boba's Tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. An ungrounded tower cannot be compiled because each level depends on the one below. A grounded tower can — the compiler bottoms out at the verified Cayley table.
+The grounded reflective tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. 2.2 ms compiled vs ~43 s interpreted. The 256-byte Cayley table is embedded in the binary and verified at runtime. An ungrounded tower cannot be compiled because each level depends on the one below. A grounded tower can — the compiler bottoms out at the verified Cayley table.
 
 ### Compile to Native
 
@@ -414,7 +414,7 @@ An infinite tower cannot be defunctionalized — there are infinitely many conti
 | Smith (1984) | Infinite | — | Reflective tower concept |
 | Black/Brown/Blond | Infinite | Opaque closures | Live `set! base-eval` |
 | Amin & Rompf (POPL 2018) | Collapsible | Opaque closures | Compile through the tower |
-| **Boba's Tower (Kamea)** | **Grounded (256 bytes)** | **Tagged data** | **Compile the tower itself** |
+| **Boba's Tower** (ours) | **Grounded (256 bytes)** | **Tagged data** | **Compile the tower itself** |
 
 What they have that we don't: live meta-interpreter modification (`set! base-eval`), infinite tower levels, compilation under modified semantics. What we have that none of them do: walkable continuations (the branch swap), a compiled tower (2.2 ms native), formal verification (106+ Lean theorems, zero `sorry`), and runtime substrate verification. See [`docs/related_work.md`](docs/related_work.md) for the full comparison.
 
@@ -449,9 +449,9 @@ Two benchmarks: counter arithmetic (fib + fact + power + gcd, all inputs known a
 | **Ψ-Lisp (Rust interpreter)** | 4.1 s | 87,000x |
 | **Ψ-Lisp (Python interpreter)** | 301 s | 6,400,000x |
 
-Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within **2x on nqueens(8)** — faster than native Python in both cases. The nqueens gap is smaller because the cons-cell arena (bump allocator, no GC) is competitive with Rust's `Vec` push/pop. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
+Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within **2x on nqueens(8)**. The nqueens gap is smaller because the cons-cell arena (bump allocator, no GC) is competitive with Rust's `Vec` push/pop. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
 
-**Boba's Tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
+**Grounded reflective tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
 
 | Implementation | Time | vs Compiled |
 |----------------|------|-------------|
@@ -594,7 +594,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── categorical_canonicity.md      # Canonicity analysis: no canonical object, canonical theory
 │   ├── self_simulation_necessity.md  # Self-simulation derivation: which axioms are necessary?
 │   ├── h_characterization.md         # H as factorable action: ICP characterization + 250-model validation
-│   ├── related_work.md               # Boba's Tower vs Smith/Black/Blond/LMS-Black: the architectural fork
+│   ├── related_work.md               # Grounded tower vs Smith/Black/Blond/LMS-Black: the architectural fork
 │   ├── continuation_protocol.md      # Continuation protocol documentation
 │   └── minimal_model.md              # Minimal model notes
 ├── h_characterization_final.py       # H characterization: ICP validation across 250 models
