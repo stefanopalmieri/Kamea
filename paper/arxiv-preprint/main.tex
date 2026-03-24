@@ -1,7 +1,7 @@
 % Pairwise Independence of Representation, Classification, and Composition
 % in Finite Extensional Magmas
-% LICS 2027 submission — ACM SIGCONF format, double-blind
-\documentclass[sigconf,screen,review,anonymous]{acmart}
+% arXiv preprint
+\documentclass[sigconf,screen]{acmart}
 
 % Lean code listings
 \usepackage{listings}
@@ -33,6 +33,15 @@
 \begin{document}
 
 \title{Pairwise Independence of Representation, Classification, and Composition in Finite Extensional Magmas}
+\thanks{Preprint version.}
+
+\author{Stefano Palmieri}
+\affiliation{
+  \institution{Independent Researcher}
+  \city{Austin}
+  \state{Texas}
+  \country{USA}
+}
 
 \begin{CCSXML}
 <ccs2012>
@@ -587,7 +596,7 @@ The independence of R from D and H plausibly extends beyond finite magmas. A fai
 Whether the three-capability separation appears in other settings ($\lambda$-calculus, typed systems, infinite algebras) is the primary open question. Theorem~\ref{thm:no-assoc} constrains the target: any such translation must work without associativity or identity. A categorical characterization of H as a universal property (stronger than the analogy above) is also open. Two further directions connect to the frameworks discussed in Section~\ref{sec:related}: (1)~the \emph{extraction theorem} --- do the emergent behavioral roles (absorbers, classifiers, non-classifiers) formally yield a Turing category when used as objects, with role-respecting elements as morphisms? (2)~the \emph{realizability connection} --- does the classifier dichotomy, viewed as a property of an underlying PCA, predict specific logical principles in the associated realizability topos?
 
 \paragraph{The cost of legibility.}
-Additional organizational axioms push the minimum coexistence size to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are explored in a companion paper (available after the review process).
+Additional organizational axioms push the minimum coexistence size to $N\!=\!12$ (SAT-verified) and produce interpretable role structure; these are explored in a companion paper.
 
 \paragraph{Realization freedom.}
 Each capability admits multiple axiom forms; the independence result holds for all variants.
@@ -605,7 +614,7 @@ We have proved that three natural properties of finite extensional 2-pointed mag
 \end{enumerate}
 
 \paragraph{Artifact.}
-All Lean files, counterexample tables, and SAT reproduction scripts are included in the supplemental material (anonymous repository, available upon acceptance).
+All Lean files, counterexample tables, SAT reproduction scripts, and the 16-element reflective tower artifact are available at \url{https://github.com/stefanopalmieri/Kamea}.
 
 % ══════════════════════════════════════════════════════════════
 % References
