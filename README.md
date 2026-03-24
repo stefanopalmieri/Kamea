@@ -2,7 +2,7 @@
 
 A structural decomposition of reflective computation into independent capabilities, witnessed by finite algebras and proved by universal theorems over algebraic varieties.
 
-**Three capabilities. Three walls. Seven roles. Zero `sorry`.**
+**Three capabilities. Three walls. Seven roles.**
 
 *A finite algebra can represent itself without describing itself. It can describe itself without executing itself. It can execute itself without describing itself. No capability implies any other.*
 
