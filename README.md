@@ -8,19 +8,21 @@ A structural decomposition of reflective computation into independent capabiliti
 
 ### For Reviewers
 
-1. **Definitions**: S (self-representation) = retraction pair; D (self-description) = classifier dichotomy; H (self-execution) = partial internal composition
-2. **Independence theorem**: S ⊬ D, D ⊬ H, H ⊬ D, S ⊬ H — all four non-trivial directions Lean-proved (`Countermodel.lean`, `Countermodels10.lean`). The two remaining directions (D → S, H → S) are trivial: the Lean formalization builds D and H on top of FRM, so both include a retraction pair by construction.
-3. **Coexistence witness**: S+D+H coexist at N=10 with all roles distinct (Lean witness in `Witness10.lean`). With role overlap permitted, S+D+ICP+Branch+Y coexist at N=6 (SAT). The N=10 witness is the reference model; the N=6 result shows the bound depends on distinctness assumptions.
+1. **Definitions**: S (self-representation) = retraction pair; D (self-description) = classifier dichotomy; H (self-execution) = partial internal composition (ICP)
+2. **Full 6-way independence**: All six non-implications Lean-proved. S ⊬ D (N=8), D ⊬ H (N=10), H ⊬ D (N=10), S ⊬ H (N=6, structural), D ⊬ S (N=5), H ⊬ S (N=6). Files: `Countermodel.lean`, `Countermodels10.lean`, `E2PM.lean`, `ICP.lean`.
+3. **Optimal coexistence**: S+D+H coexist at N=5, which is optimal — ICP needs 3 pairwise distinct core elements, so N ≥ 5 (`Witness5.lean`, `no_icp_at_4`). Both the N=5 and N=6 witnesses self-simulate (`SelfSim5.lean`, `SelfSim6.lean`). The N=10 witness has all roles distinct (`Witness10.lean`).
 4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
 5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
-6. **Proof inventory**: 8 files, 62 theorems, zero `sorry` — verify with `lake build`
+6. **Self-simulation**: eval is external (meta-level); only R/D/H are internal. Injectivity theorem: any self-simulating algebra must produce n distinct partial applications (`SelfSimulation.lean`).
+7. **Proof inventory**: 13 files, 90 theorems, zero `sorry` — verify with `lake build`
+8. **Paper**: [arXiv preprint](paper/arxiv-preprint/main.pdf) — "Pairwise Independence of Representation, Classification, and Composition in Finite Extensional Magmas"
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-Kamea separates three independent capabilities of reflective computation — self-representation, self-description, and self-execution — and shows that no capability implies any other (proved by concrete counterexamples). The core theorem is witnessed minimally at N=10. A richer 16×16 table supports the artifact: a reflective tower, compilation, and operational demos.
+Kamea separates three independent capabilities of reflective computation — self-representation, self-description, and self-execution — and shows that no capability implies any other (all six non-implications Lean-proved). The optimal coexistence witness has N=5 (tight — ICP needs 3 core elements). Both the N=5 and N=6 witnesses self-simulate. A richer 16×16 table supports the artifact: a reflective tower, compilation, and operational demos.
 
 ### Why finite extensional magmas?
 
@@ -47,13 +49,14 @@ All three are single-concept definitions corresponding to standard categorical s
 
 Branch and Y are not independent capabilities — they are enrichments that connect the three capabilities and add power. Branch bridges D and H: the classifier's judgment controls the evaluator's dispatch. Y crosses the decidability boundary: without it, evaluation is bounded (finite case analysis suffices); with it, the algebra supports unbounded recursion. Both are irredundant for the full evaluator (SAT-proved) and necessary for the reflective tower artifact.
 
-**Full independence.** No capability implies any other. Four non-trivial directions (D and H both include S by construction, so D→S and H→S are definitional):
+**Full 6-way independence.** No capability implies any other — all six non-implications Lean-proved:
 
-| | S ⊬ D | D ⊬ H | H ⊬ D | S ⊬ H |
-|---|---|---|---|---|
-| **Counterexample** | N=8 (the Countermodel) | N=10 (no internal composition) | N=10 (diagonal) | N=4 (`kripke4`) |
-| **What it shows** | Self-simulates, no clean roles | Has dichotomy, no composition factors | Has internal composition, no dichotomy | Has retraction pair, too small for H |
-| **Proof** | `[Lean]` | `[Lean]` | `[Lean]` | `[Lean]` (trivial: H needs N≥10) |
+| | S ⊬ D | S ⊬ H | D ⊬ S | D ⊬ H | H ⊬ S | H ⊬ D |
+|---|---|---|---|---|---|---|
+| **Size** | N=8 | N=6 | N=5 | N=10 | N=6 | N=10 |
+| **File** | `Countermodel` | `E2PM` | `E2PM` | `Countermodels10` | `E2PM` | `Countermodels10` |
+
+The D ⊬ S and H ⊬ S directions use `Ext2PointedMagma` — the common base structure without a retraction pair — proving that dichotomy and ICP can each exist independently of self-representation. The S ⊬ H witness at N=6 is structural: 4 core elements (so ICP is non-vacuous), but no triple satisfies it.
 
 The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has internal composition (the evaluation core) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
 
@@ -153,7 +156,7 @@ The 16×16 table, the compiled tower, Turing completeness, and performance bench
 
 **Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). In the finite-algebra setting, these instantiate as: a retraction pair on core (S), the classifier dichotomy (D), and a non-trivially factorable action on core (H) — the existence of an element whose row factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
-**What's the contribution?** (1) An independence theorem: self-representation, self-description, and self-execution are three independent capabilities of reflective computation — no capability implies any other, proved by Lean-verified finite counterexamples (N=8, N=10). All three correspond to standard categorical structures (section-retraction, decidable subobject classifier, partial internal composition). (2) Coexistence witnesses: all capabilities coexist at N=10 with distinct roles (Lean witness) and at N=6 with role overlap (SAT). (3) Thirty universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, asymmetry, and self-simulation injectivity. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
+**What's the contribution?** (1) A full independence theorem: self-representation, self-description, and self-execution are three pairwise independent capabilities — all six non-implications Lean-proved by counterexamples at N=5 through N=10. (2) Optimal coexistence: all capabilities coexist at N=5, which is tight (N=4 impossible by pigeonhole). Both the N=5 and N=6 witnesses self-simulate (Lean-verified). The N=10 witness separates all roles. (3) Universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, self-simulation injectivity, no-associativity, and asymmetry. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
 
 ## The Seven Roles
 
@@ -179,7 +182,9 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ### Paper 1: The Independence Structure (self-contained)
 
-62 theorems across 8 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+90 theorems across 13 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+
+**Paper**: [arXiv preprint](paper/arxiv-preprint/main.pdf) — "Pairwise Independence of Representation, Classification, and Composition in Finite Extensional Magmas"
 
 **The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
 - Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
@@ -198,11 +203,13 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - Encoding injectivity: Q-depth encoding is injective `[Lean, universal]`
 - Row determination: equal partial applications ⇒ identical rows `[Lean, universal]`
 
-**The three capabilities are independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean)):
-- S ⊬ D: N=8 FRM with classifier that violates classifier dichotomy `[Lean, by decide]`
-- D ⊬ H: N=10 DRM satisfying classifier dichotomy where no internal composition exists `[Lean, by native_decide]`
-- H ⊬ D: N=10 FRM with internal composition + Branch + Y that violates classifier dichotomy `[Lean, by native_decide]`
-- S ⊬ H: N=4 DRM (trivial — H needs N ≥ 10) `[Lean, by decide]`
+**The three capabilities are fully independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean), [`E2PM.lean`](Kamea/E2PM.lean), [`ICP.lean`](Kamea/ICP.lean)):
+- S ⊬ D: N=8 FRM violating classifier dichotomy `[Lean, by decide]`
+- S ⊬ H: N=6 E2PM with retraction pair but no ICP (structural, 4 core elements) `[Lean, by decide]`
+- D ⊬ S: N=5 E2PM with dichotomy but no retraction pair `[Lean, by decide]`
+- D ⊬ H: N=10 DRM with no internal composition `[Lean, by native_decide]`
+- H ⊬ S: N=6 E2PM with ICP but no retraction pair `[Lean, by decide]`
+- H ⊬ D: N=10 FRM with ICP that violates classifier dichotomy `[Lean, by native_decide]`
 
 **H characterization** ([`ICP.lean`](Kamea/ICP.lean)):
 - ICP ↔ Compose+Inert: the two formulations are logically equivalent for any magma `[Lean, pure logic, no decide]`
@@ -210,10 +217,16 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 - D ⊬ ICP and ICP ⊬ D: the classifier dichotomy and internal composition are independent `[Lean, counterexample]`
 - S+D+ICP coexist at N=10 `[Lean, witness]`
 
-**Coexistence** ([`Witness10.lean`](Kamea/Witness10.lean)):
-- S+D+H coexist at N=10 with all 10 roles distinct: concrete Lean witness `[Lean, by native_decide]`
-- With role overlap permitted, S+D+ICP+Branch+Y coexist at N=6 (ICP witnesses overlap retraction pair) `[SAT]`
-- The N=10 witness is the reference model for the artifact; the N=6 result shows the capabilities themselves don't require 10 distinct elements
+**Coexistence** ([`Witness5.lean`](Kamea/Witness5.lean), [`Witness6.lean`](Kamea/Witness6.lean), [`Witness10.lean`](Kamea/Witness10.lean)):
+- S+D+H coexist at **N=5** (optimal): sec=ret=identity on core, 2 classifiers, 1 non-classifier `[Lean, by decide]`
+- N=4 is impossible: ICP needs 3 pairwise distinct non-absorbers, but core has only 2 `[Lean, pigeonhole]`
+- S+D+H coexist at N=6 with sec ≠ ret (non-degenerate retraction) `[Lean, by decide]`
+- S+D+H coexist at N=10 with all 10 roles distinct `[Lean, by native_decide]`
+
+**Self-simulation** ([`SelfSim5.lean`](Kamea/SelfSim5.lean), [`SelfSim6.lean`](Kamea/SelfSim6.lean)):
+- The N=5 witness self-simulates: simulation term is atom(3), a classifier `[Lean, by native_decide]`
+- The N=6 witness self-simulates: simulation term is atom(3), the retraction element `[Lean, by native_decide]`
+- Role decoupling: the simulation term's algebraic role (classifier vs retraction) is irrelevant to self-simulation
 
 **Partial minimality** (`axiom_irredundancy_test.py`):
 - Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
@@ -261,10 +274,9 @@ Proved for the specific 16-element table by `decide`/`native_decide`. These are 
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
-- S ⊬ D: N=8 non-dichotomic retraction magma (the Countermodel) `[Lean: Countermodel.lean]`
-- D ⊬ H: N=10 DRM without internal composition (no Compose) `[Lean: Countermodels10.lean]`; N=10 DRM without Inert `[SAT]`
-- H ⊬ D: N=10 FRM with internal composition + Branch + Y but 4 mixed elements violating classifier dichotomy `[Lean: Countermodels10.lean]`
-- Coexistence: S+D+H coexist at N=10 with distinct roles `[Lean: Witness10.lean]`; at N=6 with role overlap `[SAT]`; full axiom stack requires N=12 `[SAT]`
+- Full 6-way independence: S⊬D (N=8), S⊬H (N=6), D⊬S (N=5), D⊬H (N=10), H⊬S (N=6), H⊬D (N=10) `[all Lean]`
+- Coexistence: S+D+H at N=5 (optimal) `[Lean: Witness5.lean]`; at N=6 with sec≠ret `[Lean: Witness6.lean]`; at N=10 with distinct roles `[Lean: Witness10.lean]`; full axiom stack requires N=12 `[SAT]`
+- Self-simulation: N=5 and N=6 witnesses both self-simulate `[Lean: SelfSim5.lean, SelfSim6.lean]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
@@ -310,11 +322,13 @@ The Ψ framework answers this by stacking axioms on a finite magma (N-element se
 
 | What | Min N | What it gives |
 |------|-------|---------------|
-| S+D+H (three capabilities alone) | **10** | Encoding, classification, evaluation — computationally complete but role structure unconstrained |
+| S+D+H (three capabilities alone) | **5** | Encoding, classification, evaluation — optimal (ICP needs 3 core elements, so N ≥ 5) |
+| S+D+H with sec ≠ ret | **6** | Non-degenerate retraction pair, non-trivial ICP factorization |
+| + all roles distinct | **10** | Encoding, classification, evaluation with separated roles |
 | + structural ladder (L3–L8) + PA + Selection | **12** | Clean 2-1-8-1 role architecture, seven separated roles, McCarthy correspondence |
 | + IO + 8-state counter | **16** | Efficient counters, product encodings, the specific Ψ₁₆ᶠ witness |
 
-The computational primitives of Lisp — quote/eval, conditional, cons/car/cdr, recursion — fall out of the three capability axioms alone at N=10. The clean seven-role architecture that makes those primitives look like McCarthy's specific design requires the additional organizational axioms and pushes the minimum to N=12. The gap between N=10 and N=12 is the cost of *legibility*: going from an algebra that works to one whose roles are cleanly separated and interpretable. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
+The N=5 optimal witness uses maximal role overlap (sec=ret=identity, ICP factorization degenerates to row equality on core). The N=6 witness with sec ≠ ret is the first non-degenerate example. The N=10 witness separates all roles. The clean seven-role architecture that produces the McCarthy correspondence requires additional organizational axioms and pushes the minimum to N=12. Full details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
 The axioms have an equivalent categorical formulation using standard vocabulary: zero morphisms, retraction pairs, subobject classifiers, and the classifier dichotomy. The categorical formulation and its universal theorems are in [`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) (minimal 5-element witness + 16 universal algebraic theorems), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean) (asymmetry — 3 universal theorems), and [`CategoricalFoundation.lean`](Kamea/CategoricalFoundation.lean) (full 16-element structure with products, copairing, and fixed-point combinator). All use only standard algebraic concepts — no Ψ-specific vocabulary.
 
@@ -338,8 +352,13 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
 - [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating classifier dichotomy
 - [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
+- [`Kamea/E2PM.lean`](Kamea/E2PM.lean) — **Full 6-way independence**: D ⊬ S (N=5), H ⊬ S (N=6), structural S ⊬ H (N=6)
 - [`Kamea/ICP.lean`](Kamea/ICP.lean) — **ICP ↔ Compose+Inert**: H characterization as factorable action, verified on all counterexamples
-- [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Coexistence: S+D+H coexist at N=10 with distinct roles
+- [`Kamea/Witness5.lean`](Kamea/Witness5.lean) — **Optimal coexistence**: S+D+H at N=5 + impossibility at N=4
+- [`Kamea/Witness6.lean`](Kamea/Witness6.lean) — Coexistence: S+D+H at N=6 with sec ≠ ret
+- [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Coexistence: S+D+H at N=10 with distinct roles
+- [`Kamea/SelfSim5.lean`](Kamea/SelfSim5.lean) — Self-simulation at N=5 (simulation term = classifier)
+- [`Kamea/SelfSim6.lean`](Kamea/SelfSim6.lean) — Self-simulation at N=6 (simulation term = retraction element)
 - [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
 - [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) — Standard categorical vocabulary translation
 - [`docs/h_characterization.md`](docs/h_characterization.md) — H as factorable action: presentation-independent characterization
@@ -373,10 +392,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
-- **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Four Lean-verified counterexamples: S ⊬ D (N=8, `Countermodel.lean`), D ⊬ H (N=10, `Countermodels10.lean`), H ⊬ D (N=10, `Countermodels10.lean`), S ⊬ H (N=4, trivial). The classifier wall is epistemic, not computational: evaluation machinery does not force clean roles. Coexistence: S+D+H at N=10 with distinct roles (`Witness10.lean`), at N=6 with overlap (SAT). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+- **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Six Lean-verified counterexamples establish all six non-implications: S ⊬ D (N=8), S ⊬ H (N=6, structural), D ⊬ S (N=5), D ⊬ H (N=10), H ⊬ S (N=6), H ⊬ D (N=10). The D ⊬ S and H ⊬ S directions use `Ext2PointedMagma` — the base structure without a retraction pair. Coexistence: S+D+H at N=5 (optimal, `Witness5.lean`), N=6 (`Witness6.lean`), N=10 (`Witness10.lean`). Both N=5 and N=6 witnesses self-simulate (`SelfSim5.lean`, `SelfSim6.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 - **Self-execution characterization (resolved, Lean-proved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. Formally, the Internal Composition Property (ICP): ∃ pairwise distinct non-absorber a, b, c with b core-preserving, a = c∘b on core, and a taking ≥2 distinct values. ICP ↔ Compose+Inert is Lean-proved as a universal equivalence (pure logic, `ICP.lean`), and verified on all three N=10 counterexamples by `native_decide`. Also validated empirically across 250 SAT-generated retraction magmas (250/250 agreement). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
-- **Categorical formalization (mostly complete for paper 1).** 62 public theorems across 8 Lean files, zero `sorry`: universal decomposition and bounds (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`), functoriality (`Functoriality.lean`), self-simulation injectivity (`SelfSimulation.lean`), independence counterexamples (`Countermodel.lean`, `Countermodels10.lean`), coexistence (`Witness10.lean`), and H characterization (`ICP.lean`). What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Categorical formalization (complete for paper 1).** 90 public theorems across 13 Lean files, zero `sorry`: universal decomposition and bounds (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`), functoriality (`Functoriality.lean`), self-simulation injectivity (`SelfSimulation.lean`), independence counterexamples (`Countermodel.lean`, `Countermodels10.lean`, `E2PM.lean`), H characterization (`ICP.lean`), coexistence witnesses (`Witness5.lean`, `Witness6.lean`, `Witness10.lean`), and self-simulation witnesses (`SelfSim5.lean`, `SelfSim6.lean`). What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
 
 ---
 
@@ -470,6 +489,15 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── CatRigidity.lean                 # Rigidity of N=16 categorical witness
 │   ├── CatDiscoverable.lean             # 4-probe discoverability of N=16 witness
 │   ├── CatActualityIrreducibility.lean  # Twin-model actuality irreducibility
+│   ├── E2PM.lean                        # Ext2PointedMagma: D⊬S (N=5), H⊬S (N=6), structural S⊬H (N=6)
+│   ├── ICP.lean                         # Internal Composition Property: ICP ↔ Compose+Inert (universal)
+│   ├── Countermodels10.lean             # D⊬H, H⊬D: N=10 counterexamples
+│   ├── Witness5.lean                    # Optimal S+D+H coexistence at N=5 + no ICP at N=4
+│   ├── Witness6.lean                    # S+D+H coexistence at N=6 with sec≠ret
+│   ├── Witness10.lean                   # S+D+H at N=10 with all roles distinct
+│   ├── SelfSim5.lean                    # Self-simulation at N=5 (sim term = classifier)
+│   ├── SelfSim6.lean                    # Self-simulation at N=6 (sim term = retraction)
+│   ├── SelfSimulation.lean              # Universal: partial application injectivity
 │   └── legacy/                          # Historical Δ₁/Δ₂/Δ₃ proofs (superseded by Ψ₁₆)
 ├── kamea-rs/                             # Rust emulator + WASM browser debugger
 │   ├── crates/
@@ -540,12 +568,19 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 │   ├── inert_expressiveness.py       # Substrate expressiveness analysis (inert count vs discoverability)
 │   ├── n16c_expressiveness_search.py # Ψ₁₆ᶜ table search (maximally expressive model)
 │   ├── tc_merge_test.py              # DEPRECATED: tests Ext, not role forcing (see forced_roles_test.py)
+│   ├── n5_rdh_unsat.py               # N=5 R+D+H SAT verification + algebraic analysis
+│   ├── n5_rdh_check.py               # N=5 R+D+H Z3 SAT check
 │   ├── counterexample_search.py      # WL-1 discrimination tests
 │   ├── composition_closure_test.py    # Composition closure: compatible but kills 0/10 pairs
 │   ├── reflection_distinctness_test.py # Reflective tower test on 10 nontriviality pairs (0/10 killed)
 │   ├── kripke_canonicity.py           # DRMag enumeration + homomorphism search (112 iso classes at N=4)
 │   ├── rigid_census.py               # Small rigid magma census
 │   └── counterexamples/              # Saved counterexample tables (.npy)
+├── paper/
+│   ├── main-lics.tex                  # LICS submission (double-blind)
+│   └── arxiv-preprint/
+│       ├── main.tex                   # arXiv preprint (de-anonymized)
+│       └── main.pdf                   # Rendered 10-page PDF
 ├── docs/
 │   ├── technical_overview.md          # Full technical details (moved from README)
 │   ├── forced_roles_theorem.md        # The Forced Roles Theorem (core theoretical result)
@@ -583,7 +618,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 
 ## Building
 
-`lake build` compiles all Lean files — the categorical foundation (19 universal theorems from axioms in `CatKripkeWallMinimal.lean` + `NoCommutativity.lean`), the self-simulation foundation (4 universal theorems from definition in `SelfSimulation.lean`), and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
+`lake build` compiles all Lean files — the independence structure (90 theorems across 13 files: universal decomposition, 6-way independence counterexamples, optimal coexistence witnesses, self-simulation, H characterization) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)

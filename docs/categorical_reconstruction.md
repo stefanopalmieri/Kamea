@@ -2,7 +2,7 @@
 
 ## Summary
 
-The three capabilities — self-representation (S), self-description (D), self-execution (H) — correspond to three standard categorical enrichment steps applied to finite extensional magmas. No capability implies any other (proved by counterexample at N=8 and N=10). All three coexist at N=10.
+The three capabilities — self-representation (S), self-description (D), self-execution (H) — correspond to three standard categorical enrichment steps applied to finite extensional magmas. No capability implies any other — all six non-implications Lean-proved (counterexamples at N=5, 6, 8, 10). All three coexist at N=5 (optimal; Lean-verified), and both the N=5 and N=6 witnesses self-simulate.
 
 | Capability | Categorical Structure | What's Internalized | Standard Analog |
 |---|---|---|---|
@@ -139,7 +139,7 @@ Classifier minimality remains a well-defined selection criterion that uniquely p
 
 ## What Is Proved vs. What Is Open
 
-62 Lean theorems, 8 files, zero `sorry`.
+90 Lean theorems, 13 files, zero `sorry`.
 
 | Claim | Status | File |
 |---|---|---|

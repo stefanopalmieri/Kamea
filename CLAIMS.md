@@ -120,7 +120,14 @@ The three capabilities — self-representation (S), self-description (D), self-e
 | D ⊬ H (Compose): N=10 DRM satisfies classifier dichotomy, no element satisfies Compose axiom | Lean-proved | `Kamea/Countermodels10.lean` — `dNotH` (DRM instance) + `dNotH_no_compose` | `lake build Kamea.Countermodels10` |
 | D ⊬ H (Inert): N=10 DRM satisfies classifier dichotomy, no inert element exists (all non-absorbers are testers or encoders) | Empirical | `independence_results.py` — D_not_H_inert | `python3 independence_results.py` |
 | H ⊬ D (diagonal): N=10 FRM has Branch+Compose+Y (all H machinery), violates classifier dichotomy (4 mixed elements) | Lean-proved | `Kamea/Countermodels10.lean` — `hNotD` (FRM) + `hNotD_branch/compose/y_fixpoint` + `hNotD_violates_dichotomy` | `lake build Kamea.Countermodels10` |
-| S+D+H coexist at N=10 (minimum possible — 10 distinguished elements). Tight bound: N ≥ 10 (counting) and N = 10 suffices (witness). | Lean-proved | `Kamea/Witness10.lean` — `witness10_drm` (DRM instance) + `witness10_branch/compose/inert/y_fixpoint` + `sdh_witness_10` | `lake build Kamea.Witness10` |
+| **S+D+H coexist at N=5 (optimal)**. ICP needs 3 pairwise distinct core elements, so N ≥ 5. N=5 witness: sec=ret=2, cls=3, ICP a=3,b=2,c=4. | Lean-proved | `Kamea/Witness5.lean` — `sdh_witness_5`, `no_icp_at_4` | `lake build Kamea.Witness5` |
+| S+D+H coexist at N=6 with sec ≠ ret (non-degenerate retraction). | Lean-proved | `Kamea/Witness6.lean` — `sdh_witness_6` | `lake build Kamea.Witness6` |
+| S+D+H coexist at N=10 with all 10 roles distinct. | Lean-proved | `Kamea/Witness10.lean` — `witness10_drm` + `sdh_witness_10` | `lake build Kamea.Witness10` |
+| N=5 witness self-simulates (sim term = classifier). | Lean-proved | `Kamea/SelfSim5.lean` — `witness5_self_simulates` | `lake build Kamea.SelfSim5` |
+| N=6 witness self-simulates (sim term = retraction element). | Lean-proved | `Kamea/SelfSim6.lean` — `witness6_self_simulates` | `lake build Kamea.SelfSim6` |
+| D ⊬ S: N=5 E2PM with dichotomy but no retraction pair. | Lean-proved | `Kamea/E2PM.lean` — `d_not_implies_s` | `lake build Kamea.E2PM` |
+| H ⊬ S: N=6 E2PM with ICP but no retraction pair. | Lean-proved | `Kamea/E2PM.lean` — `h_not_implies_s` | `lake build Kamea.E2PM` |
+| S ⊬ H (structural): N=6 E2PM with retraction pair, 4 core elements, no ICP. | Lean-proved | `Kamea/E2PM.lean` — `s_not_implies_icp_structural` | `lake build Kamea.E2PM` |
 | Full axiom stack (capabilities + organizational ladder) requires N=12 | Empirical | `minimal_sdh_test.py`, `ds_search/stacking_analysis.py` | `python3 minimal_sdh_test.py` |
 | Classifier wall is epistemic, not computational: H machinery does not force D | Empirical | `independence_results.py` — H_not_D counterexample | `python3 independence_results.py` |
 | Counterexample tables frozen and independently verified (all properties checked without Z3) | Empirical | `counterexamples.json`, `independence_results.py` verification functions | `python3 independence_results.py` |
