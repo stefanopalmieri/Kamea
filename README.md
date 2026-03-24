@@ -26,7 +26,7 @@ Kamea separates three independent capabilities of reflective computation — sel
 
 ### Why finite extensional magmas?
 
-A meta-circular evaluator applies functions to arguments. Strip away the syntax, the types, and the environment — what remains is a set of elements and a binary operation: `apply(f, x)`. That operation is the Cayley table. An extensional magma is what you get when you require that `apply` distinguishes its arguments: if two functions agree on all inputs, they are equal. The two absorbers (⊤, ⊥) are the truth values — the constant functions that ignore their argument. The retraction pair (Q, E) is Gödel numbering: Q encodes an element as data, E decodes it back. Everything else is structure that the operation forces.
+A meta-circular evaluator applies functions to arguments. If you strip away the syntax, the types, and the environment — keeping only the application operation — what remains is a set of elements and a binary operation: `apply(f, x)`. That operation is the Cayley table. (Other decompositions are possible: typed settings keep the typing judgment, categories keep composition. This is one cut, chosen because it isolates the operation table where the three capabilities live.) An extensional magma is what you get when you require that `apply` distinguishes its arguments: if two functions agree on all inputs, they are equal. The two absorbers (⊤, ⊥) are the truth values — the constant functions that ignore their argument. The retraction pair (Q, E) is Gödel numbering: Q encodes an element as data, E decodes it back. Everything else is structure that the operation forces.
 
 This is not a claim that magmas *are* evaluators, any more than Turing machines *are* programs. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation would be invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction. Finite algebra makes the separation visible by stripping the infrastructure down to the operation alone.
 
@@ -102,7 +102,7 @@ K-IF BRANCH SWAP — the definitive 3-Lisp demo:
   CONFIRMED: Program rewrote its own if-branches.
 ```
 
-The demo exercises all three capabilities: computation on the algebra (S), verification of the Cayley table's invariants (D), and continuation reification + branch swap within a meta-circular evaluator (H). The reflective stack is grounded in a 16×16 verified Cayley table — the 256-byte table is a complete specification of the algebra, not an approximation or encoding. See [`docs/artifact.md`](docs/artifact.md) for the full artifact description and additional demos.
+The demo exercises the 16-element coexistence witness, which has all three capabilities plus both enrichments: computation on the algebra (S), verification of the Cayley table's invariants (D), and continuation reification + branch swap within a meta-circular evaluator (H). This demonstrates coexistence, not independence — the independence theorem is proved by the six separate counterexamples in the Lean files. The reflective stack is grounded in a 16×16 verified Cayley table — the 256-byte table is a complete specification of the algebra, not an approximation or encoding. See [`docs/artifact.md`](docs/artifact.md) for the full artifact description and additional demos.
 
 ### Compiled Grounded Reflective Tower
 
