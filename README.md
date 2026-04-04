@@ -552,7 +552,7 @@ If you use this work, please cite:
 ```bibtex
 @software{palmieri2025kamea,
   author = {Palmieri, Stefano},
-  title = {Kamea: Three Independent Capabilities of Reflective Computation in Finite Algebras},
+  title = {Kamea: A Compiled Reflective Tower from a 256-Byte Cayley Table},
   year = {2025},
   url = {https://github.com/stefanopalmieri/Kamea}
 }
