@@ -27,15 +27,21 @@ pub const CAR_OFFSET: usize = 0; // objref points to car
 pub const CDR_OFFSET: usize = 8;
 
 impl ObjectModel<WispyVM> for WispyVM {
-    // All metadata stored in the 8-byte header word.
-    const GLOBAL_LOG_BIT_SPEC: VMGlobalLogBitSpec = VMGlobalLogBitSpec::in_header(0);
-    const LOCAL_FORWARDING_POINTER_SPEC: VMLocalForwardingPointerSpec =
-        VMLocalForwardingPointerSpec::in_header(0);
+    // Metadata layout:
+    //   Header bits 0..1:  forwarding bits (2 bits, copying/Immix)
+    //   Header bits 8..63: forwarding pointer (high bits, enough for address)
+    //   Side metadata:     mark bit, LOS/nursery bit, global log bit
+    //   (Immix requires mark bit in side metadata, not header)
     const LOCAL_FORWARDING_BITS_SPEC: VMLocalForwardingBitsSpec =
         VMLocalForwardingBitsSpec::in_header(0);
-    const LOCAL_MARK_BIT_SPEC: VMLocalMarkBitSpec = VMLocalMarkBitSpec::in_header(0);
+    const LOCAL_FORWARDING_POINTER_SPEC: VMLocalForwardingPointerSpec =
+        VMLocalForwardingPointerSpec::in_header(8);
+    const LOCAL_MARK_BIT_SPEC: VMLocalMarkBitSpec =
+        VMLocalMarkBitSpec::side_first();
     const LOCAL_LOS_MARK_NURSERY_SPEC: VMLocalLOSMarkNurserySpec =
-        VMLocalLOSMarkNurserySpec::in_header(0);
+        VMLocalLOSMarkNurserySpec::side_after(&Self::LOCAL_MARK_BIT_SPEC.as_spec());
+    const GLOBAL_LOG_BIT_SPEC: VMGlobalLogBitSpec =
+        VMGlobalLogBitSpec::side_first();
 
     const OBJECT_REF_OFFSET_LOWER_BOUND: isize = HEADER_SIZE as isize;
 

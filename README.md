@@ -303,15 +303,15 @@ Primary benchmark: N-Queens(8), backtracking search with cons-cell lists (92 sol
 | **C** (gcc -O2, bump allocator) | 98 µs | 1x |
 | **Compiled Ψ-Lisp → C** (gcc -O2, bump) | 86 µs | **0.9x** |
 | **Compiled Ψ-Lisp → Rust** (LLVM -O, bump) | 114 µs | 1.2x |
-| **Rust + MMTk GC** (32 MB heap) | 202 µs | 2.1x |
-| **Rust + MMTk GC** (4 MB heap) | 204 µs | 2.1x |
+| **Rust + MMTk Immix** (32 MB heap) | 184 µs | 1.9x |
+| **Rust + MMTk Immix** (4 MB heap) | 186 µs | 1.9x |
 | **LuaJIT** | 220 µs | 2.2x |
 | **SBCL** (native Common Lisp) | 432 µs | 4.4x |
 | **Native Python** | 5.9 ms | 60x |
 | **Ψ-Lisp (Rust interpreter)** | 4.1 s | 42,000x |
 | **Ψ-Lisp (Python interpreter)** | 301 s | 3,100,000x |
 
-Compiled Ψ-Lisp with the bump allocator matches hand-written C. With MMTk garbage collection, it still matches LuaJIT. The bump allocator advantage is ~2x: the difference between a pointer increment and MMTk's alloc path + metadata bookkeeping. The 4 MB and 32 MB heaps perform identically because nqueens has a small live set (the placed-queens list is at most 8 cells deep), so collection pressure is negligible. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array.
+Compiled Ψ-Lisp with the bump allocator matches hand-written C. With MMTk Immix (a real mark-region garbage collector), it beats LuaJIT. The bump allocator advantage is ~2x: the difference between a pointer increment and Immix's alloc path + side metadata. The 4 MB and 32 MB heaps perform identically because nqueens has a small live set (the placed-queens list is at most 8 cells deep), so collection pressure is negligible. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array.
 
 **Counter arithmetic** (fib(8) + fib-iter(30) + fact(10) + power(2,10) + gcd(100,75), runtime inputs via argv):
 

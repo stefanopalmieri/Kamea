@@ -30,8 +30,8 @@ pub fn mmtk_ref() -> &'static MMTK<WispyVM> {
 pub fn wispy_init_with_heap(heap_bytes: usize) {
     let mut builder = mmtk::MMTKBuilder::new();
 
-    // Use MarkSweep plan (non-copying, simplest real GC)
-    builder.options.plan.set(mmtk::util::options::PlanSelector::MarkSweep);
+    // Use Immix plan (bump-allocating, mark-region collector)
+    builder.options.plan.set(mmtk::util::options::PlanSelector::Immix);
 
     // Configure heap size
     builder.options.gc_trigger.set(
