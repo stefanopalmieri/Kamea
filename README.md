@@ -6,16 +6,11 @@ A structural decomposition of reflective computation into independent capabiliti
 
 *A finite algebra can represent itself without describing itself. It can describe itself without executing itself. It can execute itself without describing itself. No capability implies any other.*
 
-### For Reviewers
+### The Independence Theorem
 
-1. **Definitions**: S (self-representation) = retraction pair; D (self-description) = classifier dichotomy; H (self-execution) = partial internal composition (ICP)
-2. **Full 6-way independence**: All six non-implications Lean-proved. S ⊬ D (N=8), D ⊬ H (N=10), H ⊬ D (N=10), S ⊬ H (N=6, structural), D ⊬ S (N=5), H ⊬ S (N=6). Files: `Countermodel.lean`, `Countermodels10.lean`, `E2PM.lean`, `ICP.lean`.
-3. **Optimal coexistence**: S+D+H coexist at N=5, which is optimal — ICP needs 3 pairwise distinct core elements, so N ≥ 5 (`Witness5.lean`, `no_icp_at_4`). Both the N=5 and N=6 witnesses self-simulate (`SelfSim5.lean`, `SelfSim6.lean`). The N=10 witness has all roles distinct (`Witness10.lean`).
-4. **Decomposition invariance**: three-category decomposition preserved by homomorphisms (`Functoriality.lean`)
-5. **H characterization**: ICP ↔ Compose+Inert proved as universal equivalence (`ICP.lean`)
-6. **Self-simulation**: eval is external (meta-level); only R/D/H are internal. Injectivity theorem: any self-simulating algebra must produce n distinct partial applications (`SelfSimulation.lean`).
-7. **Proof inventory**: 13 files, 90 theorems, zero `sorry` — verify with `lake build`
-8. **Paper**: [arXiv preprint](paper/arxiv-preprint/main.pdf) — "Pairwise Independence of Representation, Classification, and Composition in Finite Extensional Magmas"
+The three capabilities (R, D, H) are pairwise independent — no one implies any other. All six non-implications are Lean-proved with four provably tight bounds. The optimal coexistence witness has N=5.
+
+**Full formalization, paper, and proofs:** [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
@@ -49,20 +44,9 @@ All three are single-concept definitions corresponding to standard categorical s
 
 Branch and Y are not independent capabilities — they are enrichments that connect the three capabilities and add power. Branch bridges D and H: the classifier's judgment controls the evaluator's dispatch. Y crosses the decidability boundary: without it, evaluation is bounded (finite case analysis suffices); with it, the algebra supports unbounded recursion. Both are irredundant for the full evaluator (SAT-proved) and necessary for the reflective tower artifact.
 
-**Full 6-way independence.** No capability implies any other — all six non-implications Lean-proved:
+**Full 6-way independence.** No capability implies any other — all six non-implications Lean-proved. See [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence) for the full formalization, counterexample tables, and tight bounds.
 
-| | S ⊬ D | S ⊬ H | D ⊬ S | D ⊬ H | H ⊬ S | H ⊬ D |
-|---|---|---|---|---|---|---|
-| **Size** | N=8 | N=6 | N=5 | N=10 | N=6 | N=10 |
-| **File** | `Countermodel` | `E2PM` | `E2PM` | `Countermodels10` | `E2PM` | `Countermodels10` |
-
-The D ⊬ S and H ⊬ S directions use `Ext2PointedMagma` — the common base structure without a retraction pair — proving that dichotomy and ICP can each exist independently of self-representation. The S ⊬ H witness at N=6 is structural: 4 core elements (so ICP is non-vacuous), but no triple satisfies it.
-
-The classifier wall is not forced by computation — an N=8 counterexample self-simulates without it, and an N=10 counterexample has internal composition (the evaluation core) without it. An algebra can *evaluate* without *understanding itself as evaluating*.
-
-(The classifier dichotomy is a total finite algebraic condition: every non-zero element's row on core is either entirely boolean-valued or entirely non-boolean-valued. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) for the categorical analysis.)
-
-The Ψ₁₆ᶠ table has all three capabilities at once. The demo below exercises all of them: the table computes itself (S), the classifier wall gives elements interpretable roles (D), and the meta-circular evaluator runs within the algebra with no external machine (H).
+The Ψ₁₆ᶠ table has all three capabilities plus the Branch and Y enrichments. The demo below exercises them: encoding via the retraction pair (R), interpretable roles via the classifier wall (D), and a meta-circular evaluator via internal composition (H).
 
 ## Quick Start
 
@@ -146,9 +130,7 @@ The transpiler handles both computational programs (arithmetic, recursion, branc
 
 Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope — not proposing it as a replacement for lambda calculus.
 
-Many reflective systems combine mechanisms that this framework separates into three capabilities and two enrichments. The framework shows what each costs: a section-retraction pair (naming), a decidable subobject classifier (judging), and a partial internal composition (evaluating) — plus two enrichments that connect them: Branch (classifier-controlled dispatch) and Y (unbounded recursion). All three capabilities correspond to standard categorical structures; all three are proved independent. The three-category architecture (zeros, classifiers, non-classifiers) and the walls between categories are proved universal. The specific seven roles are one realization within an equivalence class — each capability admits multiple axiom forms (≥6, ≥4, ≥3), and the McCarthy realization is the unique form that minimizes the classifier count. Full analysis: [`docs/inevitability_summary.md`](docs/inevitability_summary.md), [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md), [`docs/h_characterization.md`](docs/h_characterization.md).
-
-The 16×16 table, the compiled tower, Turing completeness, and performance benchmarks are the *artifact* — a witness demonstrating that all three capabilities can coexist. The artifact demonstrates feasibility; the independence theorem is the primary contribution.
+The three capabilities are proved independent ([finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)). This repository is the *artifact*: a 16-element algebra where all three capabilities coexist with two connecting enrichments (Branch and Y), supporting a reflective tower, compilation to native code, and Turing completeness.
 
 ### Frequently Asked Questions
 
@@ -156,7 +138,7 @@ The 16×16 table, the compiled tower, Turing completeness, and performance bench
 
 **Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). In the finite-algebra setting, these instantiate as: a retraction pair on core (S), the classifier dichotomy (D), and a non-trivially factorable action on core (H) — the existence of an element whose row factors as the composition of two other elements' actions, one core-preserving. The *specific axiom forms* are conventional — each capability admits multiple presentations. Even Compose admits 6 equivalent forms; the choice η·x = ρ·(g·x) is the one that minimizes the classifier count. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
-**What's the contribution?** (1) A full independence theorem: self-representation, self-description, and self-execution are three pairwise independent capabilities — all six non-implications Lean-proved by counterexamples at N=5 through N=10. (2) Optimal coexistence: all capabilities coexist at N=5, which is tight (N=4 impossible by pigeonhole). Both the N=5 and N=6 witnesses self-simulate (Lean-verified). The N=10 witness separates all roles. (3) Universal algebraic theorems (zero `decide`, zero `sorry`) establishing the decomposition, its invariance under homomorphisms, self-simulation injectivity, no-associativity, and asymmetry. (4) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra.
+**What's the contribution?** (1) A full independence theorem: R, D, and H are pairwise independent, four of six bounds provably tight. See [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence). (2) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra. (3) Turing completeness via 7 axiom-forced elements, compilation to native code within 4x of Rust, and a meta-circular CPS evaluator with continuation reification.
 
 ## The Seven Roles
 
@@ -180,61 +162,11 @@ Of the 45 pairwise distinctness requirements among the ten role-bearing elements
 
 ## Key Results
 
-### Paper 1: The Independence Structure (self-contained)
+### The Formal Foundation
 
-90 theorems across 13 Lean files. Zero `sorry`. A reviewer does not need to look at the 16-element table, the Lisp implementation, or the reflective tower to evaluate the core claim. Those are supporting material and motivation, not load-bearing walls.
+The independence theorem, universal algebraic theorems, coexistence witnesses, and all Lean proofs are in a separate repository:
 
-**Paper**: [arXiv preprint](paper/arxiv-preprint/main.pdf) — "Pairwise Independence of Representation, Classification, and Composition in Finite Extensional Magmas"
-
-**The decomposition exists** ([`CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean), [`NoCommutativity.lean`](Kamea/NoCommutativity.lean)):
-- Three-category decomposition: every element is a zero morphism, classifier, or non-classifier `[Lean, universal]`
-- classifier wall: classifier ∩ non-classifier = ∅ `[Lean, universal]`
-- Retraction pair members are non-classifiers `[Lean, universal]`
-- No right identity in any model `[Lean, universal]`
-- Card ≥ 4 (tight); card ≥ 5 when sec ≠ ret (tight) `[Lean, universal]`
-- Asymmetry: two distinct left-absorbers ⇒ non-commutative `[Lean, universal]`
-
-**It's invariant** ([`Functoriality.lean`](Kamea/Functoriality.lean)):
-- DRM isomorphisms preserve zeros, classifiers, and non-classifiers `[Lean, algebraic, no decide]`
-- Combined: the three-category decomposition is a proved algebraic invariant `[Lean, algebraic]`
-
-**Self-simulation forces injectivity** ([`SelfSimulation.lean`](Kamea/SelfSimulation.lean)):
-- Partial application injectivity: the self-simulator cannot compress the encoding `[Lean, universal]`
-- Encoding injectivity: Q-depth encoding is injective `[Lean, universal]`
-- Row determination: equal partial applications ⇒ identical rows `[Lean, universal]`
-
-**The three capabilities are fully independent** ([`Countermodel.lean`](Kamea/Countermodel.lean), [`Countermodels10.lean`](Kamea/Countermodels10.lean), [`E2PM.lean`](Kamea/E2PM.lean), [`ICP.lean`](Kamea/ICP.lean)):
-- S ⊬ D: N=8 FRM violating classifier dichotomy `[Lean, by decide]`
-- S ⊬ H: N=6 E2PM with retraction pair but no ICP (structural, 4 core elements) `[Lean, by decide]`
-- D ⊬ S: N=5 E2PM with dichotomy but no retraction pair `[Lean, by decide]`
-- D ⊬ H: N=10 DRM with no internal composition `[Lean, by native_decide]`
-- H ⊬ S: N=6 E2PM with ICP but no retraction pair `[Lean, by decide]`
-- H ⊬ D: N=10 FRM with ICP that violates classifier dichotomy `[Lean, by native_decide]`
-
-**H characterization** ([`ICP.lean`](Kamea/ICP.lean)):
-- ICP ↔ Compose+Inert: the two formulations are logically equivalent for any magma `[Lean, pure logic, no decide]`
-- D⊬H model has no ICP (exhaustive search), H⊬D model has ICP, S+D+H witness has ICP `[Lean, by native_decide]`
-- D ⊬ ICP and ICP ⊬ D: the classifier dichotomy and internal composition are independent `[Lean, counterexample]`
-- S+D+ICP coexist at N=10 `[Lean, witness]`
-
-**Coexistence** ([`Witness5.lean`](Kamea/Witness5.lean), [`Witness6.lean`](Kamea/Witness6.lean), [`Witness10.lean`](Kamea/Witness10.lean)):
-- S+D+H coexist at **N=5** (optimal): sec=ret=identity on core, 2 classifiers, 1 non-classifier `[Lean, by decide]`
-- N=4 is impossible: ICP needs 3 pairwise distinct non-absorbers, but core has only 2 `[Lean, pigeonhole]`
-- S+D+H coexist at N=6 with sec ≠ ret (non-degenerate retraction) `[Lean, by decide]`
-- S+D+H coexist at N=10 with all 10 roles distinct `[Lean, by native_decide]`
-
-**Self-simulation** ([`SelfSim5.lean`](Kamea/SelfSim5.lean), [`SelfSim6.lean`](Kamea/SelfSim6.lean)):
-- The N=5 witness self-simulates: simulation term is atom(3), a classifier `[Lean, by native_decide]`
-- The N=6 witness self-simulates: simulation term is atom(3), the retraction element `[Lean, by native_decide]`
-- Role decoupling: the simulation term's algebraic role (classifier vs retraction) is irrelevant to self-simulation
-
-**Partial minimality** (`axiom_irredundancy_test.py`):
-- Each capability's axiom set is irredundant — no axiom is derivable from the others `[SAT]`
-- S = {retraction pair, E-transparency}: both irredundant
-- D = {classifier dichotomy}: single axiom
-- H = {Compose, Inert}: the internal composition core (2 axioms, equivalent to the Internal Composition Property)
-- Enrichments = {Branch, Y}: both irredundant over S+D+H
-- Total: 5 capability axioms + 2 enrichment axioms = 7 irredundant axioms
+**[finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)** — 93 theorems across 12 Lean files, zero `sorry`. Includes the paper, counterexample tables, and SAT reproduction scripts.
 
 ### Paper 2: The Artifact (supporting material)
 
@@ -274,9 +206,8 @@ Proved for the specific 16-element table by `decide`/`native_decide`. These are 
 - Extension profiles: Ψ₁₆ᶠ (hardware) and Ψ₁₆ᶜ (software), same core theorems `[Empirical]`
 - Self-simulation: universal self-simulator verified on both Ψ₁₆ᶠ and Ψ₁₆ᶜ (512/512 cells, same code) `[Empirical]`
 - Self-simulation: role-aware self-simulator computes 60/256 cells from algebraic rules alone `[Empirical]`
-- Full 6-way independence: S⊬D (N=8), S⊬H (N=6), D⊬S (N=5), D⊬H (N=10), H⊬S (N=6), H⊬D (N=10) `[all Lean]`
-- Coexistence: S+D+H at N=5 (optimal) `[Lean: Witness5.lean]`; at N=6 with sec≠ret `[Lean: Witness6.lean]`; at N=10 with distinct roles `[Lean: Witness10.lean]`; full axiom stack requires N=12 `[SAT]`
-- Self-simulation: N=5 and N=6 witnesses both self-simulate `[Lean: SelfSim5.lean, SelfSim6.lean]`
+- Full axiom stack requires N=12 `[SAT]`
+- Independence and coexistence: see [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence) `[Lean]`
 
 Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full technical details: [`docs/technical_overview.md`](docs/technical_overview.md).
 
@@ -345,26 +276,9 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 
 ### How to Read This Repo
 
-**Paper 1: The independence structure** (self-contained, no artifact needed)
-- [`Kamea/CatKripkeWallMinimal.lean`](Kamea/CatKripkeWallMinimal.lean) — **Start here**: FaithfulRetractMagma + DichotomicRetractMagma, minimal witnesses, 19 universal theorems
-- [`Kamea/Functoriality.lean`](Kamea/Functoriality.lean) — DRM isomorphisms preserve the Z/C/N decomposition (algebraic proof)
-- [`Kamea/NoCommutativity.lean`](Kamea/NoCommutativity.lean) — Asymmetry: two left-absorbers ⇒ non-commutative
-- [`Kamea/SelfSimulation.lean`](Kamea/SelfSimulation.lean) — Self-simulation forces encoding injectivity (4 universal theorems)
-- [`Kamea/Countermodel.lean`](Kamea/Countermodel.lean) — S ⊬ D: N=8 FRM violating classifier dichotomy
-- [`Kamea/Countermodels10.lean`](Kamea/Countermodels10.lean) — D ⊬ H and H ⊬ D: N=10 counterexamples
-- [`Kamea/E2PM.lean`](Kamea/E2PM.lean) — **Full 6-way independence**: D ⊬ S (N=5), H ⊬ S (N=6), structural S ⊬ H (N=6)
-- [`Kamea/ICP.lean`](Kamea/ICP.lean) — **ICP ↔ Compose+Inert**: H characterization as factorable action, verified on all counterexamples
-- [`Kamea/Witness5.lean`](Kamea/Witness5.lean) — **Optimal coexistence**: S+D+H at N=5 + impossibility at N=4
-- [`Kamea/Witness6.lean`](Kamea/Witness6.lean) — Coexistence: S+D+H at N=6 with sec ≠ ret
-- [`Kamea/Witness10.lean`](Kamea/Witness10.lean) — Coexistence: S+D+H at N=10 with distinct roles
-- [`Kamea/SelfSim5.lean`](Kamea/SelfSim5.lean) — Self-simulation at N=5 (simulation term = classifier)
-- [`Kamea/SelfSim6.lean`](Kamea/SelfSim6.lean) — Self-simulation at N=6 (simulation term = retraction element)
-- [`independence_results.py`](independence_results.py) — Generate, verify, and freeze all counterexamples
-- [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md) — Standard categorical vocabulary translation
-- [`docs/h_characterization.md`](docs/h_characterization.md) — H as factorable action: presentation-independent characterization
-- [`CLAIMS.md`](CLAIMS.md) — what is proved, what is empirical, what is open
+**The independence theorem:** [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence) (separate repo, self-contained)
 
-**Paper 2: The artifact** (the 16-element witness and its consequences)
+**The artifact** (this repo: the 16-element witness and its consequences)
 - [`psi_repl.py`](psi_repl.py) — Interactive Ψ-Lisp REPL
 - [`examples/psi_reflective_tower.lisp`](examples/psi_reflective_tower.lisp) — Three-level reflective tower: compute → verify → inspect/modify continuations → branch swap
 - [`Kamea/Psi16Full.lean`](Kamea/Psi16Full.lean) — 83 operational theorems + rigidity/discoverability/irreducibility
@@ -392,10 +306,10 @@ Full registry with reproduction commands: [`CLAIMS.md`](CLAIMS.md).
 - **Self-modeling vs discriminability.** Empirical search shows nearly all rigid magmas are WL-1 discriminable without self-modeling — unique structural fingerprints suffice for identification. Self-modeling adds interpretability: elements don't just have unique fingerprints, they have roles (classifier, transformer, substrate) that make the algebra a computational system rather than a mere barcode. Whether interpretability is necessary for reflective computation, or merely convenient, is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal for its target — or whether better profiles exist — is unexplored. The methodology (SAT search with target-specific constraints) can find other profiles, but the space has not been systematically enumerated.
 - **Distinctness: 78% derived, 22% axiomatic (fully characterized).** Of 45 pairwise distinctness requirements, 35 are derived: 32 from categorical axioms (Lean-proved on the witness, SAT-verified universally at N=12) and 3 from Turing completeness (lazy/eager and projection conflicts — no evaluator can resolve them). The remaining 10 (⊤=⊥, Q=ρ, Q=Y, E=f, E=ρ, E=Y, f=ρ, f=Y, ρ=Y, η=Y) have been exhaustively tested against categorical axioms, Turing completeness, composition closure, and the full reflective tower including continuation reification and branch swap. All 10 survive all tests. They are the nontriviality axiom — the analog of 0 ≠ 1 in a nontrivial ring. Merged-role algebras satisfying all other axioms exist, compute, and reflect; they are expressively but not computationally degenerate.
-- **Capability independence (resolved, Lean-proved).** All three capabilities are fully independent — no capability implies any other. Six Lean-verified counterexamples establish all six non-implications: S ⊬ D (N=8), S ⊬ H (N=6, structural), D ⊬ S (N=5), D ⊬ H (N=10), H ⊬ S (N=6), H ⊬ D (N=10). The D ⊬ S and H ⊬ S directions use `Ext2PointedMagma` — the base structure without a retraction pair. Coexistence: S+D+H at N=5 (optimal, `Witness5.lean`), N=6 (`Witness6.lean`), N=10 (`Witness10.lean`). Both N=5 and N=6 witnesses self-simulate (`SelfSim5.lean`, `SelfSim6.lean`). Whether the axioms for each capability are *minimal* remains open. See [`docs/categorical_reconstruction.md`](docs/categorical_reconstruction.md).
+- **Capability independence (resolved, Lean-proved).** See [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence) for the full formalization.
 - **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a **proved functorial invariant** — DRM isomorphisms preserve Z, C, N (algebraic proof in [`Functoriality.lean`](Kamea/Functoriality.lean), no `decide`). Whether a natural universal property characterizes Ψ₁₆ᶠ within DRMag⁺ remains open. See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
-- **Self-execution characterization (resolved, Lean-proved).** H now has a presentation-independent definition on par with S and D: *partial internal composition* — the left-regular representation contains a non-trivially composed element. Formally, the Internal Composition Property (ICP): ∃ pairwise distinct non-absorber a, b, c with b core-preserving, a = c∘b on core, and a taking ≥2 distinct values. ICP ↔ Compose+Inert is Lean-proved as a universal equivalence (pure logic, `ICP.lean`), and verified on all three N=10 counterexamples by `native_decide`. Also validated empirically across 250 SAT-generated retraction magmas (250/250 agreement). Branch and Y are enrichments on top of ICP: Branch bridges D to H (the classifier controls the dispatcher), Y crosses the decidability boundary (bounded → unbounded recursion). Full analysis: [`docs/h_characterization.md`](docs/h_characterization.md).
-- **Categorical formalization (complete for paper 1).** 90 public theorems across 13 Lean files, zero `sorry`: universal decomposition and bounds (`CatKripkeWallMinimal.lean`, `NoCommutativity.lean`), functoriality (`Functoriality.lean`), self-simulation injectivity (`SelfSimulation.lean`), independence counterexamples (`Countermodel.lean`, `Countermodels10.lean`, `E2PM.lean`), H characterization (`ICP.lean`), coexistence witnesses (`Witness5.lean`, `Witness6.lean`, `Witness10.lean`), and self-simulation witnesses (`SelfSim5.lean`, `SelfSim6.lean`). What remains for Lean: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean. See [`docs/inevitability_summary.md`](docs/inevitability_summary.md).
+- **Self-execution characterization (resolved, Lean-proved).** ICP ↔ Compose+Inert is proved as a universal equivalence. See [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence).
+- **Categorical formalization (complete).** See [finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence) for the full Lean formalization (93 theorems across 12 files). What remains for Lean in this repo: the intermediate distinctness layer (proving 13 non-forced pairs are independently justified by expressiveness) is supported by SAT analysis, not Lean.
 
 ---
 
