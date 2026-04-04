@@ -17,6 +17,16 @@ A meta-circular evaluator applies functions to arguments. Strip away syntax, typ
 
 This is not a claim that magmas *are* evaluators. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation is invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction.
 
+### Why the engineering artifacts work
+
+The Cayley table is a 256-byte array. Every operation in the algebra — including the operations that *implement the evaluator* — is a table lookup. This has three consequences:
+
+1. **The table is transparent to optimizers.** A supercompiler can constant-fold through any chain of table lookups, because the table is static data. There is no interpretive overhead that can't be compiled away — the "interpreter" is just indexing into an array.
+
+2. **The reflective tower has a fixed point.** In an infinite tower (3-Lisp, Black), each level is interpreted by the one below, and compilation requires cutting the chain. In a grounded tower, the bottom level *is* the table. The compiler doesn't need to cut anything — it bottoms out at 256 bytes of constant data. That's why the meta-circular evaluator compiles to a native binary: the tower terminates at data, not at another interpreter.
+
+3. **Allocation is trivial.** Cons cells are pairs of table indices (integers). The runtime is a bump allocator — allocation is a pointer increment, no GC, no free lists. This is why compiled Ψ-Lisp matches hand-written C on cons-heavy workloads: there is no runtime system to get in the way.
+
 ## The Three Capabilities
 
 | Capability | Categorical property | Finite-algebra instantiation | Independence |
@@ -253,7 +263,7 @@ Results fall into four tiers: **Universal** (every model of the axiom class, `[L
 - **Self-modeling vs discriminability.** Nearly all rigid magmas are WL-1 discriminable without self-modeling. Self-modeling adds interpretability: elements have roles (classifier, transformer, substrate), not just unique fingerprints. Whether interpretability is necessary for reflective computation is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal is unexplored.
 - **Distinctness: 78% derived, 22% axiomatic.** Of 45 distinctness requirements, 35 are derived (32 categorical + 3 TC). The remaining 10 have been exhaustively tested against categorical axioms, TC, composition closure, and the full reflective tower. All 10 survive — they are the nontriviality axiom.
-- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of Kripke magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a proved functorial invariant ([`Functoriality.lean`](Kamea/Functoriality.lean)). See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
+- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of dichotomic retract magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a proved functorial invariant ([`Functoriality.lean`](Kamea/Functoriality.lean)). See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
 ---
 
