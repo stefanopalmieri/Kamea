@@ -1,27 +1,21 @@
 # Kamea
 
-A structural decomposition of reflective computation into independent capabilities, witnessed by finite algebras and proved by universal theorems over algebraic varieties.
-
-**Three capabilities. Three walls. Seven roles.**
-
-*A finite algebra can represent itself without describing itself. It can describe itself without executing itself. It can execute itself without describing itself. No capability implies any other.*
-
-### The Independence Theorem
-
-The three capabilities (R, D, H) are pairwise independent — no one implies any other. All six non-implications are Lean-proved with four provably tight bounds. The optimal coexistence witness has N=5. Full formalization (93 theorems, 12 Lean files, zero `sorry`), paper, counterexample tables, and SAT reproduction scripts: **[finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)**.
+A 16-element algebra whose Cayley table is a complete computational system: a Lisp that fits in 256 bytes, compiles to native code matching hand-written C, and whose reflective tower — meta-circular evaluator, continuation reification, branch swap — compiles to a single binary in 2.2 ms.
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-This repository is the *artifact*: a 16-element algebra (Ψ₁₆ᶠ) where all three capabilities coexist with two connecting enrichments (Branch and Y), supporting a reflective tower, compilation to native code, and Turing completeness.
+The 16×16 operation table contains seven elements that correspond to Lisp's primitives (quote, eval, cons, car, cdr, cond, nil) — not by encoding, but because the algebraic constraints that make reflection possible force those roles to exist. The algebra is Turing-complete via these seven elements alone. The remaining nine elements are I/O and counter machinery.
 
-### Why finite extensional magmas?
+Behind the artifact is a structural decomposition: self-representation (encoding/decoding), self-description (classification), and self-execution (internal composition) are three independent capabilities of reflective computation. No capability implies any other — all six non-implications Lean-proved. The theory, paper, and proofs are in a separate repository: **[finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)** (93 theorems, 12 Lean files, zero `sorry`).
 
-A meta-circular evaluator applies functions to arguments. Strip away syntax, types, and environment — keeping only the application operation — and what remains is a set of elements and a binary operation: `apply(f, x)`. That operation is the Cayley table. An extensional magma requires that `apply` distinguishes its arguments: if two functions agree on all inputs, they are equal. The two absorbers (⊤, ⊥) are the constant functions. The retraction pair (Q, E) is Gödel numbering.
+### Why a finite magma?
 
-This is not a claim that magmas *are* evaluators. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation would be invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction.
+A meta-circular evaluator applies functions to arguments. Strip away syntax, types, and environment — keeping only `apply(f, x)` — and what remains is a set with a binary operation: a magma. The Cayley table *is* the complete specification. Extensionality (distinct rows) gives the operation its discriminating power. The two absorbers (⊤, ⊥) are the constant functions. The retraction pair (Q, E) is Gödel numbering. Everything else is structure that the operation forces.
+
+This is not a claim that magmas *are* evaluators. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation is invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction.
 
 ## The Three Capabilities
 
