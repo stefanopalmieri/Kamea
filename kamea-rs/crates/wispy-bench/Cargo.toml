@@ -1,0 +1,11 @@
+[package]
+name = "wispy-bench"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wispy-bench"
+path = "src/main.rs"
+
+[dependencies]
+wispy-gc = { path = "../wispy-gc" }

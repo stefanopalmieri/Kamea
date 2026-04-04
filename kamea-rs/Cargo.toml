@@ -6,5 +6,6 @@ members = [
     "crates/psi-web",
     "crates/wispy-gc",
     "crates/wispy-stress",
+    "crates/wispy-bench",
 ]
 resolver = "2"
