@@ -1,0 +1,10 @@
+; Counter arithmetic benchmark for Psi-Lisp transpiler
+(defun fib (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))
+(defun fib-iter (n)
+  (defun helper (a b count)
+    (if (= count 0) a (helper b (+ a b) (- count 1))))
+  (helper 0 1 n))
+(defun fact (n) (if (= n 0) 1 (* n (fact (- n 1)))))
+(defun power (base exp) (if (= exp 0) 1 (* base (power base (- exp 1)))))
+(defun gcd2 (a b) (if (= b 0) a (gcd2 b (mod a b))))
+(print (+ (fib 8) (fib-iter 30) (fact 10) (power 2 10) (gcd2 100 75)))

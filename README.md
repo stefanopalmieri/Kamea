@@ -426,30 +426,32 @@ What they have that we don't: live meta-interpreter modification (`set! base-eva
 
 ## Performance
 
-Two benchmarks: counter arithmetic (fib + fact + power + gcd, all inputs known at call time) and N-Queens(8) (backtracking search with cons-cell lists, 92 solutions). Counter arithmetic is pure compute; nqueens stresses allocation and recursion.
-
-**Counter arithmetic** (fib(8) + fib-iter(30) + fact(10) + power(2,10) + gcd(100,75), amortized per iteration):
-
-| Implementation | Time/iter | vs Native Rust |
-|----------------|----------|---------------|
-| **Native Rust** (LLVM -O) | 0.003 µs | 1x |
-| **Compiled Ψ-Lisp → C** (gcc -O2) | 0.01 µs | **~4x** |
-| **Native Python** | 5 µs | ~1,700x |
-| **Ψ-Lisp (Rust interpreter)** | ~200 ms | ~70,000,000x |
-| **Ψ-Lisp (Python interpreter)** | ~2,000 ms | ~700,000,000x |
+Primary benchmark: N-Queens(8) — backtracking search with cons-cell lists, 92 solutions. This stresses allocation, recursion, and branching, and cannot be constant-folded.
 
 **N-Queens(8)** (backtracking with cons/car/cdr, per call):
 
-| Implementation | Time/call | vs Native Rust |
+| Implementation | Time/call | vs C baseline |
 |----------------|----------|---------------|
-| **Native Rust** (LLVM -O) | 47 µs | 1x |
-| **Compiled Ψ-Lisp → C** (gcc -O2) | 86 µs | **1.8x** |
-| **Compiled Ψ-Lisp → Rust** (LLVM -O) | 114 µs | **2.4x** |
-| **Native Python** | 5.9 ms | 125x |
-| **Ψ-Lisp (Rust interpreter)** | 4.1 s | 87,000x |
-| **Ψ-Lisp (Python interpreter)** | 301 s | 6,400,000x |
+| **C** (gcc -O2, bump allocator) | 98 µs | 1x |
+| **Compiled Ψ-Lisp → C** (gcc -O2) | 86 µs | **0.9x** |
+| **Compiled Ψ-Lisp → Rust** (LLVM -O) | 114 µs | 1.2x |
+| **LuaJIT** | 220 µs | 2.2x |
+| **SBCL** (native Common Lisp) | 432 µs | 4.4x |
+| **Native Python** | 5.9 ms | 60x |
+| **Ψ-Lisp (Rust interpreter)** | 4.1 s | 42,000x |
+| **Ψ-Lisp (Python interpreter)** | 301 s | 3,100,000x |
 
-Compiled Ψ-Lisp is within **4x of native Rust** on pure arithmetic and within **2x on nqueens(8)**. The nqueens gap is smaller because the cons-cell arena (bump allocator, no GC) is competitive with Rust's `Vec` push/pop. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
+Compiled Ψ-Lisp matches hand-written C with the same allocation strategy, and is **2.5x faster than LuaJIT** and **5x faster than SBCL** on a cons-heavy workload. The bump allocator (no GC, no free) is a structural advantage: allocation is a pointer increment. The entire compilation pipeline is ~1,100 lines: a 312-line supercompiler, a 640-line transpiler, and a 121-line C runtime whose core is a 256-byte array.
+
+**Counter arithmetic** (fib(8) + fib-iter(30) + fact(10) + power(2,10) + gcd(100,75), runtime inputs via argv):
+
+| Implementation | Time/iter | vs C baseline |
+|----------------|----------|---------------|
+| **C** (gcc -O2) | 0.016 µs | 1x |
+| **LuaJIT** | 0.17 µs | 10x |
+| **SBCL** | 0.20 µs | 13x |
+
+Note: the compiled Ψ-Lisp transpiler emits literal constants in `main()`, so gcc constant-folds the entire computation. With known inputs, the compiled binary effectively returns a precomputed result (~0.01 µs). The table above uses runtime inputs (argv) for a fair comparison. Full performance analysis and extension profile comparison: [`docs/technical_overview.md#10-performance`](docs/technical_overview.md#10-performance).
 
 **Grounded reflective tower** (meta-circular evaluator: fib(8) + fact(10) + table verification + reify/reflect + branch swap):
 
