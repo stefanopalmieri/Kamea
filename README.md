@@ -1,31 +1,31 @@
 # Kamea
 
-A 16-element algebra whose Cayley table is a complete computational system: a Lisp that fits in 256 bytes, compiles to native code matching hand-written C, and whose reflective tower — meta-circular evaluator, continuation reification, branch swap — compiles to a single binary in 2.2 ms.
+A 16-element algebra whose Cayley table is a complete computational system: a Lisp that fits in 256 bytes, compiles to native code matching hand-written C, and whose reflective tower (meta-circular evaluator, continuation reification, branch swap) compiles to a single binary in 2.2 ms.
 
 <p align="center">
   <img src="melencolia.png" width="250" alt="Albrecht Dürer — Melencolia I (1514)" />
 </p>
 <p align="center"><sub>In loving memory of Boba</sub></p>
 
-The 16×16 operation table contains seven elements that correspond to Lisp's primitives (quote, eval, cons, car, cdr, cond, nil) — not by encoding, but because the algebraic constraints that make reflection possible force those roles to exist. The algebra is Turing-complete via these seven elements alone. The remaining nine elements are I/O and counter machinery.
+The 16×16 operation table contains seven elements that correspond to Lisp's primitives (quote, eval, cons, car, cdr, cond, nil). Not by encoding, but because the algebraic constraints that make reflection possible force those roles to exist. The algebra is Turing-complete via these seven elements alone. The remaining nine elements are I/O and counter machinery.
 
-Behind the artifact is a structural decomposition: self-representation (encoding/decoding), self-description (classification), and self-execution (internal composition) are three independent capabilities of reflective computation. No capability implies any other — all six non-implications Lean-proved. The theory, paper, and proofs are in a separate repository: **[finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)** (93 theorems, 12 Lean files, zero `sorry`).
+Behind the artifact is a structural decomposition: self-representation (encoding/decoding), self-description (classification), and self-execution (internal composition) are three independent capabilities of reflective computation. No capability implies any other, all six non-implications Lean-proved. The theory, paper, and proofs are in a separate repository: **[finite-magma-independence](https://github.com/stefanopalmieri/finite-magma-independence)** (93 theorems, 12 Lean files, zero `sorry`).
 
 ### Why a finite magma?
 
-A meta-circular evaluator applies functions to arguments. Strip away syntax, types, and environment — keeping only `apply(f, x)` — and what remains is a set with a binary operation: a magma. The Cayley table *is* the complete specification. Extensionality (distinct rows) gives the operation its discriminating power. The two absorbers (⊤, ⊥) are the constant functions. The retraction pair (Q, E) is Gödel numbering. Everything else is structure that the operation forces.
+A meta-circular evaluator applies functions to arguments. Strip away syntax, types, and environment, keeping only `apply(f, x)`, and what remains is a set with a binary operation: a magma. The Cayley table *is* the complete specification. Extensionality (distinct rows) gives the operation its discriminating power. The two absorbers (⊤, ⊥) are the constant functions. The retraction pair (Q, E) is Gödel numbering. Everything else is structure that the operation forces.
 
-This is not a claim that magmas *are* evaluators. It is a claim that the algebraic structure of `apply` — the constraints that extensionality, encoding, classification, and composition impose on a finite operation table — is the right level of abstraction to separate reflective capabilities. The separation is invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction.
+This is not a claim that magmas *are* evaluators. It is a claim that the algebraic structure of `apply` (the constraints that extensionality, encoding, classification, and composition impose on a finite operation table) is the right level of abstraction to separate reflective capabilities. The separation is invisible in richer settings (lambda calculus, typed systems) where the capabilities are entangled by construction.
 
 ### Why the engineering artifacts work
 
-The Cayley table is a 256-byte array. Every operation in the algebra — including the operations that *implement the evaluator* — is a table lookup. This has three consequences:
+The Cayley table is a 256-byte array. Every operation in the algebra, including the operations that *implement the evaluator*, is a table lookup. This has three consequences:
 
-1. **The table is transparent to optimizers.** A supercompiler can constant-fold through any chain of table lookups, because the table is static data. There is no interpretive overhead that can't be compiled away — the "interpreter" is just indexing into an array.
+1. **The table is transparent to optimizers.** A supercompiler can constant-fold through any chain of table lookups, because the table is static data. There is no interpretive overhead that can't be compiled away. The "interpreter" is just indexing into an array.
 
-2. **The reflective tower has a fixed point.** In an infinite tower (3-Lisp, Black), each level is interpreted by the one below, and compilation requires cutting the chain. In a grounded tower, the bottom level *is* the table. The compiler doesn't need to cut anything — it bottoms out at 256 bytes of constant data. That's why the meta-circular evaluator compiles to a native binary: the tower terminates at data, not at another interpreter.
+2. **The reflective tower has a fixed point.** In an infinite tower (3-Lisp, Black), each level is interpreted by the one below, and compilation requires cutting the chain. In a grounded tower, the bottom level *is* the table. The compiler doesn't need to cut anything; it bottoms out at 256 bytes of constant data. That's why the meta-circular evaluator compiles to a native binary: the tower terminates at data, not at another interpreter.
 
-3. **Allocation is trivial.** Cons cells are pairs of table indices (integers). The runtime is a bump allocator — allocation is a pointer increment, no GC, no free lists. This is why compiled Ψ-Lisp matches hand-written C on cons-heavy workloads: there is no runtime system to get in the way.
+3. **Allocation is trivial.** Cons cells are pairs of table indices (integers). The runtime is a bump allocator: allocation is a pointer increment, no GC, no free lists. This is why compiled Ψ-Lisp matches hand-written C on cons-heavy workloads: there is no runtime system to get in the way.
 
 ## The Three Capabilities
 
@@ -42,7 +42,7 @@ Each can be present or absent independently. Whether the axioms for each capabil
 | **Branch** | Classifier-controlled dispatch: ρ·x = f·x if τ·x = ⊤, else g·x. Bridges D and H. |
 | **Y** | Fixed-point combinator: Y·ρ = ρ·(Y·ρ), Y·ρ non-absorber. Crosses the decidability boundary. |
 
-Branch and Y are not independent capabilities — they connect the three capabilities and add power. Both are irredundant for the full evaluator (SAT-proved).
+Branch and Y are not independent capabilities. They connect the three capabilities and add power. Both are irredundant for the full evaluator (SAT-proved).
 
 ## Quick Start
 
@@ -94,7 +94,7 @@ rustc -O -o /tmp/tower /tmp/tower.rs
 /tmp/tower    # 2.2 ms — same output, 20,000x faster
 ```
 
-The reflective tower — fibonacci, factorial, table verification, continuation reification, frame walking, branch swap — compiles to a single native binary. An ungrounded (infinite) tower cannot be compiled because each level depends on the one below. A grounded tower can — the compiler bottoms out at the verified Cayley table.
+The reflective tower (fibonacci, factorial, table verification, continuation reification, frame walking, branch swap) compiles to a single native binary. An ungrounded (infinite) tower cannot be compiled because each level depends on the one below. A grounded tower can: the compiler bottoms out at the verified Cayley table.
 
 ### Compile to Native
 
@@ -104,7 +104,7 @@ python3 psi_supercompile.py examples/psi_counter_known.psi > /tmp/opt.psi
 python3 psi_transpile.py /tmp/opt.psi > /tmp/counter.c
 gcc -O2 -I. -o /tmp/counter /tmp/counter.c
 
-# Rust backend (self-hosted transpiler — works with either interpreter)
+# Rust backend (self-hosted transpiler, works with either interpreter)
 python3 psi_lisp.py --table=c examples/psi_transpile_test.lisp | sed '1d;$d' > /tmp/out.rs
 cp psi_runtime.rs /tmp/
 rustc -O -o /tmp/out /tmp/out.rs && /tmp/out               # 3 42 99 3 5 5
@@ -124,9 +124,9 @@ The transpiler handles both computational programs and metaprograms (continuatio
 
 Kamea is not a new model of computation. It is a structural decomposition of reflective computation into independent capabilities, using finite algebra as a microscope.
 
-**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are irredundant — each corresponds to a standard categorical structure. The specific axiom forms are not unique: composition admits ≥6 variants. But in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count — it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by a parsimony principle: don't judge when you can compute.
+**Did you just encode Lisp in a lookup table?** No. We found the *space* of reflective axiom systems, and Lisp is a distinguished point in it. The three capabilities (S, D, H) are irredundant, each corresponding to a standard categorical structure. The specific axiom forms are not unique: composition admits ≥6 variants. But in 4 of 5 alternatives, computational elements cross the classifier wall and become classifiers. The McCarthy realization is the unique form that minimizes the classifier count: it keeps the maximum number of elements in the computational stratum. It is "natural" not by uniqueness proof but by parsimony: don't judge when you can compute.
 
-**Are the axioms natural or engineered?** The *capabilities* are natural — they correspond to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). The *specific axiom forms* are conventional — each capability admits multiple presentations. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
+**Are the axioms natural or engineered?** The *capabilities* are natural, corresponding to standard categorical concepts (section-retraction pair, decidable subobject classifier, partial internal composition). The *specific axiom forms* are conventional; each capability admits multiple presentations. The enrichments (Branch, Y) are the deliberate choices that connect D to H and cross the decidability boundary.
 
 **What's the contribution?** (1) A full independence theorem: R, D, and H are pairwise independent, four of six bounds provably tight. (2) A working artifact: a compiled reflective tower (2.2 ms native) demonstrating all three capabilities plus both enrichments in a single 16-element algebra. (3) Turing completeness via 7 axiom-forced elements, compilation to native code matching hand-written C, and a meta-circular CPS evaluator with continuation reification.
 
@@ -144,9 +144,9 @@ Kamea is not a new model of computation. It is a structural decomposition of ref
 
 The correspondence is structural (same role inventory) rather than semantic (Ψ operates on magma elements, Lisp on symbolic lists). The structure is necessarily non-commutative: any magma with two distinct left-absorbers cannot be commutative ([`NoCommutativity.lean`](Kamea/NoCommutativity.lean)).
 
-**What is proved vs. what is convergent.** The *architecture* — three categories (absorbers, classifiers, non-classifiers) with hard walls between them — is a universal theorem: every finite dichotomic retract magma decomposes the same way (112 non-isomorphic models at N=4 all share it). The *specific seven roles* are convergently natural: three independently motivated axiom systems (category-theoretic, game-theoretic, categorical topos) — none referencing Lisp — recover the identical 2-1-8-1 distribution. A fourth (information-theoretic) recovers 2-1-9-0, missing inert because it lacks a substrate axiom. The architecture is a theorem; the instantiation is convergent evidence, not a uniqueness proof.
+**What is proved vs. what is convergent.** The *architecture* (three categories: absorbers, classifiers, non-classifiers, with hard walls between them) is a universal theorem: every finite dichotomic retract magma decomposes the same way (112 non-isomorphic models at N=4 all share it). The *specific seven roles* are convergently natural: three independently motivated axiom systems (category-theoretic, game-theoretic, categorical topos), none referencing Lisp, recover the identical 2-1-8-1 distribution. A fourth (information-theoretic) recovers 2-1-9-0, missing inert because it lacks a substrate axiom. The architecture is a theorem; the instantiation is convergent evidence, not a uniqueness proof.
 
-Of the 45 pairwise distinctness requirements, **35 are derived** (32 from categorical axioms + 3 from TC). The remaining **10 are the nontriviality axiom** — as 0 ≠ 1 in a nontrivial ring. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). Canonicity: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
+Of the 45 pairwise distinctness requirements, **35 are derived** (32 from categorical axioms + 3 from TC). The remaining **10 are the nontriviality axiom**, analogous to 0 ≠ 1 in a nontrivial ring. Full analysis: [`docs/forced_roles_theorem.md`](docs/forced_roles_theorem.md). Canonicity: [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
 ## Key Results
 
@@ -158,7 +158,7 @@ Of the 45 pairwise distinctness requirements, **35 are derived** (32 from catego
 - 35/45 role pairs forced distinct: 32 by categorical axioms + 3 by TC
 - 83 operational theorems on the 16×16 table
 
-**What actuality irreducibility means.** Two Cayley tables can agree on every cell except the classifier's response to one element. Both satisfy all structural axioms. Structure does not determine classification — the classifier assignment is independent, not derivable from anything else in the structure.
+**What actuality irreducibility means.** Two Cayley tables can agree on every cell except the classifier's response to one element. Both satisfy all structural axioms. Structure does not determine classification: the classifier assignment is independent and not derivable from anything else in the structure.
 
 ### SAT and Empirical Results
 
@@ -185,7 +185,7 @@ Full claim matrix with reproduction commands: [`CLAIMS.md`](CLAIMS.md). Full tec
 
 What is the simplest finite structure that can identify its own components through its own operation?
 
-**Structural Ladder (L0–L8)** — forces the basic role architecture:
+**Structural Ladder (L0–L8)**, forcing the basic role architecture:
 
 | Level | Name | What It Forces |
 |-------|------|----------------|
@@ -199,7 +199,7 @@ What is the simplest finite structure that can identify its own components throu
 | L7 | Inert exists | At least one "substrate" element |
 | L8 | Encoder separation | ≥2 encoders with distinct output sets |
 
-**Operational Axioms** — force specific computational capabilities:
+**Operational Axioms**, forcing specific computational capabilities:
 
 | Axiom | What It Forces |
 |-------|----------------|
@@ -207,19 +207,19 @@ What is the simplest finite structure that can identify its own components throu
 | **D (Inert Propagation)** | Inert elements preserve non-absorber status |
 | **PA (Power-Associativity)** | `(x·x)·x = x·(x·x)` for all x |
 | **VV (Inert Self-Application)** | Inert self-application yields a tester or encoder |
-| **QE (Quote/Eval)** | `E·(Q·x) = x` and `Q·(E·x) = x` on core — mutual inverses |
+| **QE (Quote/Eval)** | `E·(Q·x) = x` and `Q·(E·x) = x` on core (mutual inverses) |
 | **1-Inert** | Exactly 1 inert element |
 | **E-Transparency** | `E·⊤ = ⊤` and `E·⊥ = ⊥` |
-| **Branch** | `ρ·x = f·x` if `τ·x = ⊤`, else `ρ·x = g·x` — tester-mediated conditional |
-| **Compose** | `η·x = ρ·(g·x)` — function composition through branch |
-| **Y-Combinator** | `Y·ρ = ρ·(Y·ρ)`, with `Y·ρ ≥ 2` — fixed-point combinator |
-| **Selection** | `η·ρ = τ` — composing then branching yields a judgment |
+| **Branch** | `ρ·x = f·x` if `τ·x = ⊤`, else `ρ·x = g·x` (tester-mediated conditional) |
+| **Compose** | `η·x = ρ·(g·x)` (function composition through branch) |
+| **Y-Combinator** | `Y·ρ = ρ·(Y·ρ)`, with `Y·ρ ≥ 2` (fixed-point combinator) |
+| **Selection** | `η·ρ = τ` (composing then branching yields a judgment) |
 
 **Minimum sizes:**
 
 | What | Min N | What it gives |
 |------|-------|---------------|
-| S+D+H (three capabilities alone) | **5** | Encoding, classification, evaluation — optimal (ICP needs 3 core elements) |
+| S+D+H (three capabilities alone) | **5** | Encoding, classification, evaluation; optimal (ICP needs 3 core elements) |
 | S+D+H with sec ≠ ret | **6** | Non-degenerate retraction pair, non-trivial ICP factorization |
 | + all roles distinct | **10** | Separated roles |
 | + structural ladder + PA + Selection | **12** | Clean 2-1-8-1 architecture, McCarthy correspondence |
@@ -262,8 +262,8 @@ Results fall into four tiers: **Universal** (every model of the axiom class, `[L
 - **Minimality from base axioms.** Abstract axiom limitation theorems show base DirectedDS axioms imply only `card ≥ 2` (tight). What forcing conditions derive the full structure from first principles remains open.
 - **Self-modeling vs discriminability.** Nearly all rigid magmas are WL-1 discriminable without self-modeling. Self-modeling adds interpretability: elements have roles (classifier, transformer, substrate), not just unique fingerprints. Whether interpretability is necessary for reflective computation is open.
 - **Extension profile optimality.** Ψ₁₆ᶠ and Ψ₁₆ᶜ are two points in the extension design space. Whether either is optimal is unexplored.
-- **Distinctness: 78% derived, 22% axiomatic.** Of 45 distinctness requirements, 35 are derived (32 categorical + 3 TC). The remaining 10 have been exhaustively tested against categorical axioms, TC, composition closure, and the full reflective tower. All 10 survive — they are the nontriviality axiom.
-- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of dichotomic retract magmas — 112 non-isomorphic models exist at N=4. The canonicity lies at the theory level: the three-class decomposition is a proved functorial invariant ([`Functoriality.lean`](Kamea/Functoriality.lean)). See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
+- **Distinctness: 78% derived, 22% axiomatic.** Of 45 distinctness requirements, 35 are derived (32 categorical + 3 TC). The remaining 10 have been exhaustively tested against categorical axioms, TC, composition closure, and the full reflective tower. All 10 survive; they are the nontriviality axiom.
+- **No canonical object.** Ψ₁₆ᶠ is not initial, terminal, or otherwise universal in the category of dichotomic retract magmas (112 non-isomorphic models exist at N=4). The canonicity lies at the theory level: the three-class decomposition is a proved functorial invariant ([`Functoriality.lean`](Kamea/Functoriality.lean)). See [`docs/categorical_canonicity.md`](docs/categorical_canonicity.md).
 
 ---
 
@@ -294,7 +294,7 @@ What they have that we don't: live meta-interpreter modification (`set! base-eva
 
 ## Performance
 
-Primary benchmark: N-Queens(8) — backtracking search with cons-cell lists, 92 solutions. This stresses allocation, recursion, and branching, and cannot be constant-folded.
+Primary benchmark: N-Queens(8), backtracking search with cons-cell lists (92 solutions). This stresses allocation, recursion, and branching, and cannot be constant-folded.
 
 **N-Queens(8)** (backtracking with cons/car/cdr, per call):
 
@@ -328,7 +328,7 @@ Note: the compiled Ψ-Lisp transpiler emits literal constants in `main()`, so gc
 | **Compiled tower** (rustc -O) | 2.2 ms | 1x |
 | **Ψ-Lisp (Python interpreter)** | ~43 s | ~20,000x |
 
-The compiled tower is not about benchmark speed — it's about having the meta-circular evaluator as compiled Rust with continuations as data, the Cayley table verified at runtime, and branch swap via continuation modification, all in a single native binary.
+The compiled tower is not about benchmark speed. It's about having the meta-circular evaluator as compiled Rust with continuations as data, the Cayley table verified at runtime, and branch swap via continuation modification, all in a single native binary.
 
 ---
 
@@ -488,7 +488,7 @@ The compiled tower is not about benchmark speed — it's about having the meta-c
 
 ## Building
 
-`lake build` compiles all Lean files — the independence structure (90 theorems across 13 files: universal decomposition, 6-way independence counterexamples, optimal coexistence witnesses, self-simulation, H characterization) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
+`lake build` compiles all Lean files: the independence structure (90 theorems across 13 files) and the Ψ-specific operational proofs (130+ theorems on the 16-element table in `Psi16*.lean`). Zero `decide` on universal theorems. Zero `sorry` across all files.
 
 ```bash
 # Lean (requires Lean 4.28.0 / Mathlib v4.28.0)
@@ -502,7 +502,7 @@ uv run python examples/psi16_corrupted_host_demo.py --plain   # plain narrative
 python3 psi_repl.py --algebraic                              # Q-chain number representation
 python3 psi_lisp.py --algebraic examples/psi_fibonacci.lisp  # verify: same results, algebraic encoding
 
-# Rust interpreter (requires rustup — https://rustup.rs)
+# Rust interpreter (requires rustup: https://rustup.rs)
 cd kamea-rs
 cargo test                                                     # run all tests (40 total)
 cargo run --release -- run examples/psi_fibonacci.lisp         # run a Lisp program (~25x faster)
@@ -522,14 +522,14 @@ rustc -O -o /tmp/fib /tmp/fib.rs && /tmp/fib
 cd kamea-rs
 HEAP_MB=4 cargo run -p wispy-stress --release                  # 10M allocs in 4MB heap
 
-# WASM browser debugger (requires wasm-pack — https://rustwasm.github.io/wasm-pack/)
+# WASM browser debugger (requires wasm-pack: https://rustwasm.github.io/wasm-pack/)
 cd kamea-rs/crates/psi-web
 wasm-pack build --target web                                   # build WASM (124KB)
 python3 -m http.server 8080 --directory www                    # serve debugger UI
 # → open http://localhost:8080
 ```
 
-Lean proofs use two techniques: universal theorems (`CatKripkeWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning — no `decide`, no `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
+Lean proofs use two techniques: universal theorems (`CatKripkeWallMinimal.lean`, `PsiUniversalBounds.lean`) use pure algebraic reasoning with no `decide` or `native_decide`. Model-specific theorems (`Psi16*.lean`, `Cat*.lean`) use `decide` or `native_decide`, appropriate and complete for finite carrier types with decidable equality. Zero `sorry` across all files.
 
 All Ψ-Lisp test programs produce identical output across Python, compiled C, compiled Rust, Rust interpreter, and WASM.
 
